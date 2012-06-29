@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package com.vaushell.treetasker;
+package pl.polidea.treeview;
 
 public final class R {
     public static final class attr {
