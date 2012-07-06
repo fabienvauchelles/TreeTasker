@@ -3,5 +3,14 @@
 
     <string name="hello">Hello World, TreeTaskerADactivity!</string>
     <string name="app_name">TreeTaskerAD</string>
+    <string name="error">Erreur</string>
+    <string name="not_authenticated">Le couple identifiant/mot de passe est incorrect.</string>
+    <string name="ok">OK</string>
+    <string name="app_display_name">TreeTasker</string>
+    <string name="login">Identifiant</string>
+    <string name="password">Mot de passe</string>
+    <string name="connect">Se connecter</string>
+    <string name="register">S\'enregistrer</string>
+    <string name="server_not_reachable">La connexion au serveur n\'a pas abouti.</string>
 
 </resources>

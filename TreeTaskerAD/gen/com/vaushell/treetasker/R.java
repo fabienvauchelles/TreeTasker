@@ -99,44 +99,50 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int list_selector_background_transition=0x7f02000a;
     }
     public static final class id {
+        public static final int aBTconnect=0x7f05000f;
+        public static final int aBTregister=0x7f050010;
+        public static final int aLBLtitle=0x7f05000c;
+        public static final int aTXTloginValue=0x7f05000d;
+        public static final int aTXTpasswordValue=0x7f05000e;
         public static final int bottom=0x7f050001;
         public static final int center=0x7f050008;
         public static final int center_horizontal=0x7f050006;
         public static final int center_vertical=0x7f050004;
         public static final int clip_horizontal=0x7f05000b;
         public static final int clip_vertical=0x7f05000a;
-        public static final int collapse_all_menu_item=0x7f05001c;
-        public static final int collapsible_menu_item=0x7f05001d;
-        public static final int context_menu_collapse=0x7f050017;
-        public static final int context_menu_delete=0x7f050018;
-        public static final int context_menu_expand_all=0x7f050015;
-        public static final int context_menu_expand_item=0x7f050016;
-        public static final int demo_list_checkbox=0x7f05000e;
-        public static final int demo_list_item_description=0x7f05000d;
-        public static final int demo_list_item_level=0x7f05000c;
-        public static final int expand_all_menu_item=0x7f05001b;
-        public static final int fancy_menu_item=0x7f05001a;
+        public static final int collapse_all_menu_item=0x7f050021;
+        public static final int collapsible_menu_item=0x7f050022;
+        public static final int context_menu_collapse=0x7f05001c;
+        public static final int context_menu_delete=0x7f05001d;
+        public static final int context_menu_expand_all=0x7f05001a;
+        public static final int context_menu_expand_item=0x7f05001b;
+        public static final int demo_list_checkbox=0x7f050013;
+        public static final int demo_list_item_description=0x7f050012;
+        public static final int demo_list_item_level=0x7f050011;
+        public static final int expand_all_menu_item=0x7f050020;
+        public static final int fancy_menu_item=0x7f05001f;
         public static final int fill=0x7f050009;
         public static final int fill_horizontal=0x7f050007;
         public static final int fill_vertical=0x7f050005;
         public static final int left=0x7f050002;
-        public static final int mainTreeView=0x7f05000f;
+        public static final int mainTreeView=0x7f050014;
         public static final int right=0x7f050003;
-        public static final int simple_menu_item=0x7f050019;
-        public static final int textValue=0x7f050010;
+        public static final int simple_menu_item=0x7f05001e;
+        public static final int textValue=0x7f050015;
         public static final int top=0x7f050000;
-        public static final int treeView=0x7f050014;
-        public static final int treeview_list_item_frame=0x7f050013;
-        public static final int treeview_list_item_image=0x7f050012;
-        public static final int treeview_list_item_image_layout=0x7f050011;
+        public static final int treeView=0x7f050019;
+        public static final int treeview_list_item_frame=0x7f050018;
+        public static final int treeview_list_item_image=0x7f050017;
+        public static final int treeview_list_item_image_layout=0x7f050016;
     }
     public static final class layout {
-        public static final int demo_list_item=0x7f030000;
-        public static final int main=0x7f030001;
-        public static final int main_demo=0x7f030002;
-        public static final int task_view=0x7f030003;
-        public static final int tree_list_item_wrapper=0x7f030004;
-        public static final int tree_task_view=0x7f030005;
+        public static final int connection=0x7f030000;
+        public static final int demo_list_item=0x7f030001;
+        public static final int main=0x7f030002;
+        public static final int main_demo=0x7f030003;
+        public static final int task_view=0x7f030004;
+        public static final int tree_list_item_wrapper=0x7f030005;
+        public static final int tree_task_view=0x7f030006;
     }
     public static final class menu {
         public static final int context_menu=0x7f080000;
@@ -146,6 +152,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int empty=0x7f040000;
     }
     public static final class string {
+        public static final int app_display_name=0x7f060015;
         public static final int app_name=0x7f060000;
         public static final int collapse_all_condesed=0x7f06000c;
         public static final int collapse_all_menu=0x7f06000b;
@@ -153,8 +160,10 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int collapsible_condensed_enable=0x7f060008;
         public static final int collapsible_menu_disable=0x7f060009;
         public static final int collapsible_menu_enable=0x7f060007;
+        public static final int connect=0x7f060018;
         public static final int delete_menu=0x7f06000f;
         public static final int delete_menu_condensed=0x7f060010;
+        public static final int error=0x7f060012;
         public static final int expand_all_condensed=0x7f060006;
         public static final int expand_all_menu=0x7f060005;
         public static final int expand_menu=0x7f06000d;
@@ -162,6 +171,12 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int fancy_menu_condensed=0x7f060004;
         public static final int fancy_menu_name=0x7f060003;
         public static final int hello=0x7f060011;
+        public static final int login=0x7f060016;
+        public static final int not_authenticated=0x7f060013;
+        public static final int ok=0x7f060014;
+        public static final int password=0x7f060017;
+        public static final int register=0x7f060019;
+        public static final int server_not_reachable=0x7f06001a;
         public static final int simple_menu_condensed=0x7f060002;
         public static final int simple_menu_name=0x7f060001;
     }
