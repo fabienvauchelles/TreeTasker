@@ -12,5 +12,11 @@
     <string name="connect">Se connecter</string>
     <string name="register">S\'enregistrer</string>
     <string name="server_not_reachable">La connexion au serveur n\'a pas abouti.</string>
+    <string name="addTask">Ajouter des tâches</string>
+    <string name="renameTask">Renommer la tâche</string>
+    <string name="rename">Renommer</string>
+    <string name="copy">Copier</string>
+    <string name="paste">Coller</string>
+    <string name="delete">Supprimer</string>
 
 </resources>
