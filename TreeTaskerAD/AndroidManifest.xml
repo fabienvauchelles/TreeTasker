@@ -19,6 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity><activity android:name="TreeTaskerConnectionActivity"></activity>
+        <activity android:name=".application.activity.TT_TaskListActivity"></activity>
         
     </application>
 

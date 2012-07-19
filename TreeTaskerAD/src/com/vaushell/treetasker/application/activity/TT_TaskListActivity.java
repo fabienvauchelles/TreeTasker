@@ -10,6 +10,8 @@ import pl.polidea.treeview.TreeNodeInfo;
 import pl.polidea.treeview.TreeStateManager;
 import pl.polidea.treeview.TreeViewList;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -34,19 +36,21 @@ public class TT_TaskListActivity
 		super.onCreate( savedInstanceState );
 
 		this.view2taskMap = new HashMap<View, TT_Task>();
+		this.dialogBuilder = new AlertDialog.Builder( this );
 
-		TreeStateManager<TT_Task> manager = new InMemoryTreeStateManager<TT_Task>();
-		TreeBuilder<TT_Task> builder = new TreeBuilder<TT_Task>( manager );
+		treeManager = new InMemoryTreeStateManager<TT_Task>();
+		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
+		                                                             treeManager );
 
 		List<TT_Task> tasks = TreeTaskerControllerDAO.getMockTaskList1();
 		for ( TT_Task task : tasks )
 		{
-			builder.sequentiallyAddNextNode( task, 0 );
-			buildRecursively( task, builder );
+			treeBuilder.sequentiallyAddNextNode( task, 0 );
+			buildRecursively( task, treeBuilder );
 		}
 
 		AbstractTreeViewAdapter<TT_Task> adapter = new AbstractTreeViewAdapter<TT_Task>( this,
-		                                                                                 manager,
+		                                                                                 treeManager,
 		                                                                                 4 )
 		{
 
@@ -160,12 +164,48 @@ public class TT_TaskListActivity
 				                    + view2taskMap.get( currentView )
 				                                  .getTitle() );
 				return true;
+			case R.id.delete:
+				dialogBuilder.setMessage( R.string.confirm_delete_task )
+				             .setCancelable( false )
+				             .setPositiveButton( R.string.delete,
+				                                 new DialogInterface.OnClickListener()
+				                                 {
+
+					                                 @Override
+					                                 public void onClick( DialogInterface dialog,
+					                                                      int which )
+					                                 {
+						                                 TT_Task taskToRemove = view2taskMap.get( currentView );
+						                                 treeManager.removeNodeRecursively( taskToRemove );
+						                                 taskToRemove.setParent( null );
+						                                 view2taskMap.remove( currentView );
+						                                 System.out.println( "Suppression de "
+						                                                     + taskToRemove.getTitle() );
+					                                 }
+				                                 } )
+				             .setNegativeButton( R.string.cancel,
+				                                 new DialogInterface.OnClickListener()
+				                                 {
+
+					                                 @Override
+					                                 public void onClick( DialogInterface dialog,
+					                                                      int which )
+					                                 {
+						                                 // DO NOTHING
+					                                 }
+				                                 } );
+				AlertDialog alert = dialogBuilder.create();
+				alert.show();
+				return true;
+
 			default:
 				return super.onContextItemSelected( item );
 		}
 	}
 
-	private HashMap<View, TT_Task>	view2taskMap;
-	private View	               currentView;
+	private HashMap<View, TT_Task>	  view2taskMap;
+	private View	                  currentView;
+	private AlertDialog.Builder	      dialogBuilder;
+	private TreeStateManager<TT_Task>	treeManager;
 
 }

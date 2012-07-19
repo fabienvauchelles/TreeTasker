@@ -106,10 +106,7 @@ public class TT_Task
 
 		if ( parent == null )
 		{
-			if ( getParent() != null )
-			{
-				getParent().removeChildTask( this );
-			}
+			this.parentTask.removeChildTask( this );			
 			this.parentTask = parent;
 		}
 		else if ( parent != this && !parent.getAllAncestors().contains( this ) )

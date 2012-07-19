@@ -18,5 +18,7 @@
     <string name="copy">Copier</string>
     <string name="paste">Coller</string>
     <string name="delete">Supprimer</string>
+    <string name="confirm_delete_task">Êtes-vous sûr de vouloir supprimer cette tâche et son contenu ?</string>
+    <string name="cancel">Annuler</string>
 
 </resources>
