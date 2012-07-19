@@ -5,13 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.sun.jersey.api.client.Client;
+import com.vaushell.treetasker.application.activity.TT_ConnectionActivity;
 import com.vaushell.treetasker.module.UserSession;
 
 public class TreeTaskerADactivity
     extends Activity
 {
 	// PUBLIC
-	public static final Client client = Client.create();
+	public static final Client	client	  = Client.create();
 	public static final String	USERNAME	= "USERNAME";
 	public static final String	SESSIONID	= "SESSIONID";
 
@@ -34,7 +35,8 @@ public class TreeTaskerADactivity
 	{
 		if ( resultCode == RESULT_OK )
 		{
-			// Utilisateur authentifié, charger les données. Utiliser un Loader apparemment
+			// Utilisateur authentifié, charger les données. Utiliser un Loader
+			// apparemment
 			session = new UserSession( data.getStringExtra( USERNAME ),
 			                           data.getStringExtra( SESSIONID ) );
 		}
@@ -49,7 +51,7 @@ public class TreeTaskerADactivity
 
 	private void requestAuthentication() // Afficher l'activity de connexion
 	{
-		Intent intent = new Intent( this, TreeTaskerConnectionActivity.class );
+		Intent intent = new Intent( this, TT_ConnectionActivity.class );
 		startActivityForResult( intent, 0 );
 	}
 }

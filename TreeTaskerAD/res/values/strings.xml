@@ -12,6 +12,10 @@
     <string name="connect">Se connecter</string>
     <string name="register">S\'enregistrer</string>
     <string name="server_not_reachable">La connexion au serveur n\'a pas abouti.</string>
+    <string name="valid_mail">E-mail valide</string>
+    <string name="achieved">Réussi !</string>
+    <string name="register_achieved">L\'enregistrement a réussi. Un mail vient de vous être envoyé. Vous devez valider votre compte avant de pouvoir l\'utiliser.</string>
+    <string name="registration_not_validated">Vous devez valider votre inscription avant de pouvoir vous connecter.</string>
     <string name="addTask">Ajouter des tâches</string>
     <string name="renameTask">Renommer la tâche</string>
     <string name="rename">Renommer</string>

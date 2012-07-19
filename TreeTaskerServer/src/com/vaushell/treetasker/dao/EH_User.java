@@ -14,6 +14,7 @@ public class EH_User
 		super( KIND, login);
 		this.login = login;
 		this.password = password;
+		this.validatedUser = false;
 		init();
 	}
 	
@@ -23,6 +24,7 @@ public class EH_User
 		
 		this.login = (String) entity.getKey().getName();
 		this.password = (String) entity.getProperty( "password" );
+		this.validatedUser = (Boolean) entity.getProperty( "validatedUser" );
 	}
 
 	public String getLogin()
@@ -39,11 +41,22 @@ public class EH_User
 	{
 		this.password = password;
 	}
+	
+	public boolean isValidatedUser()
+	{
+		return validatedUser;
+	}
+
+	public void setValidatedUser( boolean validatedUser )
+    {
+    	this.validatedUser = validatedUser;
+    }
 
 	@Override
 	public Entity getEntity()
 	{
 		entity.setProperty( "password", getPassword() );
+		entity.setProperty( "validatedUser", isValidatedUser() );
 
 		return entity;
 	}
@@ -60,6 +73,7 @@ public class EH_User
 	// PRIVATE
 	private String	login;
 	private String	password;
+	private boolean validatedUser;
 
 	private void init()
 	{

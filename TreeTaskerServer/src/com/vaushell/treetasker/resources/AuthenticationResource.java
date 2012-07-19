@@ -34,14 +34,28 @@ public class AuthenticationResource
 
 			if ( user.getPassword().equals( request.getPassword() ) )
 			{
-				return new UserSession( user.getLogin(), UUID.randomUUID()
-				                                             .toString() );
+				if ( user.isValidatedUser() )
+				{
+					return new UserSession( user.getLogin(), UUID.randomUUID()
+					                                             .toString() );
+				}
+				else
+				{
+					UserSession session = new UserSession();
+					session.setSessionMessage( UserSession.MESSAGE_REGISTRATION_NOT_VALIDATED );
+					return session;
+				}
 			}
 		}
 		catch ( EntityNotFoundException e )
 		{
-			return new UserSession();
+			UserSession session = new UserSession();
+			session.setSessionMessage( UserSession.MESSAGE_BAD_AUTHENTICATION );
+			return session;
 		}
-		return new UserSession();
+
+		UserSession session = new UserSession();
+		session.setSessionMessage( UserSession.MESSAGE_BAD_AUTHENTICATION );
+		return session;
 	}
 }

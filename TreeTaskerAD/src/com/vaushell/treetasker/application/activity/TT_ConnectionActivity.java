@@ -1,4 +1,4 @@
-package com.vaushell.treetasker;
+package com.vaushell.treetasker.application.activity;
 
 import org.apache.http.client.ClientProtocolException;
 
@@ -10,14 +10,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.EditText;
 import android.widget.TextView;
 
-import com.sun.org.apache.bcel.internal.generic.ATHROW;
+import com.vaushell.treetasker.R;
+import com.vaushell.treetasker.TreeTaskerADactivity;
 import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.module.UserAuthenticationRequest;
 import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.tools.TT_Tools;
 
-public class TreeTaskerConnectionActivity
+public class TT_ConnectionActivity
     extends Activity
 {
 	// PUBLIC
@@ -36,14 +39,40 @@ public class TreeTaskerConnectionActivity
 
 	// PROTECTED
 	@Override
+	protected void onActivityResult( int requestCode,
+	                                 int resultCode,
+	                                 Intent data )
+	{
+		if ( resultCode == RESULT_OK )
+		{
+			// Utilisateur authentifié, charger les données. Utiliser un Loader
+			// apparemment
+			( (EditText) findViewById( R.id.aTXTloginValue ) ).setText( data.getStringExtra( TreeTaskerADactivity.USERNAME ) );
+		}
+	}
+
+	@Override
 	protected Dialog onCreateDialog( int id )
 	{
 		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder( this );
 		switch ( id )
 		{
-			case AUTHENTICATION_KO_DIALOG:
+			case UserSession.MESSAGE_BAD_AUTHENTICATION:
 				dialogBuilder.setTitle( R.string.error )
 				             .setMessage( R.string.not_authenticated )
+				             .setNeutralButton( R.string.ok,
+				                                new DialogInterface.OnClickListener()
+				                                {
+					                                public void onClick( DialogInterface dialog,
+					                                                     int which )
+					                                {
+						                                dialog.dismiss();
+					                                }
+				                                } );
+				break;
+			case UserSession.MESSAGE_REGISTRATION_NOT_VALIDATED:
+				dialogBuilder.setTitle( R.string.error )
+				             .setMessage( R.string.registration_not_validated )
 				             .setNeutralButton( R.string.ok,
 				                                new DialogInterface.OnClickListener()
 				                                {
@@ -68,17 +97,16 @@ public class TreeTaskerConnectionActivity
 				                                } );
 				break;
 			default:
-				throw new RuntimeException( "ID de dialog impossible." );
+				throw new RuntimeException( "ID de dialog inconnu: " + id );
 		}
 
 		return dialogBuilder.create();
 	}
 
 	// PRIVATE
-	private static final int	          AUTHENTICATION_KO_DIALOG	= 0;
-	private static final int	          SERVER_KO_DIALOG	       = 1;
+	private static final int	          SERVER_KO_DIALOG	= -1;
 
-	private static final SimpleJsonClient	client	               = new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/login" );
+	private static final SimpleJsonClient	client	       = new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/login" );
 
 	private void initListeners()
 	{
@@ -87,6 +115,13 @@ public class TreeTaskerConnectionActivity
 			public void onClick( View v )
 			{
 				login();
+			}
+		} );
+		findViewById( R.id.aBTregister ).setOnClickListener( new OnClickListener()
+		{
+			public void onClick( View v )
+			{
+				launchRegisterActivity();
 			}
 		} );
 	}
@@ -103,7 +138,7 @@ public class TreeTaskerConnectionActivity
 		if ( username.length() == 0
 		     || password.length() == 0 )
 		{
-			showDialog( AUTHENTICATION_KO_DIALOG );
+			showDialog( UserSession.MESSAGE_BAD_AUTHENTICATION );
 		}
 		else
 		{
@@ -111,28 +146,16 @@ public class TreeTaskerConnectionActivity
 		}
 	}
 
-	// TODO:
-	// - Faire l'authentification sur la base
-	// - Si OK, retourner une userSession à l'activity parent
-	// - Si NOK, afficher une popup d'avertissement
 	private void checkForUserAuthentication( String username,
 	                                         String password )
 	{
-
-		// TODO: Code pour se connecter à la base et vérifier l'authentification
-		// UserSession session = TreeTaskerADactivity.client
-		// .resource( "http://vsh2-test.appspot.com/resources/login" )
-		// .type( MediaType.APPLICATION_JSON )
-		// .post( UserSession.class,
-		// new UserAuthenticationRequest(
-		// username,
-		// password ) );
 		try
 		{
 			UserSession session = client.post( UserSession.class,
 			                                   new UserAuthenticationRequest(
 			                                                                  username,
-			                                                                  password ) );
+			                                                                  TT_Tools.encryptPassword( username,
+			                                                                                            password ) ) );
 
 			boolean authenticated = session.getSessionState() == UserSession.SESSION_OK;
 			if ( authenticated )
@@ -146,12 +169,18 @@ public class TreeTaskerConnectionActivity
 			}
 			else
 			{
-				showDialog( AUTHENTICATION_KO_DIALOG );
+				showDialog( session.getSessionMessage() );
 			}
 		}
 		catch ( ClientProtocolException e )
 		{
 			showDialog( SERVER_KO_DIALOG );
 		}
+	}
+
+	private void launchRegisterActivity()
+	{
+		Intent intent = new Intent( this, TT_RegisterActivity.class );
+		startActivityForResult( intent, 0 );
 	}
 }

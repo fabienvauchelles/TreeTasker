@@ -5,7 +5,7 @@
     android:layout_gravity="center"
     android:gravity="center"
     android:orientation="vertical" >
-
+    
     <TextView
         android:id="@+id/aLBLtitle"
         android:layout_width="wrap_content"
@@ -13,45 +13,37 @@
         android:layout_marginTop="20dp"
         android:text="@string/app_display_name"
         android:textAppearance="?android:attr/textAppearanceLarge" />
-
+
     <TextView
-        android:id="@+id/aLBLconnectTitle"
+        android:id="@+id/aLBLregisterTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
-        android:text="@string/connect"
+        android:text="@string/register"
         android:textAppearance="?android:attr/textAppearanceMedium" />
-
+
     <EditText
-        android:id="@+id/aTXTloginValue"
+        android:id="@+id/aTXTregisterMailValue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:ems="10"
-        android:hint="@string/login" >
+        android:hint="@string/valid_mail" >
 
         <requestFocus />
     </EditText>
-
+
     <EditText
-        android:id="@+id/aTXTpasswordValue"
+        android:id="@+id/aTXTregisterPasswordValue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:ems="10"
         android:hint="@string/password"
         android:inputType="textPassword" />
-
+
     <Button
-        android:id="@+id/aBTconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:text="@string/connect" />
-
-    <Button
-        android:id="@+id/aBTregister"
-        style="?android:attr/buttonStyleSmall"
+        android:id="@+id/aBTregisterUser"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"

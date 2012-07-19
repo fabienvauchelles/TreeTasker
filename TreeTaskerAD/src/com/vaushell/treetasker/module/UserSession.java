@@ -3,9 +3,12 @@ package com.vaushell.treetasker.module;
 public class UserSession
 {
 	// PUBLIC
-	public static final int SESSION_NOK = 0;
-	public static final int SESSION_OK = 1;
-	
+	public static final int	SESSION_NOK	                       = 0;
+	public static final int	SESSION_OK	                       = 1;
+	public static final int	MESSAGE_REGISTERED	               = 0;
+	public static final int	MESSAGE_REGISTRATION_NOT_VALIDATED	= 1;
+	public static final int	MESSAGE_BAD_AUTHENTICATION	       = 2;
+
 	public UserSession()
 	{
 		this.sessionState = SESSION_NOK;
@@ -18,6 +21,7 @@ public class UserSession
 		this.userName = userName;
 		this.userSessionID = userSessionID;
 		this.sessionState = SESSION_OK;
+		this.sessionMessage = MESSAGE_REGISTERED;
 		init();
 	}
 
@@ -40,22 +44,33 @@ public class UserSession
 	{
 		this.userSessionID = userSessionID;
 	}
-	
+
 	public int getSessionState()
-    {
-    	return sessionState;
-    }
+	{
+		return sessionState;
+	}
 
 	public void setSessionState( int sessionState )
-    {
-    	this.sessionState = sessionState;
-    }
+	{
+		this.sessionState = sessionState;
+	}
+
+	public int getSessionMessage()
+	{
+		return sessionMessage;
+	}
+
+	public void setSessionMessage( int sessionMessage )
+	{
+		this.sessionMessage = sessionMessage;
+	}
 
 	// PROTECTED
 	// PRIVATE
 	private String	userName;
 	private String	userSessionID;
-	private int sessionState;
+	private int	   sessionState;
+	private int	   sessionMessage;
 
 	private void init()
 	{
