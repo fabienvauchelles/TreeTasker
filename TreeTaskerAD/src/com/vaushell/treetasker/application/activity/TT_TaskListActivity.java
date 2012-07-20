@@ -12,6 +12,7 @@ import pl.polidea.treeview.TreeViewList;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -64,7 +65,7 @@ public class TT_TaskListActivity
 			public View updateView( View view,
 			                        final TreeNodeInfo<TT_Task> treeNodeInfo )
 			{
-				( (TextView) view.findViewById( R.id.aTXTtaskNameValue ) ).setText( treeNodeInfo.getId()
+				( (TextView) view.findViewById( R.id.aLBLtaskNameValue ) ).setText( treeNodeInfo.getId()
 				                                                                                .getTitle() );
 				final CheckBox cbView = (CheckBox) view.findViewById( R.id.aCBtaskDoneValue );
 				cbView.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener()
@@ -96,7 +97,7 @@ public class TT_TaskListActivity
 			{
 				View taskView = getLayoutInflater().inflate( R.layout.task_view,
 				                                             null );
-				TextView textView = (TextView) taskView.findViewById( R.id.aTXTtaskNameValue );
+				TextView textView = (TextView) taskView.findViewById( R.id.aLBLtaskNameValue );
 				textView.setText( treeNodeInfo.getId().getTitle() );
 				final CheckBox cbView = (CheckBox) taskView.findViewById( R.id.aCBtaskDoneValue );
 				cbView.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener()
@@ -106,8 +107,6 @@ public class TT_TaskListActivity
 					public void onCheckedChanged( CompoundButton buttonView,
 					                              boolean isChecked )
 					{
-						System.out.println( treeNodeInfo.getId().getTitle()
-						                    + " " + isChecked );
 						if ( isChecked )
 						{
 							treeNodeInfo.getId().setStatus( TT_Task.DONE );
@@ -143,6 +142,17 @@ public class TT_TaskListActivity
 	}
 
 	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		if ( currentView != null )
+		{
+			( (TextView) currentView.findViewById( R.id.aLBLtaskNameValue ) ).setText( view2taskMap.get( currentView )
+			                                                                                       .getTitle() );
+		}
+	}
+
+	@Override
 	public void onCreateContextMenu( ContextMenu menu,
 	                                 View v,
 	                                 ContextMenuInfo menuInfo )
@@ -160,9 +170,11 @@ public class TT_TaskListActivity
 		switch ( item.getItemId() )
 		{
 			case R.id.rename:
-				System.out.println( "Renommage de "
-				                    + view2taskMap.get( currentView )
-				                                  .getTitle() );
+				Intent intent = new Intent( this, TT_EditTaskActivity.class );
+				Bundle bundle = new Bundle();
+				bundle.putSerializable( "task", view2taskMap.get( currentView ) );
+				intent.putExtras( bundle );
+				startActivityForResult( intent, EDITION_REQUEST );
 				return true;
 			case R.id.delete:
 				dialogBuilder.setMessage( R.string.confirm_delete_task )
@@ -179,8 +191,6 @@ public class TT_TaskListActivity
 						                                 treeManager.removeNodeRecursively( taskToRemove );
 						                                 taskToRemove.setParent( null );
 						                                 view2taskMap.remove( currentView );
-						                                 System.out.println( "Suppression de "
-						                                                     + taskToRemove.getTitle() );
 					                                 }
 				                                 } )
 				             .setNegativeButton( R.string.cancel,
@@ -203,6 +213,20 @@ public class TT_TaskListActivity
 		}
 	}
 
+	@Override
+	protected void onActivityResult( int requestCode,
+	                                 int resultCode,
+	                                 Intent data )
+	{
+		if ( resultCode == Activity.RESULT_OK && requestCode == EDITION_REQUEST )
+		{
+			// TODO controllerDAO qui copie
+			TT_Task task = (TT_Task) data.getExtras().getSerializable( "task" );
+			view2taskMap.get( currentView ).setTitle( task.getTitle() );
+		}
+	}
+
+	private final static int	      EDITION_REQUEST	= 1;
 	private HashMap<View, TT_Task>	  view2taskMap;
 	private View	                  currentView;
 	private AlertDialog.Builder	      dialogBuilder;

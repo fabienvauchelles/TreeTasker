@@ -1,5 +1,6 @@
 package com.vaushell.treetasker.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -7,7 +8,9 @@ import java.util.List;
 import java.util.Set;
 
 public class TT_Task
+    implements Serializable
 {
+    private static final long serialVersionUID = 1L;
 	public static final int	TODO	= 0;
 	public static final int	DONE	= 1;
 
@@ -72,7 +75,7 @@ public class TT_Task
 	{
 		if ( childTask == null )
 			return;
-		
+
 		if ( !getChildrenTask().contains( childTask ) )
 		{
 			if ( childTask != this && !getAllAncestors().contains( childTask ) )
@@ -106,7 +109,7 @@ public class TT_Task
 
 		if ( parent == null )
 		{
-			this.parentTask.removeChildTask( this );			
+			this.parentTask.removeChildTask( this );
 			this.parentTask = parent;
 		}
 		else if ( parent != this && !parent.getAllAncestors().contains( this ) )
@@ -115,7 +118,7 @@ public class TT_Task
 			{
 				getParent().removeChildTask( this );
 			}
-			this.parentTask = parent;			
+			this.parentTask = parent;
 			parent.addChildTask( this );
 		}
 	}

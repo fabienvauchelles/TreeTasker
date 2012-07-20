@@ -24,5 +24,7 @@
     <string name="delete">Supprimer</string>
     <string name="confirm_delete_task">Êtes-vous sûr de vouloir supprimer cette tâche et son contenu ?</string>
     <string name="cancel">Annuler</string>
+    <string name="title">Titre</string>
+    <string name="save">Sauvegarder</string>
 
 </resources>
