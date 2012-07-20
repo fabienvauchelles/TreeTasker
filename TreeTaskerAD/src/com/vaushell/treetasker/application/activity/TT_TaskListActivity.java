@@ -1,7 +1,9 @@
 package com.vaushell.treetasker.application.activity;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import pl.polidea.treeview.AbstractTreeViewAdapter;
 import pl.polidea.treeview.InMemoryTreeStateManager;
@@ -170,12 +172,14 @@ public class TT_TaskListActivity
 		switch ( item.getItemId() )
 		{
 			case R.id.rename:
-				Intent intent = new Intent( this, TT_EditTaskActivity.class );
-				Bundle bundle = new Bundle();
-				bundle.putSerializable( "task", view2taskMap.get( currentView ) );
-				intent.putExtras( bundle );
-				startActivityForResult( intent, EDITION_REQUEST );
+				Intent editIntent = new Intent( this, TT_EditTaskActivity.class );
+				Bundle editBundle = new Bundle();
+				editBundle.putSerializable( "task",
+				                            view2taskMap.get( currentView ) );
+				editIntent.putExtras( editBundle );
+				startActivityForResult( editIntent, EDITION_REQUEST );
 				return true;
+
 			case R.id.delete:
 				dialogBuilder.setMessage( R.string.confirm_delete_task )
 				             .setCancelable( false )
@@ -187,10 +191,7 @@ public class TT_TaskListActivity
 					                                 public void onClick( DialogInterface dialog,
 					                                                      int which )
 					                                 {
-						                                 TT_Task taskToRemove = view2taskMap.get( currentView );
-						                                 treeManager.removeNodeRecursively( taskToRemove );
-						                                 taskToRemove.setParent( null );
-						                                 view2taskMap.remove( currentView );
+						                                 deleteTaskAndView( currentView );
 					                                 }
 				                                 } )
 				             .setNegativeButton( R.string.cancel,
@@ -208,6 +209,18 @@ public class TT_TaskListActivity
 				alert.show();
 				return true;
 
+			case R.id.addTask:
+				TT_Task newTask = new TT_Task( UUID.randomUUID().toString(),
+				                               "", new Date(), TT_Task.TODO );
+
+				Intent createIntent = new Intent( this,
+				                                  TT_EditTaskActivity.class );
+				Bundle createBundle = new Bundle();
+				createBundle.putSerializable( "task", newTask );
+				createIntent.putExtras( createBundle );
+				startActivityForResult( createIntent, CREATION_REQUEST );
+				return true;
+
 			default:
 				return super.onContextItemSelected( item );
 		}
@@ -218,15 +231,42 @@ public class TT_TaskListActivity
 	                                 int resultCode,
 	                                 Intent data )
 	{
-		if ( resultCode == Activity.RESULT_OK && requestCode == EDITION_REQUEST )
+		if ( resultCode == Activity.RESULT_OK )
 		{
-			// TODO controllerDAO qui copie
-			TT_Task task = (TT_Task) data.getExtras().getSerializable( "task" );
-			view2taskMap.get( currentView ).setTitle( task.getTitle() );
+			switch ( requestCode )
+			{
+				case EDITION_REQUEST:
+					// TODO controllerDAO qui copie
+					TT_Task task = (TT_Task) data.getExtras()
+					                             .getSerializable( "task" );
+					view2taskMap.get( currentView ).setTitle( task.getTitle() );
+					break;
+
+				case CREATION_REQUEST:
+					TT_Task newTask = (TT_Task) data.getExtras()
+					                                .getSerializable( "task" );
+					TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
+					                                                             treeManager );
+					newTask.setParent( view2taskMap.get( currentView ) );
+					treeBuilder.addRelation( view2taskMap.get( currentView ),
+					                         newTask );
+					break;
+			}
+
 		}
 	}
 
+	private void deleteTaskAndView( View taskView )
+	{
+		TT_Task taskToRemove = view2taskMap.get( taskView );
+		treeManager.removeNodeRecursively( taskToRemove );
+		taskToRemove.setParent( null );
+		view2taskMap.remove( taskView );
+	}
+
+	private final static int	      CREATION_REQUEST	= 0;
 	private final static int	      EDITION_REQUEST	= 1;
+
 	private HashMap<View, TT_Task>	  view2taskMap;
 	private View	                  currentView;
 	private AlertDialog.Builder	      dialogBuilder;
