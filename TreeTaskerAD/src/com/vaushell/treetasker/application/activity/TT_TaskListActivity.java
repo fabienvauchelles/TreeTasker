@@ -1,8 +1,8 @@
 package com.vaushell.treetasker.application.activity;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import pl.polidea.treeview.AbstractTreeViewAdapter;
@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,13 +42,14 @@ public class TT_TaskListActivity
 		this.view2taskMap = new HashMap<View, TT_Task>();
 		this.dialogBuilder = new AlertDialog.Builder( this );
 		this.copiedTask = null;
+		this.rootTasksList = new ArrayList<TT_Task>();
 
 		treeManager = new InMemoryTreeStateManager<TT_Task>();
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
 		                                                             treeManager );
 
-		List<TT_Task> tasks = TreeTaskerControllerDAO.getMockTaskList1();
-		for ( TT_Task task : tasks )
+		rootTasksList.addAll( TreeTaskerControllerDAO.getMockTaskList1() );
+		for ( TT_Task task : rootTasksList )
 		{
 			treeBuilder.sequentiallyAddNextNode( task, 0 );
 			buildRecursively( task, treeBuilder );
@@ -134,27 +136,6 @@ public class TT_TaskListActivity
 
 	}
 
-	private void buildRecursively( TT_Task parent,
-	                               TreeBuilder<TT_Task> builder )
-	{
-		for ( TT_Task child : parent.getChildrenTask() )
-		{
-			builder.addRelation( parent, child );
-			buildRecursively( child, builder );
-		}
-	}
-
-	@Override
-	protected void onResume()
-	{
-		super.onResume();
-		if ( currentView != null )
-		{
-			( (TextView) currentView.findViewById( R.id.aLBLtaskNameValue ) ).setText( view2taskMap.get( currentView )
-			                                                                                       .getTitle() );
-		}
-	}
-
 	@Override
 	public void onCreateContextMenu( ContextMenu menu,
 	                                 View v,
@@ -223,7 +204,7 @@ public class TT_TaskListActivity
 				Bundle createBundle = new Bundle();
 				createBundle.putSerializable( "task", newTask );
 				createIntent.putExtras( createBundle );
-				startActivityForResult( createIntent, CREATION_REQUEST );
+				startActivityForResult( createIntent, SUB_TASK_CREATION_REQUEST );
 				return true;
 
 			case R.id.copy:
@@ -231,11 +212,12 @@ public class TT_TaskListActivity
 				return true;
 
 			case R.id.paste:
-				if( copiedTask != null)
+				if ( copiedTask != null )
 				{
 					TT_Task parentTask = view2taskMap.get( currentView );
 					TT_Task childTask = copiedTask.getCopy();
-					TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
+					TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
+					                                                             treeManager );
 					treeBuilder.addRelation( parentTask, childTask );
 					buildRecursively( childTask, treeBuilder );
 				}
@@ -247,12 +229,55 @@ public class TT_TaskListActivity
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu( Menu menu )
+	{
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate( R.menu.add_root_task_menu, menu );
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected( MenuItem item )
+	{
+		switch ( item.getItemId() )
+		{
+			case R.id.addRootTask:
+				TT_Task newTask = new TT_Task( UUID.randomUUID().toString(),
+				                               "", new Date(), TT_Task.TODO );
+
+				Intent createIntent = new Intent( this,
+				                                  TT_EditTaskActivity.class );
+				Bundle createBundle = new Bundle();
+				createBundle.putSerializable( "task", newTask );
+				createIntent.putExtras( createBundle );
+				startActivityForResult( createIntent,
+				                        ROOT_TASK_CREATION_REQUEST );
+				return true;
+			default:
+				return super.onOptionsItemSelected( item );
+		}
+	}
+
+	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		if ( currentView != null )
+		{
+			( (TextView) currentView.findViewById( R.id.aLBLtaskNameValue ) ).setText( view2taskMap.get( currentView )
+			                                                                                       .getTitle() );
+		}
+	}
+
+	@Override
 	protected void onActivityResult( int requestCode,
 	                                 int resultCode,
 	                                 Intent data )
 	{
 		if ( resultCode == Activity.RESULT_OK )
 		{
+			TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
+			                                                             treeManager );
 			switch ( requestCode )
 			{
 				case EDITION_REQUEST:
@@ -262,14 +287,19 @@ public class TT_TaskListActivity
 					view2taskMap.get( currentView ).setTitle( task.getTitle() );
 					break;
 
-				case CREATION_REQUEST:
-					TT_Task newTask = (TT_Task) data.getExtras()
-					                                .getSerializable( "task" );
-					TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
-					                                                             treeManager );
-					newTask.setParent( view2taskMap.get( currentView ) );
+				case SUB_TASK_CREATION_REQUEST:
+					TT_Task newSubTask = (TT_Task) data.getExtras()
+					                                   .getSerializable( "task" );
+					newSubTask.setParent( view2taskMap.get( currentView ) );
 					treeBuilder.addRelation( view2taskMap.get( currentView ),
-					                         newTask );
+					                         newSubTask );
+					break;
+
+				case ROOT_TASK_CREATION_REQUEST:
+					TT_Task newRootTask = (TT_Task) data.getExtras()
+					                                    .getSerializable( "task" );
+					rootTasksList.add( newRootTask );
+					treeBuilder.sequentiallyAddNextNode( newRootTask, 0 );
 					break;
 			}
 
@@ -279,18 +309,32 @@ public class TT_TaskListActivity
 	private void deleteTaskAndView( View taskView )
 	{
 		TT_Task taskToRemove = view2taskMap.get( taskView );
+		rootTasksList.remove( taskToRemove );
 		treeManager.removeNodeRecursively( taskToRemove );
 		taskToRemove.setParent( null );
 		view2taskMap.remove( taskView );
 	}
 
-	private final static int	      CREATION_REQUEST	= 0;
-	private final static int	      EDITION_REQUEST	= 1;
+	private void buildRecursively( TT_Task parent,
+	                               TreeBuilder<TT_Task> builder )
+	{
+		for ( TT_Task child : parent.getChildrenTask() )
+		{
+			builder.addRelation( parent, child );
+			buildRecursively( child, builder );
+		}
+	}
+
+	private final static int	      SUB_TASK_CREATION_REQUEST	 = 0;
+	private final static int	      ROOT_TASK_CREATION_REQUEST	= 1;
+	private final static int	      EDITION_REQUEST	         = 2;
 
 	private HashMap<View, TT_Task>	  view2taskMap;
 	private View	                  currentView;
 	private AlertDialog.Builder	      dialogBuilder;
 	private TreeStateManager<TT_Task>	treeManager;
 	private TT_Task	                  copiedTask;
+
+	private ArrayList<TT_Task>	      rootTasksList;
 
 }

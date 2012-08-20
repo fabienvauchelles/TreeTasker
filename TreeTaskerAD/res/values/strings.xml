@@ -16,8 +16,8 @@
     <string name="achieved">Réussi !</string>
     <string name="register_achieved">L\'enregistrement a réussi. Un mail vient de vous être envoyé. Vous devez valider votre compte avant de pouvoir l\'utiliser.</string>
     <string name="registration_not_validated">Vous devez valider votre inscription avant de pouvoir vous connecter.</string>
-    <string name="addTask">Ajouter des tâches</string>
-    <string name="renameTask">Renommer la tâche</string>
+    <string name="add_sub_task">Ajouter une sous-tâche</string>
+    <string name="rename_task">Renommer la tâche</string>
     <string name="rename">Renommer</string>
     <string name="copy">Copier</string>
     <string name="paste">Coller</string>
@@ -26,5 +26,6 @@
     <string name="cancel">Annuler</string>
     <string name="title">Titre</string>
     <string name="save">Sauvegarder</string>
+    <string name="add_root_task">Ajouter une tâche</string>
 
 </resources>
