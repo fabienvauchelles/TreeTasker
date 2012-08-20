@@ -27,8 +27,8 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.vaushell.treetasker.R;
+import com.vaushell.treetasker.application.storage.TaskDB;
 import com.vaushell.treetasker.model.TT_Task;
-import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
 
 public class TT_TaskListActivity
     extends Activity
@@ -48,11 +48,28 @@ public class TT_TaskListActivity
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
 		                                                             treeManager );
 
-		rootTasksList.addAll( TreeTaskerControllerDAO.getMockTaskList1() );
+		TaskDB taskDB = new TaskDB( getApplicationContext() );
+		taskDB.open();
+		taskDB.readTasksInfo();
+		rootTasksList.addAll( taskDB.getRootTasks() );
+		taskDB.close();
+
 		for ( TT_Task task : rootTasksList )
 		{
 			treeBuilder.sequentiallyAddNextNode( task, 0 );
 			buildRecursively( task, treeBuilder );
+		}
+
+		for ( TT_Task task : taskDB.getExpandedMap().keySet() )
+		{
+			if ( !taskDB.getExpandedMap().get( task ) )
+			{
+				treeManager.collapseChildren( task );
+			}
+			else
+			{
+				treeManager.expandDirectChildren( task );
+			}
 		}
 
 		AbstractTreeViewAdapter<TT_Task> adapter = new AbstractTreeViewAdapter<TT_Task>( this,
@@ -73,22 +90,30 @@ public class TT_TaskListActivity
 				( (TextView) view.findViewById( R.id.aLBLtaskNameValue ) ).setText( treeNodeInfo.getId()
 				                                                                                .getTitle() );
 				final CheckBox cbView = (CheckBox) view.findViewById( R.id.aCBtaskDoneValue );
-				cbView.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener()
+				cbView.setOnCheckedChangeListener( null );
+				cbView.setChecked( treeNodeInfo.getId().getStatus() == TT_Task.DONE );
+				cbView.setOnCheckedChangeListener( new CheckBox.OnCheckedChangeListener()
 				{
 
 					@Override
 					public void onCheckedChanged( CompoundButton buttonView,
 					                              boolean isChecked )
 					{
-						System.out.println( treeNodeInfo.getId().getTitle()
-						                    + " " + isChecked );
 						if ( isChecked )
 						{
 							treeNodeInfo.getId().setStatus( TT_Task.DONE );
+							System.out.println( treeNodeInfo.getId().getTitle()
+							                    + " is done ! "
+							                    + treeNodeInfo.getId()
+							                                  .getStatus() );
 						}
 						else
 						{
 							treeNodeInfo.getId().setStatus( TT_Task.TODO );
+							System.out.println( treeNodeInfo.getId().getTitle()
+							                    + " is todo ! "
+							                    + treeNodeInfo.getId()
+							                                  .getStatus() );
 						}
 
 					}
@@ -102,29 +127,8 @@ public class TT_TaskListActivity
 			{
 				View taskView = getLayoutInflater().inflate( R.layout.task_view,
 				                                             null );
-				TextView textView = (TextView) taskView.findViewById( R.id.aLBLtaskNameValue );
-				textView.setText( treeNodeInfo.getId().getTitle() );
-				final CheckBox cbView = (CheckBox) taskView.findViewById( R.id.aCBtaskDoneValue );
-				cbView.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener()
-				{
-
-					@Override
-					public void onCheckedChanged( CompoundButton buttonView,
-					                              boolean isChecked )
-					{
-						if ( isChecked )
-						{
-							treeNodeInfo.getId().setStatus( TT_Task.DONE );
-						}
-						else
-						{
-							treeNodeInfo.getId().setStatus( TT_Task.TODO );
-						}
-
-					}
-				} );
+				updateView( taskView, treeNodeInfo );
 				registerForContextMenu( taskView );
-				view2taskMap.put( taskView, treeNodeInfo.getId() );
 
 				return taskView;
 			}
@@ -219,6 +223,7 @@ public class TT_TaskListActivity
 					TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
 					                                                             treeManager );
 					treeBuilder.addRelation( parentTask, childTask );
+					childTask.setParent( parentTask );
 					buildRecursively( childTask, treeBuilder );
 				}
 				return true;
@@ -270,6 +275,22 @@ public class TT_TaskListActivity
 	}
 
 	@Override
+	protected void onPause()
+	{
+		super.onPause();
+		TaskDB taskDB = new TaskDB( getApplicationContext() );
+		taskDB.open();
+
+		taskDB.resetTable();
+		for ( TT_Task taskToSave : rootTasksList )
+		{
+			saveRecursively( taskToSave, taskDB );
+		}
+
+		taskDB.close();
+	}
+
+	@Override
 	protected void onActivityResult( int requestCode,
 	                                 int resultCode,
 	                                 Intent data )
@@ -302,9 +323,20 @@ public class TT_TaskListActivity
 					treeBuilder.sequentiallyAddNextNode( newRootTask, 0 );
 					break;
 			}
-
 		}
 	}
+
+	private final static int	      SUB_TASK_CREATION_REQUEST	 = 0;
+	private final static int	      ROOT_TASK_CREATION_REQUEST	= 1;
+	private final static int	      EDITION_REQUEST	         = 2;
+
+	private HashMap<View, TT_Task>	  view2taskMap;
+	private View	                  currentView;
+	private AlertDialog.Builder	      dialogBuilder;
+	private TreeStateManager<TT_Task>	treeManager;
+	private TT_Task	                  copiedTask;
+
+	private ArrayList<TT_Task>	      rootTasksList;
 
 	private void deleteTaskAndView( View taskView )
 	{
@@ -325,16 +357,19 @@ public class TT_TaskListActivity
 		}
 	}
 
-	private final static int	      SUB_TASK_CREATION_REQUEST	 = 0;
-	private final static int	      ROOT_TASK_CREATION_REQUEST	= 1;
-	private final static int	      EDITION_REQUEST	         = 2;
+	private void saveRecursively( TT_Task taskToSave,
+	                              TaskDB taskDB )
+	{
+		if ( taskToSave == null )
+		{
+			return;
+		}
 
-	private HashMap<View, TT_Task>	  view2taskMap;
-	private View	                  currentView;
-	private AlertDialog.Builder	      dialogBuilder;
-	private TreeStateManager<TT_Task>	treeManager;
-	private TT_Task	                  copiedTask;
-
-	private ArrayList<TT_Task>	      rootTasksList;
-
+		taskDB.insertTask( taskToSave, treeManager.getNodeInfo( taskToSave )
+		                                          .isExpanded() );
+		for ( TT_Task child : taskToSave.getChildrenTask() )
+		{
+			saveRecursively( child, taskDB );
+		}
+	}
 }

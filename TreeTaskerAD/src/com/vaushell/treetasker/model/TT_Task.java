@@ -15,6 +15,12 @@ public class TT_Task
 	public static final int	  TODO	             = 0;
 	public static final int	  DONE	             = 1;
 
+	public TT_Task()
+	{
+		this( null, null, null, TODO );
+		init();
+	}
+
 	public TT_Task( String ID,
 	                String title,
 	                Date lastModificationDate,
@@ -144,7 +150,7 @@ public class TT_Task
 		                            new Date(), status );
 		for ( TT_Task childTask : childrenTask )
 		{
-			copy.childrenTask.add( childTask.getCopy() );
+			childTask.getCopy().setParent( copy );
 		}
 		return copy;
 	}
