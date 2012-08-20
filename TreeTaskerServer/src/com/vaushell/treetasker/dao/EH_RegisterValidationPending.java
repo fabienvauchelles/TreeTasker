@@ -1,5 +1,8 @@
 package com.vaushell.treetasker.dao;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import com.google.appengine.api.datastore.Entity;
 
 public class EH_RegisterValidationPending
@@ -14,6 +17,9 @@ public class EH_RegisterValidationPending
 		super( KIND, login );
 		this.login = login;
 		this.validKey = validKey;
+		Calendar calendar = Calendar.getInstance();
+		calendar.add( Calendar.HOUR_OF_DAY, 48 );
+		this.expirationDate = calendar.getTime();
 		init();
 	}
 
@@ -23,6 +29,7 @@ public class EH_RegisterValidationPending
 
 		this.login = (String) entity.getKey().getName();
 		this.validKey = (String) entity.getProperty( "validKey" );
+		this.expirationDate = (Date) entity.getProperty( "expirationDate" );
 	}
 
 	public String getLogin()
@@ -35,10 +42,21 @@ public class EH_RegisterValidationPending
 		return validKey;
 	}
 
+	public Date getExpirationDate()
+    {
+    	return expirationDate;
+    }
+
+	public void setExpirationDate( Date expirationDate )
+    {
+    	this.expirationDate = expirationDate;
+    }
+
 	@Override
 	public Entity getEntity()
 	{
 		entity.setProperty( "validKey", getValidKey() );
+		entity.setProperty( "expirationDate", getExpirationDate() );
 
 		return entity;
 	}
@@ -55,6 +73,7 @@ public class EH_RegisterValidationPending
 	// PRIVATE
 	private String	login;
 	private String	validKey;
+	private Date expirationDate;
 
 	private void init()
 	{

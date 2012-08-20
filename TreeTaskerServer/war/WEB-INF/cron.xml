@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+	<cron>
+		<url>/cron/reg-clean</url>
+		<description>Hourly cleans pending registrations that exceeds 48 hours of validity</description>
+		<schedule>every 1 hours synchronized</schedule>
+		<timezone>Europe/Paris</timezone>
+	</cron>
+</cronentries>
