@@ -6,13 +6,14 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class TT_Task
     implements Serializable
 {
-    private static final long serialVersionUID = 1L;
-	public static final int	TODO	= 0;
-	public static final int	DONE	= 1;
+	private static final long	serialVersionUID	= 1L;
+	public static final int	  TODO	             = 0;
+	public static final int	  DONE	             = 1;
 
 	public TT_Task( String ID,
 	                String title,
@@ -135,6 +136,17 @@ public class TT_Task
 			ancestors.add( getParent() );
 			return ancestors;
 		}
+	}
+
+	public TT_Task getCopy()
+	{
+		TT_Task copy = new TT_Task( UUID.randomUUID().toString(), title,
+		                            new Date(), status );
+		for ( TT_Task childTask : childrenTask )
+		{
+			copy.childrenTask.add( childTask.getCopy() );
+		}
+		return copy;
 	}
 
 	private void init()

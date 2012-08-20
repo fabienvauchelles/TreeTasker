@@ -40,6 +40,7 @@ public class TT_TaskListActivity
 
 		this.view2taskMap = new HashMap<View, TT_Task>();
 		this.dialogBuilder = new AlertDialog.Builder( this );
+		this.copiedTask = null;
 
 		treeManager = new InMemoryTreeStateManager<TT_Task>();
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
@@ -164,6 +165,10 @@ public class TT_TaskListActivity
 		MenuInflater inflater = getMenuInflater();
 
 		inflater.inflate( R.menu.task_menu, menu );
+		if ( copiedTask == null )
+		{
+			menu.findItem( R.id.paste ).setEnabled( false );
+		}
 	}
 
 	@Override
@@ -221,6 +226,21 @@ public class TT_TaskListActivity
 				startActivityForResult( createIntent, CREATION_REQUEST );
 				return true;
 
+			case R.id.copy:
+				copiedTask = view2taskMap.get( currentView ).getCopy();
+				return true;
+
+			case R.id.paste:
+				if( copiedTask != null)
+				{
+					TT_Task parentTask = view2taskMap.get( currentView );
+					TT_Task childTask = copiedTask.getCopy();
+					TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
+					treeBuilder.addRelation( parentTask, childTask );
+					buildRecursively( childTask, treeBuilder );
+				}
+				return true;
+
 			default:
 				return super.onContextItemSelected( item );
 		}
@@ -271,5 +291,6 @@ public class TT_TaskListActivity
 	private View	                  currentView;
 	private AlertDialog.Builder	      dialogBuilder;
 	private TreeStateManager<TT_Task>	treeManager;
+	private TT_Task	                  copiedTask;
 
 }
