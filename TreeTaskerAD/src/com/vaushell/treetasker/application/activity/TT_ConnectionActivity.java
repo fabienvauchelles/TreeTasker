@@ -14,7 +14,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.vaushell.treetasker.R;
-import com.vaushell.treetasker.TreeTaskerADactivity;
 import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.module.UserAuthenticationRequest;
 import com.vaushell.treetasker.module.UserSession;
@@ -47,7 +46,7 @@ public class TT_ConnectionActivity
 		{
 			// Utilisateur authentifié, charger les données. Utiliser un Loader
 			// apparemment
-			( (EditText) findViewById( R.id.aTXTloginValue ) ).setText( data.getStringExtra( TreeTaskerADactivity.USERNAME ) );
+			( (EditText) findViewById( R.id.aTXTloginValue ) ).setText( data.getStringExtra( TT_TaskListActivity.USERNAME ) );
 		}
 	}
 
@@ -161,8 +160,8 @@ public class TT_ConnectionActivity
 			if ( authenticated )
 			{
 				Intent okIntent = new Intent();
-				okIntent.putExtra( TreeTaskerADactivity.USERNAME, username );
-				okIntent.putExtra( TreeTaskerADactivity.SESSIONID,
+				okIntent.putExtra( TT_TaskListActivity.USERNAME, username );
+				okIntent.putExtra( TT_TaskListActivity.SESSIONID,
 				                   session.getUserSessionID() );
 				setResult( RESULT_OK, okIntent );
 				finish();

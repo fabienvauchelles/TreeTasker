@@ -1,5 +1,6 @@
 package com.vaushell.treetasker.client;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -11,6 +12,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import com.vaushell.treetasker.tools.TT_Tools;
@@ -35,7 +37,7 @@ public class SimpleJsonClient
 		return this;
 	}
 
-	public <T> T post( Class<T> classOfT,
+	public <T> T post( Class<T> responseClass,
 	                   Object objectToSend )
 	    throws ClientProtocolException
 	{
@@ -72,9 +74,23 @@ public class SimpleJsonClient
 
 		try
 		{
-			return gson.fromJson( new InputStreamReader( response.getEntity()
-			                                                     .getContent() ),
-			                      classOfT );
+			BufferedReader isReader = new BufferedReader(
+			                                              new InputStreamReader(
+			                                                                     response.getEntity()
+			                                                                             .getContent() ) );
+
+			StringBuilder builder = new StringBuilder();
+
+			String line = isReader.readLine();
+			while ( line != null )
+			{
+				builder.append( line );
+				System.out.println( line );
+				line = isReader.readLine();
+			}
+
+			return gson.fromJson( builder.toString(),
+			                      responseClass );
 		}
 		catch ( JsonSyntaxException e )
 		{
@@ -96,7 +112,8 @@ public class SimpleJsonClient
 
 	// PROTECTED
 	// PRIVATE
-	private final Gson	            gson	= new Gson();
+	private final Gson	            gson	= new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" )
+	                                                           .create();
 	private final DefaultHttpClient	client	= new DefaultHttpClient();
 	private String	                resource;
 	private String	                path;

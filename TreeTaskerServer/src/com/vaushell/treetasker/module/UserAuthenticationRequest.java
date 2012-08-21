@@ -8,7 +8,7 @@ public class UserAuthenticationRequest
 	// PUBLIC
 	public UserAuthenticationRequest()
 	{
-		init();
+		this( null, null );
 	}
 
 	public UserAuthenticationRequest( String login,
@@ -16,6 +16,7 @@ public class UserAuthenticationRequest
 	{
 		this.login = login;
 		this.password = password;
+		init();
 	}
 
 	public String getLogin()

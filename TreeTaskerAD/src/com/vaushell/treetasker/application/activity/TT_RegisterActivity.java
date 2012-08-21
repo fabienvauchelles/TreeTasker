@@ -13,7 +13,6 @@ import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 import com.vaushell.treetasker.R;
-import com.vaushell.treetasker.TreeTaskerADactivity;
 import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.module.UserAuthenticationRequest;
 import com.vaushell.treetasker.module.UserSession;
@@ -83,7 +82,7 @@ public class TT_RegisterActivity
 				                                } );
 				break;
 			default:
-				throw new RuntimeException( "ID de dialog inconnu: " + id);
+				throw new RuntimeException( "ID de dialog inconnu: " + id );
 		}
 
 		return dialogBuilder.create();
@@ -142,7 +141,7 @@ public class TT_RegisterActivity
 			if ( authenticated )
 			{
 				Intent okIntent = new Intent();
-				okIntent.putExtra( TreeTaskerADactivity.USERNAME, mail );
+				okIntent.putExtra( TT_TaskListActivity.USERNAME, mail );
 				setResult( RESULT_OK, okIntent );
 				showDialog( REGISTER_OK_DIALOG );
 			}

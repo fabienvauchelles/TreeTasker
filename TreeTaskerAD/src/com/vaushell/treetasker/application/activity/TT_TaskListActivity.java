@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.apache.http.client.ClientProtocolException;
+
 import pl.polidea.treeview.AbstractTreeViewAdapter;
 import pl.polidea.treeview.TreeNodeInfo;
 import pl.polidea.treeview.TreeStateManager;
@@ -25,12 +27,19 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.vaushell.treetasker.R;
+import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.model.TT_Task;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
+import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.module.UserSessionCheckRequest;
 
 public class TT_TaskListActivity
     extends Activity
 {
+	// PUBLIC
+	public static final String	USERNAME	= "USERNAME";
+	public static final String	SESSIONID	= "SESSIONID";
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate( Bundle savedInstanceState )
@@ -105,6 +114,18 @@ public class TT_TaskListActivity
 		registerForContextMenu( findViewById( R.id.treeTaskView ) );
 		treeView.setAdapter( adapter );
 
+		// Si l'utilisateur n'est pas authentifié
+		if ( savedInstanceState != null
+		     && savedInstanceState.containsKey( USERNAME )
+		     && savedInstanceState.containsKey( SESSIONID ) )
+		{
+			session = new UserSession(
+			                           savedInstanceState.getString( USERNAME ),
+			                           savedInstanceState.getString( SESSIONID ) );
+		}
+
+		if ( !checkSession() )
+			requestAuthentication();
 	}
 
 	@Override
@@ -263,12 +284,19 @@ public class TT_TaskListActivity
 				                        ROOT_TASK_CREATION_REQUEST );
 				return true;
 			}
+			case R.id.synchronizeTasks:
+			{
+				TreeTaskerControllerDAO.getInstance()
+				                       .synchronizeWithDatastore( session );
+				return true;
+			}
 
 			default:
 				return super.onOptionsItemSelected( item );
 		}
 	}
 
+	// PROTECTED
 	@Override
 	protected void onResume()
 	{
@@ -289,52 +317,116 @@ public class TT_TaskListActivity
 	}
 
 	@Override
+	protected void onSaveInstanceState( Bundle outState )
+	{
+		super.onSaveInstanceState( outState );
+		if ( session != null )
+		{
+			outState.putString( USERNAME, session.getUserName() );
+			outState.putString( SESSIONID, session.getUserSessionID() );
+		}
+	}
+
+	@Override
 	protected void onActivityResult( int requestCode,
 	                                 int resultCode,
 	                                 Intent data )
 	{
-		if ( resultCode == Activity.RESULT_OK )
+		System.out.println( requestCode );
+		switch ( requestCode )
 		{
-			switch ( requestCode )
-			{
-				case EDITION_REQUEST:
-					// TODO controllerDAO qui copie
+			case CONNECTION_REQUEST:
+				if ( resultCode == Activity.RESULT_OK )
+				{
+					System.out.println( "Username from connection: "
+					                    + data.getStringExtra( USERNAME ) );
+					session = new UserSession( data.getStringExtra( USERNAME ),
+					                           data.getStringExtra( SESSIONID ) );
+				}
+				else
+				{
+					finish();
+				}
+				break;
+			case EDITION_REQUEST:
+				// TODO controllerDAO qui copie
+				if ( resultCode == Activity.RESULT_OK )
+				{
 					TT_Task task = (TT_Task) data.getExtras()
 					                             .getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance()
 					                       .edit( getCurrentTask(),
 					                              task.getTitle(),
 					                              task.getDescription() );
-					break;
+				}
+				break;
 
-				case SUB_TASK_CREATION_REQUEST:
+			case SUB_TASK_CREATION_REQUEST:
+				if ( resultCode == Activity.RESULT_OK )
+				{
 					TT_Task newSubTask = (TT_Task) data.getExtras()
 					                                   .getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance()
 					                       .addSubTask( getCurrentTask(),
 					                                    newSubTask );
-					break;
+				}
+				break;
 
-				case ROOT_TASK_CREATION_REQUEST:
+			case ROOT_TASK_CREATION_REQUEST:
+				if ( resultCode == Activity.RESULT_OK )
+				{
 					TT_Task newRootTask = (TT_Task) data.getExtras()
 					                                    .getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance()
 					                       .addRootTask( newRootTask );
-					break;
-			}
+				}
+				break;
+			default:
+				System.out.println( "Je n'ai reçu aucune activité mek" );
 		}
 	}
 
-	private final static int	   SUB_TASK_CREATION_REQUEST	= 0;
-	private final static int	   ROOT_TASK_CREATION_REQUEST	= 1;
-	private final static int	   EDITION_REQUEST	          = 2;
+	// PRIVATE
+	private final static int	          CONNECTION_REQUEST	     = 4;
+	private final static int	          SUB_TASK_CREATION_REQUEST	 = 0;
+	private final static int	          ROOT_TASK_CREATION_REQUEST	= 1;
+	private final static int	          EDITION_REQUEST	         = 2;
 
-	private HashMap<View, TT_Task>	view2taskMap;
-	private View	               currentView;
-	private AlertDialog.Builder	   dialogBuilder;
+	private final static SimpleJsonClient	client	                 = new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/check" );
+	private UserSession	                  session	                 = null;
+	private HashMap<View, TT_Task>	      view2taskMap;
+	private View	                      currentView;
+	private AlertDialog.Builder	          dialogBuilder;
 
 	private TT_Task getCurrentTask()
 	{
 		return view2taskMap.get( currentView );
+	}
+
+	private boolean checkSession()
+	{
+		if ( session == null )
+			return false;
+		else
+		{
+			try
+			{
+				UserSession sessionResponse = client.post( UserSession.class,
+				                                           new UserSessionCheckRequest(
+				                                                                        session.getUserSessionID(),
+				                                                                        session.getUserName() ) );
+				return sessionResponse.getSessionState() == UserSession.SESSION_OK;
+			}
+			catch ( ClientProtocolException e )
+			{
+				return false;
+			}
+		}
+	}
+
+	private void requestAuthentication() // Afficher l'activity de connexion
+	{
+		Intent intent = new Intent( this, TT_ConnectionActivity.class );
+		startActivityForResult( intent, CONNECTION_REQUEST );
 	}
 }

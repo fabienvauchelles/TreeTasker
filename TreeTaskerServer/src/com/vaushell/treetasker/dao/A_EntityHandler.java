@@ -1,23 +1,22 @@
 package com.vaushell.treetasker.dao;
 
-import java.util.UUID;
-
 import com.google.appengine.api.datastore.Entity;
 
 public abstract class A_EntityHandler
 {
 	// PUBLIC
-	public A_EntityHandler( Entity entity )
+	public A_EntityHandler( String kind,
+	                        Entity entity )
 	{
-		if ( entity == null )
+		if ( entity == null
+		     || kind == null )
 			throw new NullPointerException();
 
+		this.kind = kind;
+		checkKindsDoMatch( entity );
 		this.entity = entity;
-	}
-
-	public A_EntityHandler( String kind )
-	{
-		this( kind, UUID.randomUUID().toString() );
+		
+		this.handleEntity( entity );
 	}
 
 	public A_EntityHandler( String kind,
@@ -28,10 +27,27 @@ public abstract class A_EntityHandler
 		     || key == null
 		     || key.trim().isEmpty() )
 			throw new E_InvalidEntityHandling(
-			                                    String.format( "Illegal kind or key used: kind='%s' key=''",
-			                                                   kind,
-			                                                   key ) );
+			                                   String.format( "Illegal kind or key used: kind='%s' key='%s'",
+			                                                  kind,
+			                                                  key ) );
+		this.kind = kind;
 		this.entity = new Entity( kind, key );
+	}
+
+	public A_EntityHandler( String kind,
+	                        String key,
+	                        Entity parentEntity )
+	{
+		if ( kind == null
+		     || kind.trim().isEmpty()
+		     || key == null
+		     || key.trim().isEmpty() )
+			throw new E_InvalidEntityHandling(
+			                                   String.format( "Illegal kind or key used: kind='%s' key='%s'",
+			                                                  kind,
+			                                                  key ) );
+		this.kind = kind;
+		this.entity = new Entity( kind, key, parentEntity.getKey() );
 	}
 
 	public A_EntityHandler( String kind,
@@ -40,15 +56,30 @@ public abstract class A_EntityHandler
 		if ( kind == null
 		     || kind.trim().isEmpty() )
 			throw new E_InvalidEntityHandling(
-			                                    String.format( "Illegal kind used: kind='%s' key=''",
-			                                                   kind,
-			                                                   key ) );
+			                                   String.format( "Illegal kind used: kind='%s' key='%s'",
+			                                                  kind,
+			                                                  key ) );
+		this.kind = kind;
 		this.entity = new Entity( kind, key );
+	}
+
+	public A_EntityHandler( String kind,
+	                        long key,
+	                        Entity parentEntity )
+	{
+		if ( kind == null
+		     || kind.trim().isEmpty() )
+			throw new E_InvalidEntityHandling(
+			                                   String.format( "Illegal kind used: kind='%s' key='%s'",
+			                                                  kind,
+			                                                  key ) );
+		this.kind = kind;
+		this.entity = new Entity( kind, key, parentEntity.getKey() );
 	}
 
 	public String getKind()
 	{
-		return entity.getKind();
+		return kind;
 	}
 
 	public abstract Entity getEntity();
@@ -57,15 +88,16 @@ public abstract class A_EntityHandler
 	    throws E_InvalidEntityHandling;
 
 	// PROTECTED
+	protected String	kind;
 	protected Entity	entity;
-	
-	protected void checkKindsDoMatch(Entity entity)
+
+	protected void checkKindsDoMatch( Entity entity )
 	{
-		if ( !entity.getKind().equals( getKind() ) )
+		if ( !entity.getKind().equals( kind ) )
 			throw new E_InvalidEntityHandling(
-			                                    String.format( "Bad kind of entity in argument: kind='%d' argument.kind='%d'",
-			                                                   entity.getKind(),
-			                                                   getKind() ) );
+			                                   String.format( "Bad kind of entity in argument: kind='%s' argument.kind='%s'",
+			                                                  kind,
+			                                                  entity.getKind() ) );
 	}
 
 	// PRIVATE

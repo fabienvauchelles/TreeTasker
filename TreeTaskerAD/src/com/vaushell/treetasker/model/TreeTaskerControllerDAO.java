@@ -1,9 +1,14 @@
 package com.vaushell.treetasker.model;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.UUID;
+
+import org.apache.http.client.ClientProtocolException;
 
 import pl.polidea.treeview.InMemoryTreeStateManager;
 import pl.polidea.treeview.TreeBuilder;
@@ -11,6 +16,14 @@ import pl.polidea.treeview.TreeStateManager;
 import android.content.Context;
 
 import com.vaushell.treetasker.application.storage.TaskDB;
+import com.vaushell.treetasker.client.SimpleJsonClient;
+import com.vaushell.treetasker.module.SyncingFinalRequest;
+import com.vaushell.treetasker.module.SyncingFinalResponse;
+import com.vaushell.treetasker.module.SyncingStartRequest;
+import com.vaushell.treetasker.module.SyncingStartResponse;
+import com.vaushell.treetasker.module.TaskStamp;
+import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.module.WS_Task;
 
 public class TreeTaskerControllerDAO
 {
@@ -290,11 +303,119 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
+	public SyncingFinalResponse synchronizeWithDatastore( UserSession userSession )
+	{
+		SyncingStartRequest request = new SyncingStartRequest(
+		                                                       userSession,
+		                                                       TT_UserTaskContainer.DEFAULT_NAME ); // TODO:
+		                                                                                            // récupérer
+		                                                                                            // la
+		                                                                                            // usersession,
+		                                                                                            // faire
+		                                                                                            // le
+		                                                                                            // lien
+		                                                                                            // entre
+		                                                                                            // l'activité
+		                                                                                            // de
+		                                                                                            // connection
+		                                                                                            // et
+		                                                                                            // l'activité
+		                                                                                            // principale
+
+		HashMap<String, TT_Task> tasksMap = unrecursifyTasks();
+
+		for ( TT_Task task : tasksMap.values() )
+		{
+			request.addId( new TaskStamp( task.getID(),
+			                              task.getLastModificationDate() ) );
+		}
+
+		for ( TT_Task task : rootDeletedTasksList )
+		{
+			request.addRemovedId( task.getID() );
+		}
+
+		try
+		{
+			SyncingStartResponse response = client1.post( SyncingStartResponse.class,
+			                                              request );
+
+			// TODO: Mettre à jour les tâches, supprimer les tâches, vider les
+			// tâches supprimées, renvoyer les tâches à jour
+			for ( WS_Task wsTask : response.getMoreRecentTasks() )
+			{
+				wsTask.update( tasksMap.get( wsTask.getID() ), tasksMap );
+			}
+
+			TreeSet<WS_Task> sortedTasksToAdd = new TreeSet<WS_Task>(
+			                                                          new Comparator<WS_Task>()
+			                                                          {
+				                                                          @Override
+				                                                          public int compare( WS_Task lhs,
+				                                                                              WS_Task rhs )
+				                                                          {
+					                                                          return lhs.getLastModificationDate()
+					                                                                    .compareTo( rhs.getLastModificationDate() );
+				                                                          }
+			                                                          } );
+			sortedTasksToAdd.addAll( response.getTasksToAdd() );
+
+			for ( WS_Task taskToAdd : sortedTasksToAdd )
+			{
+				TT_Task currentNewTask = new TT_Task();
+				taskToAdd.update( currentNewTask );
+				tasksMap.put( currentNewTask.getID(), currentNewTask );
+
+				if ( taskToAdd.getParentId() == null )
+				{
+					addRootTask( currentNewTask );
+				}
+				else
+				{
+					addSubTask( tasksMap.get( taskToAdd.getParentId() ),
+					            currentNewTask );
+				}
+			}
+
+			for ( String deletedId : response.getDeletedIds() )
+			{
+				if ( tasksMap.containsKey( deletedId ) )
+				{
+					deleteTask( tasksMap.get( deletedId ) );
+				}
+			}
+
+			rootDeletedTasksList.clear();
+
+			SyncingFinalRequest finalRequest = new SyncingFinalRequest(
+			                                                            userSession,
+			                                                            TT_UserTaskContainer.DEFAULT_NAME );
+
+			for ( String needUpdateId : response.getNeedUpdateIds() )
+			{
+				finalRequest.addUpToDateTask( new WS_Task(
+				                                           tasksMap.get( needUpdateId ) ) );
+			}
+
+			SyncingFinalResponse finalResponse = client2.post( SyncingFinalResponse.class,
+			                                                   finalRequest );
+
+			return finalResponse;
+		}
+		catch ( ClientProtocolException e )
+		{
+			return null;
+		}
+	}
+
 	// PRIVATE
-	private TreeStateManager<TT_Task>	treeManager;
-	private TT_Task	                  copiedTask;
-	private ArrayList<TT_Task>	      rootTasksList;
-	private ArrayList<TT_Task>	      rootDeletedTasksList;
+	private static final SimpleJsonClient	client1	= new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/syncing1" );
+	private static final SimpleJsonClient	client2	= new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/syncing2" );
+
+	private TreeStateManager<TT_Task>	  treeManager;
+	private TT_Task	                      copiedTask;
+	private ArrayList<TT_Task>	          rootTasksList;
+	private ArrayList<TT_Task>	          rootDeletedTasksList;
 
 	private void init()
 	{
@@ -334,6 +455,29 @@ public class TreeTaskerControllerDAO
 		for ( TT_Task child : taskToSave.getChildrenTask() )
 		{
 			saveRecursively( child, taskDB );
+		}
+	}
+
+	private HashMap<String, TT_Task> unrecursifyTasks()
+	{
+		HashMap<String, TT_Task> tasksMap = new HashMap<String, TT_Task>();
+
+		for ( TT_Task rootTask : rootTasksList )
+		{
+			unrecursifyTasksRec( rootTask, tasksMap );
+		}
+
+		return tasksMap;
+	}
+
+	private void unrecursifyTasksRec( TT_Task task,
+	                                  HashMap<String, TT_Task> tasksMap )
+	{
+		tasksMap.put( task.getID(), task );
+
+		for ( TT_Task childTask : task.getChildrenTask() )
+		{
+			unrecursifyTasksRec( childTask, tasksMap );
 		}
 	}
 }

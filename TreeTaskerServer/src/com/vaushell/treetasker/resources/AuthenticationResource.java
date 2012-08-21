@@ -10,6 +10,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.vaushell.treetasker.dao.EH_User;
@@ -36,8 +37,19 @@ public class AuthenticationResource
 			{
 				if ( user.isValidatedUser() )
 				{
-					return new UserSession( user.getLogin(), UUID.randomUUID()
-					                                             .toString() );
+					UserSession userSession = new UserSession(
+					                                           user.getLogin(),
+					                                           UUID.randomUUID()
+					                                               .toString() );
+					Entity datastoreUserSession = new Entity(
+					                                          "UserSession",
+					                                          userSession.getUserSessionID() );
+					datastoreUserSession.setProperty( "username",
+					                                  userSession.getUserName() );
+
+					datastore.put( datastoreUserSession );
+
+					return userSession;
 				}
 				else
 				{

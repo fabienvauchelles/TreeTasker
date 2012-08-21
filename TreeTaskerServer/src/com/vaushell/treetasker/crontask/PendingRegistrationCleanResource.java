@@ -1,21 +1,21 @@
 package com.vaushell.treetasker.crontask;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.vaushell.treetasker.dao.EH_RegisterValidationPending;
+import com.vaushell.treetasker.dao.EH_User;
 
 @Path( "/reg-clean" )
 public class PendingRegistrationCleanResource
@@ -23,7 +23,7 @@ public class PendingRegistrationCleanResource
 	// PUBLIC
 	public static final DatastoreService	datastore	= DatastoreServiceFactory.getDatastoreService();
 
-	@GET
+	@POST
 	public void cleanPendingRegistrations()
 	{
 		Query query = new Query( EH_RegisterValidationPending.KIND );
@@ -36,13 +36,13 @@ public class PendingRegistrationCleanResource
 
 		if ( !expiredEntities.isEmpty() )
 		{
-			ArrayList<Key> keyList = new ArrayList<Key>();
 			for ( Entity entity : expiredEntities )
 			{
-				keyList.add( entity.getKey() );
+				datastore.delete( entity.getKey() );
+				datastore.delete( KeyFactory.createKey( EH_User.KIND,
+				                                        entity.getKey()
+				                                              .getName() ) );
 			}
-
-			datastore.delete( keyList );
 		}
 	}
 }

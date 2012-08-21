@@ -25,11 +25,7 @@ public class EH_RegisterValidationPending
 
 	public EH_RegisterValidationPending( Entity entity )
 	{
-		super( entity );
-
-		this.login = (String) entity.getKey().getName();
-		this.validKey = (String) entity.getProperty( "validKey" );
-		this.expirationDate = (Date) entity.getProperty( "expirationDate" );
+		super( KIND, entity );
 	}
 
 	public String getLogin()
@@ -43,14 +39,14 @@ public class EH_RegisterValidationPending
 	}
 
 	public Date getExpirationDate()
-    {
-    	return expirationDate;
-    }
+	{
+		return expirationDate;
+	}
 
 	public void setExpirationDate( Date expirationDate )
-    {
-    	this.expirationDate = expirationDate;
-    }
+	{
+		this.expirationDate = expirationDate;
+	}
 
 	@Override
 	public Entity getEntity()
@@ -67,13 +63,16 @@ public class EH_RegisterValidationPending
 	{
 		checkKindsDoMatch( entity );
 
+		this.login = (String) entity.getKey().getName();
+		this.validKey = (String) entity.getProperty( "validKey" );
+		this.expirationDate = (Date) entity.getProperty( "expirationDate" );
 	}
 
 	// PROTECTED
 	// PRIVATE
 	private String	login;
 	private String	validKey;
-	private Date expirationDate;
+	private Date	expirationDate;
 
 	private void init()
 	{

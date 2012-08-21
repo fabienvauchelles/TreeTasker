@@ -29,5 +29,6 @@
     <string name="add_root_task">Ajouter une tâche</string>
     <string name="description">Description</string>
     <color name="canary_yellow">#FCF0AD</color>
+    <string name="menu_synchronize">Synchroniser</string>
 
 </resources>
