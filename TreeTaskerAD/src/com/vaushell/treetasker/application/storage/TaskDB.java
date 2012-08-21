@@ -61,6 +61,7 @@ public class TaskDB
 	public void readTasksInfo()
 	{
 		this.rootTasksList.clear();
+		this.rootDeletedTasksList.clear();
 		this.expandedMap.clear();
 		Cursor cursor = db.query( TaskOpenHelper.TASK_TABLE_NAME,
 		                          null,
@@ -84,7 +85,8 @@ public class TaskDB
 			taskToLoad.setStatus( cursor.getInt( TaskOpenHelper.NUM_COL_STATUS ) );
 
 			taskToLoad.setTitle( cursor.getString( TaskOpenHelper.NUM_COL_TITLE ) );
-			System.out.println( taskToLoad.getTitle() + " status is " + taskToLoad.getStatus() );
+			System.out.println( taskToLoad.getTitle() + " status is "
+			                    + taskToLoad.getStatus() );
 			expandedMap.put( taskToLoad,
 			                 cursor.getInt( TaskOpenHelper.NUM_COL_EXPANDED ) > 0 );
 			idToTaskMap.put( taskToLoad.getID(), taskToLoad );
@@ -94,11 +96,15 @@ public class TaskDB
 			{
 				childrenToParentIdMap.put( taskToLoad, parentId );
 			}
+			else if ( taskToLoad.getStatus() == TT_Task.DELETED )
+
+			{
+				rootDeletedTasksList.add( taskToLoad );
+			}
 			else
 			{
 				rootTasksList.add( taskToLoad );
 			}
-
 			cursor.moveToNext();
 		}
 
@@ -115,6 +121,11 @@ public class TaskDB
 		return rootTasksList;
 	}
 
+	public ArrayList<TT_Task> getRootDeletedTasks()
+	{
+		return rootDeletedTasksList;
+	}
+
 	public HashMap<TT_Task, Boolean> getExpandedMap()
 	{
 		return expandedMap;
@@ -126,11 +137,13 @@ public class TaskDB
 	private SQLiteDatabase	          db;
 	private TaskOpenHelper	          dbHelper;
 	private ArrayList<TT_Task>	      rootTasksList;
+	private ArrayList<TT_Task>	      rootDeletedTasksList;
 	private HashMap<TT_Task, Boolean>	expandedMap;
 
 	private void init()
 	{
 		this.rootTasksList = new ArrayList<TT_Task>();
+		this.rootDeletedTasksList = new ArrayList<TT_Task>();
 		this.expandedMap = new HashMap<TT_Task, Boolean>();
 	}
 }

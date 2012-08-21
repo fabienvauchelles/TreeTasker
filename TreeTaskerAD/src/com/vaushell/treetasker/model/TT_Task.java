@@ -14,6 +14,7 @@ public class TT_Task
 	private static final long	serialVersionUID	= 1L;
 	public static final int	  TODO	             = 0;
 	public static final int	  DONE	             = 1;
+	public static final int	  DELETED	         = 2;
 
 	public TT_Task()
 	{
@@ -62,6 +63,15 @@ public class TT_Task
 	{
 		this.lastModificationDate = lastModificationDate;
 	}
+	
+	public void setLastModificationDateRecursively( Date lastModificationDate )
+	{
+		this.lastModificationDate = lastModificationDate;
+		for ( TT_Task childTask : childrenTask )
+		{
+			childTask.setLastModificationDateRecursively( lastModificationDate );
+		}
+	}
 
 	public int getStatus()
 	{
@@ -71,6 +81,15 @@ public class TT_Task
 	public void setStatus( int status )
 	{
 		this.status = status;
+	}
+
+	public void setStatusRecursively( int status )
+	{
+		this.status = status;
+		for ( TT_Task childTask : childrenTask )
+		{
+			childTask.setStatusRecursively( status );
+		}
 	}
 
 	public List<TT_Task> getChildrenTask()

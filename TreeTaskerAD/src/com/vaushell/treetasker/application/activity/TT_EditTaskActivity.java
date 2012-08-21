@@ -1,5 +1,7 @@
 package com.vaushell.treetasker.application.activity;
 
+import java.util.Date;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -26,6 +28,7 @@ public class TT_EditTaskActivity
 	{
 		task.setTitle( ( (EditText) findViewById( R.id.aTFtitleValue ) ).getText()
 		                                                                .toString() );
+		task.setLastModificationDate( new Date() );
 		Intent resultData = new Intent();
 		Bundle resultBundle = new Bundle();
 		resultBundle.putSerializable( "task", task );
