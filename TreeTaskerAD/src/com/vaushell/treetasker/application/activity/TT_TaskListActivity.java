@@ -101,6 +101,7 @@ public class TT_TaskListActivity
 
 		setContentView( R.layout.tree_task_view );
 		TreeViewList test = (TreeViewList) findViewById( R.id.treeView );
+		registerForContextMenu( findViewById( R.id.treeTaskView ) );
 		test.setAdapter( adapter );
 
 	}
@@ -111,13 +112,24 @@ public class TT_TaskListActivity
 	                                 ContextMenuInfo menuInfo )
 	{
 		super.onCreateContextMenu( menu, v, menuInfo );
-		this.currentView = v;
-		MenuInflater inflater = getMenuInflater();
-
-		inflater.inflate( R.menu.task_menu, menu );
-		if ( !TreeTaskerControllerDAO.getInstance().canPaste() )
+		if ( menu.size() == 0 )
 		{
-			menu.findItem( R.id.paste ).setEnabled( false );
+			if ( v.getId() == R.id.treeTaskView )
+			{
+				MenuInflater inflater = getMenuInflater();
+				inflater.inflate( R.menu.add_root_task_menu, menu );
+			}
+			else
+			{
+				this.currentView = v;
+				MenuInflater inflater = getMenuInflater();
+
+				inflater.inflate( R.menu.task_menu, menu );
+				if ( !TreeTaskerControllerDAO.getInstance().canPaste() )
+				{
+					menu.findItem( R.id.paste ).setEnabled( false );
+				}
+			}
 		}
 	}
 
@@ -126,15 +138,33 @@ public class TT_TaskListActivity
 	{
 		switch ( item.getItemId() )
 		{
+			case R.id.addRootTask:
+			{
+				TT_Task newTask = new TT_Task( UUID.randomUUID().toString(),
+				                               "", "", new Date(), TT_Task.TODO );
+
+				Intent createIntent = new Intent( this,
+				                                  TT_EditTaskActivity.class );
+				Bundle createBundle = new Bundle();
+				createBundle.putSerializable( "task", newTask );
+				createIntent.putExtras( createBundle );
+				startActivityForResult( createIntent,
+				                        ROOT_TASK_CREATION_REQUEST );
+				return true;
+			}
+
 			case R.id.edit:
+			{
 				Intent editIntent = new Intent( this, TT_EditTaskActivity.class );
 				Bundle editBundle = new Bundle();
 				editBundle.putSerializable( "task", getCurrentTask() );
 				editIntent.putExtras( editBundle );
 				startActivityForResult( editIntent, EDITION_REQUEST );
 				return true;
+			}
 
 			case R.id.delete:
+			{
 				dialogBuilder.setMessage( R.string.confirm_delete_task )
 				             .setCancelable( false )
 				             .setPositiveButton( R.string.delete,
@@ -165,8 +195,10 @@ public class TT_TaskListActivity
 				AlertDialog alert = dialogBuilder.create();
 				alert.show();
 				return true;
+			}
 
 			case R.id.addTask:
+			{
 				TT_Task newTask = new TT_Task( UUID.randomUUID().toString(),
 				                               "", "", new Date(), TT_Task.TODO );
 
@@ -177,22 +209,29 @@ public class TT_TaskListActivity
 				createIntent.putExtras( createBundle );
 				startActivityForResult( createIntent, SUB_TASK_CREATION_REQUEST );
 				return true;
+			}
 
 			case R.id.copy:
+			{
 				TreeTaskerControllerDAO.getInstance()
 				                       .copyTask( getCurrentTask() );
 				return true;
+			}
 
 			case R.id.paste:
+			{
 				if ( TreeTaskerControllerDAO.getInstance().canPaste() )
 				{
 					TreeTaskerControllerDAO.getInstance()
 					                       .pasteTask( getCurrentTask() );
 				}
 				return true;
+			}
 
 			default:
+			{
 				return super.onContextItemSelected( item );
+			}
 		}
 	}
 
@@ -210,6 +249,7 @@ public class TT_TaskListActivity
 		switch ( item.getItemId() )
 		{
 			case R.id.addRootTask:
+			{
 				TT_Task newTask = new TT_Task( UUID.randomUUID().toString(),
 				                               "", "", new Date(), TT_Task.TODO );
 
@@ -221,6 +261,8 @@ public class TT_TaskListActivity
 				startActivityForResult( createIntent,
 				                        ROOT_TASK_CREATION_REQUEST );
 				return true;
+			}
+
 			default:
 				return super.onOptionsItemSelected( item );
 		}
