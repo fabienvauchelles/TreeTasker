@@ -126,7 +126,7 @@ public class TT_TaskListActivity
 	{
 		switch ( item.getItemId() )
 		{
-			case R.id.rename:
+			case R.id.edit:
 				Intent editIntent = new Intent( this, TT_EditTaskActivity.class );
 				Bundle editBundle = new Bundle();
 				editBundle.putSerializable( "task", getCurrentTask() );
@@ -168,7 +168,7 @@ public class TT_TaskListActivity
 
 			case R.id.addTask:
 				TT_Task newTask = new TT_Task( UUID.randomUUID().toString(),
-				                               "", new Date(), TT_Task.TODO );
+				                               "", "", new Date(), TT_Task.TODO );
 
 				Intent createIntent = new Intent( this,
 				                                  TT_EditTaskActivity.class );
@@ -211,7 +211,7 @@ public class TT_TaskListActivity
 		{
 			case R.id.addRootTask:
 				TT_Task newTask = new TT_Task( UUID.randomUUID().toString(),
-				                               "", new Date(), TT_Task.TODO );
+				                               "", "", new Date(), TT_Task.TODO );
 
 				Intent createIntent = new Intent( this,
 				                                  TT_EditTaskActivity.class );
@@ -261,7 +261,7 @@ public class TT_TaskListActivity
 					TreeTaskerControllerDAO.getInstance()
 					                       .edit( getCurrentTask(),
 					                              task.getTitle(),
-					                              task.getTitle() );
+					                              task.getDescription() );
 					break;
 
 				case SUB_TASK_CREATION_REQUEST:

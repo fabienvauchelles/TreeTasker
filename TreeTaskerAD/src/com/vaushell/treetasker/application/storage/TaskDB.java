@@ -44,6 +44,7 @@ public class TaskDB
 		if ( task.getParent() != null )
 			values.put( TaskOpenHelper.COL_PARENT_ID, task.getParent().getID() );
 		values.put( TaskOpenHelper.COL_TITLE, task.getTitle() );
+		values.put( TaskOpenHelper.COL_DESCRIPTION, task.getDescription() );
 		values.put( TaskOpenHelper.COL_STATUS, task.getStatus() );
 		values.put( TaskOpenHelper.COL_EXPANDED, isExpanded );
 		values.put( TaskOpenHelper.COL_MODIF_DATE,
@@ -84,6 +85,7 @@ public class TaskDB
 			taskToLoad.setStatus( cursor.getInt( TaskOpenHelper.NUM_COL_STATUS ) );
 
 			taskToLoad.setTitle( cursor.getString( TaskOpenHelper.NUM_COL_TITLE ) );
+			taskToLoad.setDescription( cursor.getString( TaskOpenHelper.NUM_COL_DESCRIPTION ) );
 			expandedMap.put( taskToLoad,
 			                 cursor.getInt( TaskOpenHelper.NUM_COL_EXPANDED ) > 0 );
 			idToTaskMap.put( taskToLoad.getID(), taskToLoad );

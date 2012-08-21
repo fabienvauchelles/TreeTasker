@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item android:id="@+id/addTask" android:title="@string/add_sub_task" android:titleCondensed="@string/add_sub_task" android:enabled="true" android:visible="true"></item>
-    <item android:id="@+id/rename" android:title="@string/rename_task" android:titleCondensed="@string/rename" android:enabled="true" android:visible="true"></item>
+    <item android:id="@+id/edit" android:title="@string/edit_task" android:titleCondensed="@string/edit" android:enabled="true" android:visible="true"></item>
     <item android:id="@+id/copy" android:title="@string/copy" android:titleCondensed="@string/copy" android:enabled="true" android:visible="true"></item>
     <item android:id="@+id/paste" android:title="@string/paste" android:titleCondensed="@string/paste" android:enabled="true" android:visible="true"></item>
     <item android:id="@+id/delete" android:title="@string/delete" android:titleCondensed="@string/delete" android:enabled="true" android:visible="true"></item>

@@ -18,17 +18,19 @@ public class TT_Task
 
 	public TT_Task()
 	{
-		this( null, null, null, TODO );
+		this( null, null, "", null, TODO );
 		init();
 	}
 
 	public TT_Task( String ID,
 	                String title,
+	                String description,
 	                Date lastModificationDate,
 	                int status )
 	{
 		this.ID = ID;
 		this.title = title;
+		this.description = description;
 		this.lastModificationDate = lastModificationDate;
 		this.status = status;
 		init();
@@ -54,6 +56,16 @@ public class TT_Task
 		this.title = title;
 	}
 
+	public String getDescription()
+	{
+		return description;
+	}
+
+	public void setDescription( String description )
+	{
+		this.description = description;
+	}
+
 	public Date getLastModificationDate()
 	{
 		return lastModificationDate;
@@ -63,7 +75,7 @@ public class TT_Task
 	{
 		this.lastModificationDate = lastModificationDate;
 	}
-	
+
 	public void setLastModificationDateRecursively( Date lastModificationDate )
 	{
 		this.lastModificationDate = lastModificationDate;
@@ -166,7 +178,7 @@ public class TT_Task
 	public TT_Task getCopy()
 	{
 		TT_Task copy = new TT_Task( UUID.randomUUID().toString(), title,
-		                            new Date(), status );
+		                            description, new Date(), status );
 		for ( TT_Task childTask : childrenTask )
 		{
 			childTask.getCopy().setParent( copy );
@@ -182,6 +194,7 @@ public class TT_Task
 
 	private String	      ID;
 	private String	      title;
+	private String	      description;
 	private Date	      lastModificationDate;
 	private int	          status;
 	private List<TT_Task>	childrenTask;

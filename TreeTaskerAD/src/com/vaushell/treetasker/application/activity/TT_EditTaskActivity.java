@@ -1,7 +1,5 @@
 package com.vaushell.treetasker.application.activity;
 
-import java.util.Date;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -22,13 +20,15 @@ public class TT_EditTaskActivity
 		setContentView( R.layout.edit_task_activity_view );
 		task = (TT_Task) getIntent().getExtras().getSerializable( "task" );
 		( (EditText) findViewById( R.id.aTFtitleValue ) ).setText( task.getTitle() );
+		( (EditText) findViewById( R.id.aTFdescriptionValue ) ).setText( task.getDescription() );
 	}
 
 	public void onSave( View view )
 	{
 		task.setTitle( ( (EditText) findViewById( R.id.aTFtitleValue ) ).getText()
 		                                                                .toString() );
-		task.setLastModificationDate( new Date() );
+		task.setDescription( ( (EditText) findViewById( R.id.aTFdescriptionValue ) ).getText()
+		                                                                            .toString() );
 		Intent resultData = new Intent();
 		Bundle resultBundle = new Bundle();
 		resultBundle.putSerializable( "task", task );

@@ -25,86 +25,88 @@ public class TreeTaskerControllerDAO
 		List<TT_Task> mockList = new ArrayList<TT_Task>();
 
 		TT_Task construireMaison = new TT_Task( UUID.randomUUID().toString(),
-		                                        "Construire la maison",
+		                                        "Construire la maison", "",
 		                                        new Date(), TT_Task.TODO );
 
 		construireMaison.addChildTask( new TT_Task( UUID.randomUUID()
 		                                                .toString(),
-		                                            "Acheter terrain",
+		                                            "Acheter terrain", "",
 		                                            new Date(), TT_Task.DONE ) );
 
 		TT_Task acheterMatos = new TT_Task( UUID.randomUUID().toString(),
-		                                    "Acheter matériel", new Date(),
+		                                    "Acheter matériel", "", new Date(),
 		                                    TT_Task.TODO );
 		acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-		                                        "Acheter brique", new Date(),
-		                                        TT_Task.TODO ) );
+		                                        "Acheter brique", "",
+		                                        new Date(), TT_Task.TODO ) );
 		acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-		                                        "Acheter brouette", new Date(),
-		                                        TT_Task.TODO ) );
+		                                        "Acheter brouette", "",
+		                                        new Date(), TT_Task.TODO ) );
 		construireMaison.addChildTask( acheterMatos );
 
 		construireMaison.addChildTask( new TT_Task( UUID.randomUUID()
 		                                                .toString(),
-		                                            "Construire les murs",
+		                                            "Construire les murs", "",
 		                                            new Date(), TT_Task.TODO ) );
 		construireMaison.addChildTask( new TT_Task( UUID.randomUUID()
 		                                                .toString(),
-		                                            "Construire le toit",
+		                                            "Construire le toit", "",
 		                                            new Date(), TT_Task.TODO ) );
 
 		TT_Task passerPermis = new TT_Task( UUID.randomUUID().toString(),
-		                                    "Passer le permis", new Date(),
+		                                    "Passer le permis", "", new Date(),
 		                                    TT_Task.TODO );
 		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
 		                                        "S'inscrire à l'auto-école",
-		                                        new Date(), TT_Task.DONE ) );
+		                                        "", new Date(), TT_Task.DONE ) );
 		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-		                                        "Obtenir le code", new Date(),
-		                                        TT_Task.TODO ) );
+		                                        "Obtenir le code", "",
+		                                        new Date(), TT_Task.TODO ) );
 		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-		                                        "Faire 20h de conduite",
+		                                        "Faire 20h de conduite", "",
 		                                        new Date(), TT_Task.TODO ) );
 
 		TT_Task accederAuLevelDesPoneys = new TT_Task(
 		                                               UUID.randomUUID()
 		                                                   .toString(),
 		                                               "Accéder au niveau caché",
-		                                               new Date(), TT_Task.TODO );
+		                                               "", new Date(),
+		                                               TT_Task.TODO );
 
 		TT_Task rassemblerIngredients = new TT_Task( UUID.randomUUID()
 		                                                 .toString(),
 		                                             "Trouver les ingrédients",
-		                                             new Date(), TT_Task.TODO );
+		                                             "", new Date(),
+		                                             TT_Task.TODO );
 		rassemblerIngredients.addChildTask( new TT_Task(
 		                                                 UUID.randomUUID()
 		                                                     .toString(),
 		                                                 "Trouver champignon noir",
-		                                                 new Date(),
+		                                                 "", new Date(),
 		                                                 TT_Task.TODO ) );
 		rassemblerIngredients.addChildTask( new TT_Task(
 		                                                 UUID.randomUUID()
 		                                                     .toString(),
 		                                                 "Trouver tibia de léoric",
-		                                                 new Date(),
+		                                                 "", new Date(),
 		                                                 TT_Task.TODO ) );
 		rassemblerIngredients.addChildTask( new TT_Task(
 		                                                 UUID.randomUUID()
 		                                                     .toString(),
 		                                                 "Trouver arc-en-ciel liquide",
-		                                                 new Date(),
+		                                                 "", new Date(),
 		                                                 TT_Task.TODO ) );
 		rassemblerIngredients.addChildTask( new TT_Task(
 		                                                 UUID.randomUUID()
 		                                                     .toString(),
 		                                                 "Trouver pierre baragouinante",
-		                                                 new Date(),
+		                                                 "", new Date(),
 		                                                 TT_Task.TODO ) );
 		rassemblerIngredients.addChildTask( new TT_Task(
 		                                                 UUID.randomUUID()
 		                                                     .toString(),
 		                                                 "Acheter cloche de Wirt",
-		                                                 new Date(),
+		                                                 "", new Date(),
 		                                                 TT_Task.TODO ) );
 		accederAuLevelDesPoneys.addChildTask( rassemblerIngredients );
 
@@ -112,12 +114,12 @@ public class TreeTaskerControllerDAO
 		                                                   UUID.randomUUID()
 		                                                       .toString(),
 		                                                   "Construire le baton de bouvier",
-		                                                   new Date(),
+		                                                   "", new Date(),
 		                                                   TT_Task.DONE ) );
 		accederAuLevelDesPoneys.addChildTask( new TT_Task( UUID.randomUUID()
 		                                                       .toString(),
 		                                                   "Ouvrir le portail",
-		                                                   new Date(),
+		                                                   "", new Date(),
 		                                                   TT_Task.TODO ) );
 
 		mockList.add( construireMaison );
@@ -131,7 +133,8 @@ public class TreeTaskerControllerDAO
 	                  String title,
 	                  String description )
 	{
-		task.setTitle( task.getTitle() );
+		task.setTitle( title );
+		task.setDescription( description );
 		task.setLastModificationDate( new Date() );
 	}
 
@@ -235,30 +238,6 @@ public class TreeTaskerControllerDAO
 		init();
 	}
 
-	// PRIVATE
-	private TreeStateManager<TT_Task>	treeManager;
-	private TT_Task	                  copiedTask;
-	private ArrayList<TT_Task>	      rootTasksList;
-	private ArrayList<TT_Task>	      rootDeletedTasksList;
-
-	private void init()
-	{
-		this.copiedTask = null;
-		this.rootTasksList = new ArrayList<TT_Task>();
-		this.rootDeletedTasksList = new ArrayList<TT_Task>();
-		this.treeManager = new InMemoryTreeStateManager<TT_Task>();
-	}
-
-	private TreeTaskerControllerDAO()
-	{
-		init();
-	}
-
-	private static class TreeTaskerControllerDAOHolder
-	{
-		private static final TreeTaskerControllerDAO	INSTANCE	= new TreeTaskerControllerDAO();
-	}
-
 	public void save( Context applicationContext )
 	{
 		TaskDB taskDB = new TaskDB( applicationContext );
@@ -309,6 +288,30 @@ public class TreeTaskerControllerDAO
 				}
 			}
 		}
+	}
+
+	// PRIVATE
+	private TreeStateManager<TT_Task>	treeManager;
+	private TT_Task	                  copiedTask;
+	private ArrayList<TT_Task>	      rootTasksList;
+	private ArrayList<TT_Task>	      rootDeletedTasksList;
+
+	private void init()
+	{
+		this.copiedTask = null;
+		this.rootTasksList = new ArrayList<TT_Task>();
+		this.rootDeletedTasksList = new ArrayList<TT_Task>();
+		this.treeManager = new InMemoryTreeStateManager<TT_Task>();
+	}
+
+	private TreeTaskerControllerDAO()
+	{
+		init();
+	}
+
+	private static class TreeTaskerControllerDAOHolder
+	{
+		private static final TreeTaskerControllerDAO	INSTANCE	= new TreeTaskerControllerDAO();
 	}
 
 	private void saveRecursively( TT_Task taskToSave,
