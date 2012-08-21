@@ -1,13 +1,10 @@
 package com.vaushell.treetasker.application.activity;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
 import pl.polidea.treeview.AbstractTreeViewAdapter;
-import pl.polidea.treeview.InMemoryTreeStateManager;
-import pl.polidea.treeview.TreeBuilder;
 import pl.polidea.treeview.TreeNodeInfo;
 import pl.polidea.treeview.TreeStateManager;
 import pl.polidea.treeview.TreeViewList;
@@ -27,8 +24,8 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.vaushell.treetasker.R;
-import com.vaushell.treetasker.application.storage.TaskDB;
 import com.vaushell.treetasker.model.TT_Task;
+import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
 
 public class TT_TaskListActivity
     extends Activity
@@ -41,47 +38,16 @@ public class TT_TaskListActivity
 
 		this.view2taskMap = new HashMap<View, TT_Task>();
 		this.dialogBuilder = new AlertDialog.Builder( this );
-		this.copiedTask = null;
-		this.rootTasksList = new ArrayList<TT_Task>();
-		this.rootDeletedTasksList = new ArrayList<TT_Task>();
+		TreeTaskerControllerDAO.getInstance().reset();
+		TreeStateManager<TT_Task> treeManager = TreeTaskerControllerDAO.getInstance()
+		                                                               .getTreeManager();
 
-		treeManager = new InMemoryTreeStateManager<TT_Task>();
-		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
-		                                                             treeManager );
-
-		TaskDB taskDB = new TaskDB( getApplicationContext() );
-		taskDB.open();
-		taskDB.readTasksInfo();
-		rootTasksList.addAll( taskDB.getRootTasks() );
-		rootDeletedTasksList.addAll( taskDB.getRootDeletedTasks() );
-		taskDB.close();
-
-		for ( TT_Task task : rootTasksList )
-		{
-			treeBuilder.sequentiallyAddNextNode( task, 0 );
-			buildRecursively( task, treeBuilder );
-		}
-
-		for ( TT_Task task : taskDB.getExpandedMap().keySet() )
-		{
-			if ( treeManager.isInTree( task ) )
-			{
-				if ( !taskDB.getExpandedMap().get( task ) )
-				{
-					treeManager.collapseChildren( task );
-				}
-				else
-				{
-					treeManager.expandDirectChildren( task );
-				}
-			}
-		}
+		TreeTaskerControllerDAO.getInstance().load( getApplicationContext() );
 
 		AbstractTreeViewAdapter<TT_Task> adapter = new AbstractTreeViewAdapter<TT_Task>( this,
 		                                                                                 treeManager,
 		                                                                                 20 )
 		{
-
 			@Override
 			public long getItemId( int position )
 			{
@@ -99,22 +65,21 @@ public class TT_TaskListActivity
 				cbView.setChecked( treeNodeInfo.getId().getStatus() == TT_Task.DONE );
 				cbView.setOnCheckedChangeListener( new CheckBox.OnCheckedChangeListener()
 				{
-
 					@Override
 					public void onCheckedChanged( CompoundButton buttonView,
 					                              boolean isChecked )
 					{
 						if ( isChecked )
 						{
-							treeNodeInfo.getId().setStatus( TT_Task.DONE );
-							treeNodeInfo.getId()
-							            .setLastModificationDate( new Date() );
+							TreeTaskerControllerDAO.getInstance()
+							                       .setStatus( treeNodeInfo.getId(),
+							                                   TT_Task.DONE );
 						}
 						else
 						{
-							treeNodeInfo.getId().setStatus( TT_Task.TODO );
-							treeNodeInfo.getId()
-							            .setLastModificationDate( new Date() );
+							TreeTaskerControllerDAO.getInstance()
+							                       .setStatus( treeNodeInfo.getId(),
+							                                   TT_Task.TODO );
 						}
 					}
 				} );
@@ -150,7 +115,7 @@ public class TT_TaskListActivity
 		MenuInflater inflater = getMenuInflater();
 
 		inflater.inflate( R.menu.task_menu, menu );
-		if ( copiedTask == null )
+		if ( !TreeTaskerControllerDAO.getInstance().canPaste() )
 		{
 			menu.findItem( R.id.paste ).setEnabled( false );
 		}
@@ -180,7 +145,10 @@ public class TT_TaskListActivity
 					                                 public void onClick( DialogInterface dialog,
 					                                                      int which )
 					                                 {
-						                                 deleteTaskAndView( currentView );
+						                                 TT_Task taskToRemove = view2taskMap.get( currentView );
+						                                 TreeTaskerControllerDAO.getInstance()
+						                                                        .deleteTask( taskToRemove );
+						                                 view2taskMap.remove( currentView );
 					                                 }
 				                                 } )
 				             .setNegativeButton( R.string.cancel,
@@ -211,19 +179,15 @@ public class TT_TaskListActivity
 				return true;
 
 			case R.id.copy:
-				copiedTask = getCurrentTask().getCopy();
+				TreeTaskerControllerDAO.getInstance()
+				                       .copyTask( getCurrentTask() );
 				return true;
 
 			case R.id.paste:
-				if ( copiedTask != null )
+				if ( TreeTaskerControllerDAO.getInstance().canPaste() )
 				{
-					TT_Task parentTask = getCurrentTask();
-					TT_Task childTask = copiedTask.getCopy();
-					TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
-					                                                             treeManager );
-					treeBuilder.addRelation( parentTask, childTask );
-					childTask.setParent( parentTask );
-					buildRecursively( childTask, treeBuilder );
+					TreeTaskerControllerDAO.getInstance()
+					                       .pasteTask( getCurrentTask() );
 				}
 				return true;
 
@@ -276,20 +240,9 @@ public class TT_TaskListActivity
 	protected void onPause()
 	{
 		super.onPause();
-		TaskDB taskDB = new TaskDB( getApplicationContext() );
-		taskDB.open();
 
-		taskDB.resetTable();
-		for ( TT_Task taskToSave : rootTasksList )
-		{
-			saveRecursively( taskToSave, taskDB );
-		}
-		for ( TT_Task deletedTaskToSave : rootDeletedTasksList )
-		{
-			saveRecursively( deletedTaskToSave, taskDB );
-		}
+		TreeTaskerControllerDAO.getInstance().save( getApplicationContext() );
 
-		taskDB.close();
 	}
 
 	@Override
@@ -299,92 +252,43 @@ public class TT_TaskListActivity
 	{
 		if ( resultCode == Activity.RESULT_OK )
 		{
-			TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
-			                                                             treeManager );
 			switch ( requestCode )
 			{
 				case EDITION_REQUEST:
 					// TODO controllerDAO qui copie
 					TT_Task task = (TT_Task) data.getExtras()
 					                             .getSerializable( "task" );
-					getCurrentTask().setTitle( task.getTitle() );
-					getCurrentTask().setLastModificationDate( new Date() );
+					TreeTaskerControllerDAO.getInstance()
+					                       .edit( getCurrentTask(),
+					                              task.getTitle(),
+					                              task.getTitle() );
 					break;
 
 				case SUB_TASK_CREATION_REQUEST:
 					TT_Task newSubTask = (TT_Task) data.getExtras()
 					                                   .getSerializable( "task" );
-					newSubTask.setParent( getCurrentTask() );
-					treeBuilder.addRelation( getCurrentTask(), newSubTask );
+					TreeTaskerControllerDAO.getInstance()
+					                       .addSubTask( getCurrentTask(),
+					                                    newSubTask );
 					break;
 
 				case ROOT_TASK_CREATION_REQUEST:
 					TT_Task newRootTask = (TT_Task) data.getExtras()
 					                                    .getSerializable( "task" );
-					rootTasksList.add( newRootTask );
-					treeBuilder.sequentiallyAddNextNode( newRootTask, 0 );
+					TreeTaskerControllerDAO.getInstance()
+					                       .addRootTask( newRootTask );
 					break;
 			}
 		}
 	}
 
-	private final static int	      SUB_TASK_CREATION_REQUEST	 = 0;
-	private final static int	      ROOT_TASK_CREATION_REQUEST	= 1;
-	private final static int	      EDITION_REQUEST	         = 2;
+	private final static int	   SUB_TASK_CREATION_REQUEST	= 0;
+	private final static int	   ROOT_TASK_CREATION_REQUEST	= 1;
+	private final static int	   EDITION_REQUEST	          = 2;
 
-	private HashMap<View, TT_Task>	  view2taskMap;
-	private View	                  currentView;
-	private AlertDialog.Builder	      dialogBuilder;
-	private TreeStateManager<TT_Task>	treeManager;
-	private TT_Task	                  copiedTask;
-
-	private ArrayList<TT_Task>	      rootTasksList;
-	private ArrayList<TT_Task>	      rootDeletedTasksList;
-
-	private void deleteTaskAndView( View taskView )
-	{
-		TT_Task taskToRemove = view2taskMap.get( taskView );
-		rootTasksList.remove( taskToRemove );
-		rootDeletedTasksList.add( taskToRemove );
-		taskToRemove.setStatusRecursively( TT_Task.DELETED );
-		taskToRemove.setLastModificationDateRecursively( new Date() );
-		treeManager.removeNodeRecursively( taskToRemove );
-		taskToRemove.setParent( null );
-		view2taskMap.remove( taskView );
-	}
-
-	private void buildRecursively( TT_Task parent,
-	                               TreeBuilder<TT_Task> builder )
-	{
-		for ( TT_Task child : parent.getChildrenTask() )
-		{
-			builder.addRelation( parent, child );
-			buildRecursively( child, builder );
-		}
-	}
-
-	private void saveRecursively( TT_Task taskToSave,
-	                              TaskDB taskDB )
-	{
-		if ( taskToSave == null )
-		{
-			return;
-		}
-
-		if ( treeManager.isInTree( taskToSave ) )
-		{
-			taskDB.insertTask( taskToSave, treeManager.getNodeInfo( taskToSave )
-			                                          .isExpanded() );
-		}
-		else
-		{
-			taskDB.insertTask( taskToSave, false );
-		}
-		for ( TT_Task child : taskToSave.getChildrenTask() )
-		{
-			saveRecursively( child, taskDB );
-		}
-	}
+	private HashMap<View, TT_Task>	view2taskMap;
+	private View	               currentView;
+	private AlertDialog.Builder	   dialogBuilder;
 
 	private TT_Task getCurrentTask()
 	{

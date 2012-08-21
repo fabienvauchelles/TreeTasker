@@ -45,7 +45,6 @@ public class TaskDB
 			values.put( TaskOpenHelper.COL_PARENT_ID, task.getParent().getID() );
 		values.put( TaskOpenHelper.COL_TITLE, task.getTitle() );
 		values.put( TaskOpenHelper.COL_STATUS, task.getStatus() );
-		System.out.println( task.getTitle() + " status is " + task.getStatus() );
 		values.put( TaskOpenHelper.COL_EXPANDED, isExpanded );
 		values.put( TaskOpenHelper.COL_MODIF_DATE,
 		            String.valueOf( task.getLastModificationDate().getTime() ) );
@@ -85,8 +84,6 @@ public class TaskDB
 			taskToLoad.setStatus( cursor.getInt( TaskOpenHelper.NUM_COL_STATUS ) );
 
 			taskToLoad.setTitle( cursor.getString( TaskOpenHelper.NUM_COL_TITLE ) );
-			System.out.println( taskToLoad.getTitle() + " status is "
-			                    + taskToLoad.getStatus() );
 			expandedMap.put( taskToLoad,
 			                 cursor.getInt( TaskOpenHelper.NUM_COL_EXPANDED ) > 0 );
 			idToTaskMap.put( taskToLoad.getID(), taskToLoad );
