@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="CustomCheckBox" parent="@android:style/Widget.CompoundButton.CheckBox">
+        <item name="android:background">@drawable/checkbox_label_background</item>
+        <item name="android:button">@drawable/checkbox</item>
+    </style>
+
+    <style name="TreeViewList">
+        <item name="src_collapsed">@drawable/collapsed</item>
+        <item name="src_expanded">@drawable/expanded</item>
+    </style>
+
+</resources>

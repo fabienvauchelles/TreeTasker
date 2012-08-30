@@ -4,14 +4,17 @@
     android:id="@+id/treeTaskView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/canary_yellow"
     android:orientation="vertical" >
 
     <pl.polidea.treeview.TreeViewList
         android:id="@+id/treeView"
+        style="@style/TreeViewList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="vertical"
         android:smoothScrollbar="true"
         treeView:indicator_gravity="right|center_vertical" />
+    
 
 </LinearLayout>

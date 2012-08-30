@@ -183,7 +183,7 @@ public class TreeTaskerControllerDAO
 	public void setStatus( TT_Task task,
 	                       int status )
 	{
-		task.setStatus( TT_Task.DONE );
+		task.setStatus( status );
 		task.setLastModificationDate( new Date() );
 
 	}

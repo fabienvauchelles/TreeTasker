@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
@@ -93,16 +94,15 @@ public class TT_TaskListActivity
 				View taskView = getLayoutInflater().inflate( R.layout.task_view,
 				                                             null );
 				updateView( taskView, treeNodeInfo );
-				registerForContextMenu( taskView );
 
 				return taskView;
 			}
 		};
 
 		setContentView( R.layout.tree_task_view );
-		TreeViewList test = (TreeViewList) findViewById( R.id.treeView );
-		registerForContextMenu( findViewById( R.id.treeTaskView ) );
-		test.setAdapter( adapter );
+		TreeViewList treeView = (TreeViewList) findViewById( R.id.treeView );
+		registerForContextMenu( treeView );
+		treeView.setAdapter( adapter );
 
 	}
 
@@ -121,7 +121,7 @@ public class TT_TaskListActivity
 			}
 			else
 			{
-				this.currentView = v;
+				this.currentView = ( (AdapterContextMenuInfo) menuInfo ).targetView.findViewById( R.id.taskView );
 				MenuInflater inflater = getMenuInflater();
 
 				inflater.inflate( R.menu.task_menu, menu );
