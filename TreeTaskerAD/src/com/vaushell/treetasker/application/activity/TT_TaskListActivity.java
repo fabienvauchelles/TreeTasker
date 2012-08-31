@@ -102,6 +102,7 @@ public class TT_TaskListActivity
 		setContentView( R.layout.tree_task_view );
 		TreeViewList treeView = (TreeViewList) findViewById( R.id.treeView );
 		registerForContextMenu( treeView );
+		registerForContextMenu( findViewById( R.id.treeTaskView ) );
 		treeView.setAdapter( adapter );
 
 	}
