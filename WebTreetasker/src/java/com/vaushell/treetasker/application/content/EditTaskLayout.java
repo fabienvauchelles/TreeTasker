@@ -30,7 +30,7 @@ public class EditTaskLayout
         this.taskNode = taskNode;
         init();
     }
-
+    
     public void onExit()
     {
         saveAll();
@@ -41,24 +41,25 @@ public class EditTaskLayout
     private TreeTaskerWebApplicationController controller;
     private TextField vTFtaskTitleValue;
     private TextArea vTAtaskDescriptionValue;
-
+    
     private void init()
     {
         setSizeFull();
         setMargin( true );
         setSpacing( true );
-
+        
         vTFtaskTitleValue = new TextField( "Titre :" );
         vTFtaskTitleValue.setWidth( "100%" );
         vTFtaskTitleValue.setValue( taskNode.getTask().getTitle() );
         vTFtaskTitleValue.setReadOnly( true );
-
+        
         vTAtaskDescriptionValue = new TextArea( "Description" );
         vTAtaskDescriptionValue.setValue( taskNode.getTask().getDescription() );
         vTAtaskDescriptionValue.setReadOnly( true );
         vTAtaskDescriptionValue.setRows( 20 );
         vTAtaskDescriptionValue.setWidth( "100%" );
-
+        vTAtaskDescriptionValue.setNullRepresentation( "" );
+        
         Button okButton = new Button( "Enregistrer" ,
                                       new Button.ClickListener()
         {
@@ -67,16 +68,16 @@ public class EditTaskLayout
                 saveAll();
             }
         } );
-
+        
         addComponent( vTFtaskTitleValue );
         addComponent( vTAtaskDescriptionValue );
         addComponent( okButton );
-
+        
         setExpandRatio( okButton ,
                         1 );
         setComponentAlignment( okButton ,
                                Alignment.TOP_RIGHT );
-
+        
         addListener( new LayoutClickListener()
         {
             public void layoutClick( LayoutClickEvent event )
@@ -91,7 +92,7 @@ public class EditTaskLayout
                 }
                 else if ( event.getChildComponent() == vTAtaskDescriptionValue )
                 {
-
+                    
                     if ( vTAtaskDescriptionValue.isReadOnly() )
                     {
                         saveAll();
@@ -104,10 +105,10 @@ public class EditTaskLayout
                 }
             }
         } );
-
-
+        
+        
     }
-
+    
     private void saveAll()
     {
         vTFtaskTitleValue.setReadOnly( true );

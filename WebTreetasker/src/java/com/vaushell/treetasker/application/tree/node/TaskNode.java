@@ -45,7 +45,7 @@ public class TaskNode
     @Override
     public void onExit()
     {
-        controller.getContent().getView().onExit();
+        controller.getContent().getView().onExit();        
         controller.getTree().refreshNodeCaption( this );
     }
     // PROTECTED

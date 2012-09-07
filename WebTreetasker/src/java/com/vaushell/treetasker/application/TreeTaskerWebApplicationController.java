@@ -10,7 +10,11 @@ import com.vaushell.treetasker.application.actionbar.TTWActionBar;
 import com.vaushell.treetasker.application.content.TTWcontent;
 import com.vaushell.treetasker.application.header.TTWHeader;
 import com.vaushell.treetasker.application.tree.TTWtree;
+import com.vaushell.treetasker.application.tree.node.TaskNode;
 import com.vaushell.treetasker.application.window.UserWindow;
+import com.vaushell.treetasker.model.TT_Task;
+import java.util.Date;
+import java.util.UUID;
 
 /**
  *
@@ -24,10 +28,117 @@ public class TreeTaskerWebApplicationController
         this.application = application;
         init();
     }
-
+    
     public TreeTaskerWebApplication getApplication()
     {
         return application;
+    }
+    
+    public void addNewTask()
+    {
+        TaskNode newNode = new TaskNode( new TT_Task( UUID.randomUUID().toString() ,
+                                                      "Nouvelle tâche" ,
+                                                      null ,
+                                                      new Date() ,
+                                                      TT_Task.TODO ) ,
+                                         this );
+        TaskNode siblingNode = (TaskNode) getTree().getCurrentNode();
+        TaskNode parentNode = null;
+        if ( siblingNode != null )
+        {
+            parentNode = (TaskNode) getTree().getParent( siblingNode );
+        }
+        
+        if ( parentNode != null )
+        {
+            getTree().addNode( newNode ,
+                               parentNode );
+            getTree().moveAfterSiblingNode( newNode ,
+                                            siblingNode );
+            newNode.getTask().setParent( parentNode.getTask() );
+        }
+        else
+        {
+            getTree().addNode( newNode );
+            if ( siblingNode != null )
+            {
+                getTree().moveAfterSiblingNode( newNode ,
+                                                siblingNode );
+            }
+        }
+    }
+    
+    public void addNewSubTask()
+    {
+        TaskNode newNode = new TaskNode( new TT_Task( UUID.randomUUID().toString() ,
+                                                      "Nouvelle tâche" ,
+                                                      null ,
+                                                      new Date() ,
+                                                      TT_Task.TODO ) ,
+                                         this );
+        TaskNode parentNode = (TaskNode) getTree().getCurrentNode();
+        
+        if ( parentNode != null )
+        {
+            getTree().addNode( newNode ,
+                               parentNode );
+            newNode.getTask().setParent( parentNode.getTask() );
+            getTree().expandNode( parentNode );
+        }
+        else
+        {
+            getTree().addNode( newNode );
+        }
+    }
+    
+    public void showUserWindow()
+    {
+        application.setMainWindow( getUserWindow() );
+    }
+    
+    private Window getUserWindow()
+    {
+        if ( userWindow == null )
+        {
+            userWindow = new UserWindow( this );
+        }
+        return userWindow;
+    }
+    
+    public TTWActionBar getActionBar()
+    {
+        if ( actionBar == null )
+        {
+            actionBar = new TTWActionBar( this );
+        }
+        return actionBar;
+    }
+    
+    public TTWcontent getContent()
+    {
+        if ( content == null )
+        {
+            content = new TTWcontent();
+        }
+        return content;
+    }
+    
+    public TTWHeader getHeader()
+    {
+        if ( header == null )
+        {
+            header = new TTWHeader();
+        }
+        return header;
+    }
+    
+    public TTWtree getTree()
+    {
+        if ( tree == null )
+        {
+            tree = new TTWtree( this );
+        }
+        return tree;
     }
     // PROTECTED
     // PRIVATE
@@ -37,58 +148,8 @@ public class TreeTaskerWebApplicationController
     private TTWHeader header;
     private TTWtree tree;
     private TTWcontent content;
-
+    
     private void init()
     {
-    }
-
-    public void showUserWindow()
-    {
-        application.setMainWindow( getUserWindow() );
-    }
-
-    private Window getUserWindow()
-    {
-        if ( userWindow == null )
-        {
-            userWindow = new UserWindow( this );
-        }
-        return userWindow;
-    }
-
-    public TTWActionBar getActionBar()
-    {
-        if ( actionBar == null )
-        {
-            actionBar = new TTWActionBar( this );
-        }
-        return actionBar;
-    }
-
-    public TTWcontent getContent()
-    {
-        if ( content == null )
-        {
-            content = new TTWcontent();
-        }
-        return content;
-    }
-
-    public TTWHeader getHeader()
-    {
-        if ( header == null )
-        {
-            header = new TTWHeader();
-        }
-        return header;
-    }
-
-    public TTWtree getTree()
-    {
-        if ( tree == null )
-        {
-            tree = new TTWtree( this );
-        }
-        return tree;
     }
 }

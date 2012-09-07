@@ -6,6 +6,7 @@ package com.vaushell.treetasker.application.actionbar;
 
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 import java.util.Collection;
@@ -22,6 +23,7 @@ public class TTWActionBar
 
     public TTWActionBar( TreeTaskerWebApplicationController controller )
     {
+        this.controller = controller;
         init();
     }
 
@@ -78,6 +80,7 @@ public class TTWActionBar
     // PRIVATE
     private HorizontalLayout leftLayout;
     private HorizontalLayout rightLayout;
+    private TreeTaskerWebApplicationController controller;
 
     private void init()
     {
@@ -95,5 +98,22 @@ public class TTWActionBar
                    true ,
                    false ,
                    true );
+        addLeftButton( new Button( "Ajouter une tâche" ,
+                                   new Button.ClickListener()
+        {
+            public void buttonClick( ClickEvent event )
+            {
+                controller.addNewTask();
+            }
+        } ) );
+
+        addLeftButton( new Button( "Ajouter une sous-tâche" ,
+                                   new Button.ClickListener()
+        {
+            public void buttonClick( ClickEvent event )
+            {
+                controller.addNewSubTask();
+            }
+        } ) );
     }
 }
