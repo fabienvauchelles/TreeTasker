@@ -115,13 +115,16 @@ public class TT_TaskListActivity
 		treeView.setAdapter( adapter );
 
 		// Si l'utilisateur n'est pas authentifié
-		if ( savedInstanceState != null
+		if ( TreeTaskerControllerDAO.getInstance().getUserSession() == null
+		     && savedInstanceState != null
 		     && savedInstanceState.containsKey( USERNAME )
 		     && savedInstanceState.containsKey( SESSIONID ) )
 		{
-			session = new UserSession(
-			                           savedInstanceState.getString( USERNAME ),
-			                           savedInstanceState.getString( SESSIONID ) );
+
+			TreeTaskerControllerDAO.getInstance()
+			                       .setUserSession( new UserSession(
+			                                                         savedInstanceState.getString( USERNAME ),
+			                                                         savedInstanceState.getString( SESSIONID ) ) );
 		}
 
 		if ( !checkSession() )
@@ -287,7 +290,7 @@ public class TT_TaskListActivity
 			case R.id.synchronizeTasks:
 			{
 				TreeTaskerControllerDAO.getInstance()
-				                       .synchronizeWithDatastore( session );
+				                       .synchronizeWithDatastore();
 				return true;
 			}
 
@@ -317,17 +320,6 @@ public class TT_TaskListActivity
 	}
 
 	@Override
-	protected void onSaveInstanceState( Bundle outState )
-	{
-		super.onSaveInstanceState( outState );
-		if ( session != null )
-		{
-			outState.putString( USERNAME, session.getUserName() );
-			outState.putString( SESSIONID, session.getUserSessionID() );
-		}
-	}
-
-	@Override
 	protected void onActivityResult( int requestCode,
 	                                 int resultCode,
 	                                 Intent data )
@@ -338,10 +330,10 @@ public class TT_TaskListActivity
 			case CONNECTION_REQUEST:
 				if ( resultCode == Activity.RESULT_OK )
 				{
-					System.out.println( "Username from connection: "
-					                    + data.getStringExtra( USERNAME ) );
-					session = new UserSession( data.getStringExtra( USERNAME ),
-					                           data.getStringExtra( SESSIONID ) );
+					TreeTaskerControllerDAO.getInstance()
+					                       .setUserSession( new UserSession(
+					                                                         data.getStringExtra( USERNAME ),
+					                                                         data.getStringExtra( SESSIONID ) ) );
 				}
 				else
 				{
@@ -393,7 +385,6 @@ public class TT_TaskListActivity
 	private final static int	          EDITION_REQUEST	         = 2;
 
 	private final static SimpleJsonClient	client	                 = new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/check" );
-	private UserSession	                  session	                 = null;
 	private HashMap<View, TT_Task>	      view2taskMap;
 	private View	                      currentView;
 	private AlertDialog.Builder	          dialogBuilder;
@@ -405,6 +396,9 @@ public class TT_TaskListActivity
 
 	private boolean checkSession()
 	{
+		UserSession session = TreeTaskerControllerDAO.getInstance()
+		                                             .getUserSession();
+
 		if ( session == null )
 			return false;
 		else

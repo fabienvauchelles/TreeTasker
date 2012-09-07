@@ -65,7 +65,6 @@ public class TT_Tools
 		}
 		catch ( NoSuchAlgorithmException e )
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

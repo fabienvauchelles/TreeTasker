@@ -2,7 +2,6 @@ package com.vaushell.treetasker.resources;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -10,18 +9,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
-import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.FilterOperator;
-import com.vaushell.treetasker.dao.EH_Deleted_Task;
 import com.vaushell.treetasker.dao.EH_TT_Task;
 import com.vaushell.treetasker.dao.EH_TT_UserTaskContainer;
-import com.vaushell.treetasker.dao.EH_User;
+import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
 import com.vaushell.treetasker.module.SyncingStartRequest;
 import com.vaushell.treetasker.module.SyncingStartResponse;
 import com.vaushell.treetasker.module.TaskStamp;
@@ -29,52 +19,20 @@ import com.vaushell.treetasker.module.TaskStamp;
 @Path( "/syncing1" )
 public class SyncingStartResource
 {
-	public static final DatastoreService	datastore	= DatastoreServiceFactory.getDatastoreService();
+	public static final TT_ServerControllerDAO	DAO	= TT_ServerControllerDAO.getInstance();
 
-	@SuppressWarnings( "unused" )
 	@POST
 	@Consumes( MediaType.APPLICATION_JSON )
 	@Produces( MediaType.APPLICATION_JSON )
 	public SyncingStartResponse sync( SyncingStartRequest request )
 	{
-		Entity containerEntity;
-		HashMap<String, EH_TT_Task> datastoreTasks = null;
+		EH_TT_UserTaskContainer userContainer = DAO.getUserContainer( request.getUserSession()
+		                                                                     .getUserName() );
 
-		Query containerQuery = new Query(
-		                                  EH_TT_UserTaskContainer.KIND,
-		                                  KeyFactory.createKey( EH_User.KIND,
-		                                                        request.getUserSession()
-		                                                               .getUserName() ) );
-		containerQuery.setFilter( new Query.FilterPredicate(
-		                                                     "name",
-		                                                     FilterOperator.EQUAL,
-		                                                     request.getContainerId() ) );
-
-		containerEntity = datastore.prepare( containerQuery ).asSingleEntity();
-
-		if ( containerEntity != null )
+		HashMap<String, EH_TT_Task> datastoreTasks = new HashMap<String, EH_TT_Task>();
+		for ( EH_TT_Task task : DAO.getAllTasks( userContainer ) )
 		{
-			datastoreTasks = new HashMap<String, EH_TT_Task>();
-			Query tasksQuery = new Query( EH_TT_Task.KIND,
-			                              containerEntity.getKey() );
-			for ( Entity taskEntity : datastore.prepare( tasksQuery )
-			                                   .asIterable( FetchOptions.Builder.withDefaults() ) )
-			{
-				EH_TT_Task task = new EH_TT_Task( taskEntity );
-				datastoreTasks.put( task.getTask().getID(), task );
-			}
-		}
-		else
-		{
-			containerEntity = new Entity(
-			                              EH_TT_UserTaskContainer.KIND,
-			                              UUID.randomUUID().toString(),
-			                              KeyFactory.createKey( EH_User.KIND,
-			                                                    request.getUserSession()
-			                                                           .getUserName() ) );
-			containerEntity.setProperty( "name",
-			                             request.getContainerId() );
-			datastore.put( containerEntity );
+			datastoreTasks.put( task.getTask().getID(), task );
 		}
 
 		SyncingStartResponse response = new SyncingStartResponse();
@@ -83,19 +41,10 @@ public class SyncingStartResource
 		// Liste des ids des noeuds présents sur le téléphone
 		for ( TaskStamp taskStamp : request.getIdList() )
 		{
-			System.err.println( "date: " + taskStamp.getLastModificationDate() );
-			if ( datastoreTasks != null )
-			{
-				datastoreTasks.remove( taskStamp.getTaskID() );
-			}
+			EH_TT_Task datastoreTask = datastoreTasks.get( taskStamp.getTaskID() );
 
-			try
+			if ( datastoreTask != null )
 			{
-				Entity entity = datastore.get( KeyFactory.createKey( containerEntity.getKey(),
-				                                                     EH_TT_Task.KIND,
-				                                                     taskStamp.getTaskID() ) );
-				EH_TT_Task datastoreTask = new EH_TT_Task( entity );
-
 				if ( datastoreTask.getTask()
 				                  .getLastModificationDate()
 				                  .after( taskStamp.getLastModificationDate() ) ) // Le
@@ -115,28 +64,24 @@ public class SyncingStartResource
 					response.addNeedUpdateId( taskStamp.getTaskID() );
 				}
 			}
-			catch ( EntityNotFoundException e )
+			else
 			{
-				try
+				if ( DAO.isTaskDeleted( userContainer, taskStamp.getTaskID() ) )
 				{
-					Entity entity = datastore.get( KeyFactory.createKey( containerEntity.getKey(),
-					                                                     EH_Deleted_Task.KIND,
-					                                                     taskStamp.getTaskID() ) );
 					response.addDeletedId( taskStamp.getTaskID() );
 				}
-				catch ( EntityNotFoundException ex )
+				else
 				{
 					response.addNeedUpdateId( taskStamp.getTaskID() );
 				}
 			}
+
+			datastoreTasks.remove( taskStamp.getTaskID() );
 		}
 
-		if ( datastoreTasks != null )
+		for ( EH_TT_Task ttTask : datastoreTasks.values() )
 		{
-			for ( EH_TT_Task ttTask : datastoreTasks.values() )
-			{
-				response.addTaskToAdd( ttTask.getTask() );
-			}
+			response.addTaskToAdd( ttTask.getTask() );
 		}
 
 		// Liste des ids des noeuds supprimés sur le téléphone
@@ -145,17 +90,11 @@ public class SyncingStartResource
 			if ( taskId != null
 			     && !taskId.trim().isEmpty() )
 			{
-				try
+				EH_TT_Task datastoreTask = DAO.getTask( userContainer, taskId );
+
+				if ( datastoreTask != null )
 				{
-					Entity entity = datastore.get( KeyFactory.createKey( containerEntity.getKey(),
-					                                                     EH_TT_Task.KIND,
-					                                                     taskId ) );
-					datastore.delete( entity.getKey() );
-					datastore.put( new Entity( EH_Deleted_Task.KIND,
-					                           taskId ) );
-				}
-				catch ( EntityNotFoundException e )
-				{
+					DAO.deleteTask( datastoreTask );
 				}
 				response.addDeletedId( taskId );
 			}

@@ -1,10 +1,19 @@
 package com.vaushell.treetasker.model;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
@@ -15,6 +24,7 @@ import pl.polidea.treeview.TreeBuilder;
 import pl.polidea.treeview.TreeStateManager;
 import android.content.Context;
 
+import com.google.gson.Gson;
 import com.vaushell.treetasker.application.storage.TaskDB;
 import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.module.SyncingFinalRequest;
@@ -241,6 +251,16 @@ public class TreeTaskerControllerDAO
 		this.rootDeletedTasksList = rootDeletedTasksList;
 	}
 
+	public void setUserSession( UserSession userSession )
+	{
+		this.userSession = userSession;
+	}
+
+	public UserSession getUserSession()
+	{
+		return this.userSession;
+	}
+
 	public boolean canPaste()
 	{
 		return copiedTask != null;
@@ -253,6 +273,8 @@ public class TreeTaskerControllerDAO
 
 	public void save( Context applicationContext )
 	{
+		saveUserSession( applicationContext );
+
 		TaskDB taskDB = new TaskDB( applicationContext );
 		taskDB.open();
 
@@ -272,6 +294,8 @@ public class TreeTaskerControllerDAO
 
 	public void load( Context applicationContext )
 	{
+		loadUserSession( applicationContext );
+
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>(
 		                                                             treeManager );
 		TaskDB taskDB = new TaskDB( applicationContext );
@@ -303,45 +327,37 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
-	public SyncingFinalResponse synchronizeWithDatastore( UserSession userSession )
+	public void synchronizeWithDatastore()
 	{
+
 		SyncingStartRequest request = new SyncingStartRequest(
 		                                                       userSession,
-		                                                       TT_UserTaskContainer.DEFAULT_NAME ); // TODO:
-		                                                                                            // récupérer
-		                                                                                            // la
-		                                                                                            // usersession,
-		                                                                                            // faire
-		                                                                                            // le
-		                                                                                            // lien
-		                                                                                            // entre
-		                                                                                            // l'activité
-		                                                                                            // de
-		                                                                                            // connection
-		                                                                                            // et
-		                                                                                            // l'activité
-		                                                                                            // principale
+		                                                       TT_UserTaskContainer.DEFAULT_NAME );
 
-		HashMap<String, TT_Task> tasksMap = unrecursifyTasks();
+		HashMap<String, TT_Task> tasksMap = new HashMap<String, TT_Task>();
+
+		for ( TT_Task task : unrecursifyTasks( rootTasksList ) )
+		{
+			tasksMap.put( task.getID(), task );
+		}
 
 		for ( TT_Task task : tasksMap.values() )
 		{
-			request.addId( new TaskStamp( task.getID(),
+			request.addId( new TaskStamp(
+			                              task.getID(),
 			                              task.getLastModificationDate() ) );
 		}
 
-		for ( TT_Task task : rootDeletedTasksList )
+		for ( TT_Task task : unrecursifyTasks( rootDeletedTasksList ) )
 		{
 			request.addRemovedId( task.getID() );
 		}
 
 		try
 		{
-			SyncingStartResponse response = client1.post( SyncingStartResponse.class,
-			                                              request );
+			SyncingStartResponse response = SYNCING_CLIENT1.post( SyncingStartResponse.class,
+			                                                      request );
 
-			// TODO: Mettre à jour les tâches, supprimer les tâches, vider les
-			// tâches supprimées, renvoyer les tâches à jour
 			for ( WS_Task wsTask : response.getMoreRecentTasks() )
 			{
 				wsTask.update( tasksMap.get( wsTask.getID() ), tasksMap );
@@ -387,31 +403,39 @@ public class TreeTaskerControllerDAO
 
 			rootDeletedTasksList.clear();
 
-			SyncingFinalRequest finalRequest = new SyncingFinalRequest(
-			                                                            userSession,
-			                                                            TT_UserTaskContainer.DEFAULT_NAME );
-
-			for ( String needUpdateId : response.getNeedUpdateIds() )
+			if ( !response.getNeedUpdateIds().isEmpty() )
 			{
-				finalRequest.addUpToDateTask( new WS_Task(
-				                                           tasksMap.get( needUpdateId ) ) );
+				SyncingFinalRequest finalRequest = new SyncingFinalRequest(
+				                                                            userSession,
+				                                                            TT_UserTaskContainer.DEFAULT_NAME );
+
+				for ( String needUpdateId : response.getNeedUpdateIds() )
+				{
+					finalRequest.addUpToDateTask( new WS_Task(
+					                                           tasksMap.get( needUpdateId ) ) );
+				}
+
+				SYNCING_CLIENT2.post( SyncingFinalResponse.class,
+				                      finalRequest );
 			}
-
-			SyncingFinalResponse finalResponse = client2.post( SyncingFinalResponse.class,
-			                                                   finalRequest );
-
-			return finalResponse;
+			else
+			{
+				return;
+			}
 		}
 		catch ( ClientProtocolException e )
 		{
-			return null;
+			return;
 		}
 	}
 
 	// PRIVATE
-	private static final SimpleJsonClient	client1	= new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/syncing1" );
-	private static final SimpleJsonClient	client2	= new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/syncing2" );
+	private static final Gson	          GSON_SERIALIZER	= new Gson();
+	private static final String	          CACHE_FILENAME	= "user_cache.json";
+	private static final SimpleJsonClient	SYNCING_CLIENT1	= new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/syncing1" );
+	private static final SimpleJsonClient	SYNCING_CLIENT2	= new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/syncing2" );
 
+	private UserSession	                  userSession;
 	private TreeStateManager<TT_Task>	  treeManager;
 	private TT_Task	                      copiedTask;
 	private ArrayList<TT_Task>	          rootTasksList;
@@ -419,6 +443,7 @@ public class TreeTaskerControllerDAO
 
 	private void init()
 	{
+		this.userSession = null;
 		this.copiedTask = null;
 		this.rootTasksList = new ArrayList<TT_Task>();
 		this.rootDeletedTasksList = new ArrayList<TT_Task>();
@@ -458,26 +483,85 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
-	private HashMap<String, TT_Task> unrecursifyTasks()
+	private Set<TT_Task> unrecursifyTasks( Collection<TT_Task> rootTasksList )
 	{
-		HashMap<String, TT_Task> tasksMap = new HashMap<String, TT_Task>();
+		HashSet<TT_Task> tasksSet = new HashSet<TT_Task>();
 
 		for ( TT_Task rootTask : rootTasksList )
 		{
-			unrecursifyTasksRec( rootTask, tasksMap );
+			unrecursifyTasksRec( rootTask, tasksSet );
 		}
 
-		return tasksMap;
+		return tasksSet;
 	}
 
 	private void unrecursifyTasksRec( TT_Task task,
-	                                  HashMap<String, TT_Task> tasksMap )
+	                                  HashSet<TT_Task> tasksSet )
 	{
-		tasksMap.put( task.getID(), task );
+		tasksSet.add( task );
 
 		for ( TT_Task childTask : task.getChildrenTask() )
 		{
-			unrecursifyTasksRec( childTask, tasksMap );
+			unrecursifyTasksRec( childTask, tasksSet );
+		}
+	}
+
+	private void saveUserSession( Context appContext )
+	{
+		File cacheFile = new File( appContext.getCacheDir(), CACHE_FILENAME );
+
+		if ( userSession == null )
+		{
+			if ( cacheFile.exists() )
+			{
+				cacheFile.delete();
+			}
+		}
+		else
+		{
+			try
+			{
+				FileOutputStream fos = new FileOutputStream( cacheFile );
+				String userSessionJson = GSON_SERIALIZER.toJson( userSession );
+
+				fos.write( userSessionJson.getBytes() );
+				fos.close();
+			}
+			catch ( FileNotFoundException e )
+			{
+				e.printStackTrace();
+			}
+			catch ( IOException e )
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void loadUserSession( Context appContext )
+	{
+		File cacheFile = new File( appContext.getCacheDir(), CACHE_FILENAME );
+
+		if ( cacheFile.exists() )
+		{
+			try
+			{
+				InputStreamReader isr = new InputStreamReader(
+				                                               new FileInputStream(
+				                                                                    cacheFile ) );
+				userSession = GSON_SERIALIZER.fromJson( isr, UserSession.class );
+				isr.close();
+			}
+			catch ( FileNotFoundException e )
+			{
+				userSession = null;
+				e.printStackTrace();
+			}
+			catch ( IOException e )
+			{
+				userSession = null;
+				e.printStackTrace();
+			}
 		}
 	}
 }

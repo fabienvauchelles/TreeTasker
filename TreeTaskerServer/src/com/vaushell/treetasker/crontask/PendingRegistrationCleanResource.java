@@ -3,7 +3,7 @@ package com.vaushell.treetasker.crontask;
 import java.util.Date;
 import java.util.List;
 
-import javax.ws.rs.POST;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 import com.google.appengine.api.datastore.DatastoreService;
@@ -23,7 +23,7 @@ public class PendingRegistrationCleanResource
 	// PUBLIC
 	public static final DatastoreService	datastore	= DatastoreServiceFactory.getDatastoreService();
 
-	@POST
+	@GET
 	public void cleanPendingRegistrations()
 	{
 		Query query = new Query( EH_RegisterValidationPending.KIND );
