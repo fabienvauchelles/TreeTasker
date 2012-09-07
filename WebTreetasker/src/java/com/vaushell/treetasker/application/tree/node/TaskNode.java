@@ -5,6 +5,7 @@
 package com.vaushell.treetasker.application.tree.node;
 
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
+import com.vaushell.treetasker.application.content.EditTaskLayout;
 import com.vaushell.treetasker.model.TT_Task;
 
 /**
@@ -37,11 +38,15 @@ public class TaskNode
     @Override
     public void onEnter()
     {
+        controller.getContent().setView( new EditTaskLayout( this ,
+                                                             controller ) );
     }
 
     @Override
     public void onExit()
     {
+        controller.getContent().getView().onExit();
+        controller.getTree().refreshNodeCaption( this );
     }
     // PROTECTED
     // PRIVATE

@@ -4,7 +4,6 @@
  */
 package com.vaushell.treetasker.application.content;
 
-import com.vaadin.ui.Component;
 import com.vaadin.ui.VerticalLayout;
 
 /**
@@ -20,23 +19,24 @@ public class TTWcontent
         init();
     }
 
-    public void setView( Component view )
+    public void setView( EditTaskLayout view )
     {
         removeAllComponents();
         addComponent( view );
         currentView = view;
     }
 
-    public Component getView()
+    public EditTaskLayout getView()
     {
         return currentView;
     }
     // PROTECTED
     // PRIVATE
-    private Component currentView;
+    private EditTaskLayout currentView;
 
     private void init()
     {
         this.setMargin( true );
+        setSizeFull();
     }
 }
