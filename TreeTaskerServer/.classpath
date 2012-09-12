@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER/App Engine (1)"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/asm-3.1.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jackson-core-asl-1.9.2.jar"/>
@@ -14,6 +13,7 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jettison-1.1.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jsr311-api-1.1.1.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-server-1.12.jar"/>
-	<classpathentry kind="lib" path="D:/GitRepos/treetasker/lib/TreeTaskerModel.jar"/>
+	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/TreeTaskerModel"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>
