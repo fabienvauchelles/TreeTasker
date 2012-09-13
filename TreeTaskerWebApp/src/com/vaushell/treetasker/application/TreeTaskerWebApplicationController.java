@@ -4,6 +4,7 @@
  */
 package com.vaushell.treetasker.application;
 
+import com.google.gwt.dev.util.collect.HashSet;
 import com.vaadin.ui.Window;
 import com.vaushell.treetasker.TreeTaskerWebApplication;
 import com.vaushell.treetasker.application.actionbar.TTWActionBar;
@@ -16,6 +17,7 @@ import com.vaushell.treetasker.model.TT_Task;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -92,17 +94,23 @@ public class TreeTaskerWebApplicationController
 
 	public void validTask()
 	{
-		TT_Task selectedTask = ( (TaskNode) getTree().getCurrentNode() ).getTask();
-		if ( selectedTask.getStatus() == TT_Task.TODO )
-		{
 
-			selectedTask.setStatus( TT_Task.DONE );
-		}
-		else
+		int newStatus = TT_Task.TODO;
+
+		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
 		{
-			selectedTask.setStatus( TT_Task.TODO );
+			TT_Task selectedTask = node.getTask();
+			if ( selectedTask.getStatus() == TT_Task.TODO )
+			{
+				newStatus = TT_Task.DONE;
+			}
 		}
-		getTree().refreshNodeIcon( (TaskNode) getTree().getCurrentNode() );
+		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
+		{
+			TT_Task selectedTask = node.getTask();
+			selectedTask.setStatus( newStatus );
+			getTree().refreshNodeIcon( node );
+		}
 	}
 
 	public void refresh()

@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -176,6 +177,11 @@ public class TTWtree
 		}
 	}
 
+	public Set getValue()
+	{
+		return (Set) navigationTree.getValue();
+	}
+
 	// </editor-fold>
 	// PROTECTED
 	protected TreeTaskerWebApplicationController	controller;
@@ -192,6 +198,7 @@ public class TTWtree
 		this.navigationTree.setDragMode( Tree.TreeDragMode.NODE );
 		this.navigationTree.setDropHandler( new TreeSortDropHandler(
 		                                                             navigationTree ) );
+		this.navigationTree.setMultiSelect( true );
 		this.currentNode = null;
 
 		setSizeUndefined();
@@ -219,20 +226,30 @@ public class TTWtree
 		{
 			public void valueChange( ValueChangeEvent event )
 			{
-				A_NavigationNode node = (A_NavigationNode) event.getProperty()
-				                                                .getValue();
+				Set<A_NavigationNode> values = (Set<A_NavigationNode>) event.getProperty()
+				                                                            .getValue();
 
-				if ( node != currentNode )
+				if ( values.size() == 1 )
+				{
+					A_NavigationNode node = values.iterator().next();
+
+					if ( node != currentNode )
+					{
+						if ( currentNode != null )
+						{
+							currentNode.onExit();
+						}
+						currentNode = node;
+						node.onEnter();
+					}
+				}
+				else if ( values.isEmpty() )
 				{
 					if ( currentNode != null )
 					{
 						currentNode.onExit();
 					}
-					currentNode = node;
-					if ( node != null )
-					{
-						node.onEnter();
-					}
+					currentNode = null;
 				}
 			}
 		};
