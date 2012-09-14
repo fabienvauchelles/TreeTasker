@@ -26,15 +26,21 @@ public class UserWindow
     // PROTECTED
     // PRIVATE
     private TreeTaskerWebApplicationController controller;
+    private VerticalLayout mainLayout;
 
     private void init()
     {
-        VerticalLayout mainLayout = new VerticalLayout();
+        mainLayout = new VerticalLayout();
         mainLayout.setSizeFull();
         mainLayout.setMargin( true );
         mainLayout.setSpacing( true );
 
         mainLayout.addComponent( controller.getHeader() );
+        setContent( mainLayout );
+    }
+
+	public void setUserView( String userName )
+    {
         mainLayout.addComponent( controller.getActionBar() );
 
         HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
@@ -44,8 +50,6 @@ public class UserWindow
 
         mainLayout.addComponent( splitPanel );
         mainLayout.setExpandRatio( splitPanel ,
-                                   1 );
-
-        setContent( mainLayout );
+                                   1 );	    
     }
 }

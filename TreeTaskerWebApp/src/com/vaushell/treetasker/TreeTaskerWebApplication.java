@@ -23,7 +23,7 @@ public class TreeTaskerWebApplication
     {
         this.controller = new TreeTaskerWebApplicationController( this );
         
-        this.controller.showUserWindow();
+        this.controller.showLoginWindow();
         
     }
     

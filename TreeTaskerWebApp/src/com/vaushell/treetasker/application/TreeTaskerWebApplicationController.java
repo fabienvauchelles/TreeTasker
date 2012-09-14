@@ -137,12 +137,32 @@ public class TreeTaskerWebApplicationController
 
 	}
 
-	public void showUserWindow()
+	public boolean login( String userName,
+	                      String password )
 	{
-		application.setMainWindow( getUserWindow() );
+		if ( !"".equals( userName ) && password != null )
+		{
+			this.userName = userName;
+			return true;
+		}
+		return false;
 	}
 
-	private Window getUserWindow()
+	public void showUserWindow()
+	{
+		UserWindow userWindow = getUserWindow();
+		userWindow.setUserView( userName );
+		getHeader().setUserView();
+		// application.setMainWindow( userWindow );
+	}
+
+	public void showLoginWindow()
+	{
+		UserWindow userWindow = getUserWindow();
+		application.setMainWindow( userWindow );
+	}
+
+	public UserWindow getUserWindow()
 	{
 		if ( userWindow == null )
 		{
@@ -173,7 +193,7 @@ public class TreeTaskerWebApplicationController
 	{
 		if ( header == null )
 		{
-			header = new TTWHeader();
+			header = new TTWHeader( this );
 		}
 		return header;
 	}
@@ -195,8 +215,10 @@ public class TreeTaskerWebApplicationController
 	private TTWHeader	             header;
 	private TTWtree	                 tree;
 	private TTWcontent	             content;
+	private String	                 userName;
 
 	private void init()
 	{
 	}
+
 }
