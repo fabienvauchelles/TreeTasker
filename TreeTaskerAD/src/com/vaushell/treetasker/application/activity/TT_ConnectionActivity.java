@@ -105,7 +105,7 @@ public class TT_ConnectionActivity
 	// PRIVATE
 	private static final int	          SERVER_KO_DIALOG	= -1;
 
-	private static final SimpleJsonClient	client	       = new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/login" );
+	private static final SimpleJsonClient	client	       = new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/login" );
 
 	private void initListeners()
 	{

@@ -384,7 +384,7 @@ public class TT_TaskListActivity
 	private final static int	          ROOT_TASK_CREATION_REQUEST	= 1;
 	private final static int	          EDITION_REQUEST	         = 2;
 
-	private final static SimpleJsonClient	client	                 = new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/check" );
+	private final static SimpleJsonClient	client	                 = new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/check" );
 	private HashMap<View, TT_Task>	      view2taskMap;
 	private View	                      currentView;
 	private AlertDialog.Builder	          dialogBuilder;

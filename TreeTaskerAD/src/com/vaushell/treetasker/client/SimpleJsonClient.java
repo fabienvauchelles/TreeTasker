@@ -112,7 +112,7 @@ public class SimpleJsonClient
 
 	// PROTECTED
 	// PRIVATE
-	private final Gson	            gson	= new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" )
+	private final Gson	            gson	= new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSSZ" )
 	                                                           .create();
 	private final DefaultHttpClient	client	= new DefaultHttpClient();
 	private String	                resource;

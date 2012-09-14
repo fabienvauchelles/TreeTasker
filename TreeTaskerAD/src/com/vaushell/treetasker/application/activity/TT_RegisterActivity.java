@@ -93,7 +93,7 @@ public class TT_RegisterActivity
 	private static final int	          REGISTER_OK_DIALOG	= -2;
 	private static final int	          SERVER_KO_DIALOG	 = -3;
 
-	private static final SimpleJsonClient	client	         = new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/register" );
+	private static final SimpleJsonClient	client	         = new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/register" );
 
 	private void initListeners()
 	{

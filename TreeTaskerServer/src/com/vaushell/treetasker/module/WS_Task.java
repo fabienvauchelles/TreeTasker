@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.vaushell.treetasker.model.TT_Task;
 
@@ -74,6 +75,7 @@ public class WS_Task
 		this.description = description;
 	}
 
+	@XmlJavaTypeAdapter(JerseyDateAdapter.class)
 	public Date getLastModificationDate()
 	{
 		return lastModificationDate;

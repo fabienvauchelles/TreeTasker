@@ -15,6 +15,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Transaction;
 import com.vaushell.treetasker.model.TT_UserTaskContainer;
+import com.vaushell.treetasker.module.UserSession;
 
 public class TT_ServerControllerDAO
 {
@@ -27,6 +28,89 @@ public class TT_ServerControllerDAO
 	public static TT_ServerControllerDAO getInstance()
 	{
 		return INSTANCE;
+	}
+
+	/**
+	 * Try to authenticate the user identity. If authenticated, put a session in
+	 * datastore with a UUID and returns it. Otherwise, returns a session with a
+	 * "bad authentication" message.
+	 * 
+	 * @param username
+	 *            ID of the user
+	 * @param passwordHash
+	 *            Password hash of the user
+	 * @return A session indicating whether authenticated or not
+	 */
+	public UserSession authenticateUser( String username,
+	                                     String passwordHash )
+	{
+		try
+		{
+			EH_User user = new EH_User(
+			                            DATASTORE.get( KeyFactory.createKey( EH_User.KIND,
+			                                                                 username ) ) );
+
+			if ( user.isValidatedUser() )
+			{
+				if ( user.getPassword().equals( passwordHash ) )
+				{
+					UserSession userSession = new UserSession(
+					                                           user.getLogin(),
+					                                           UUID.randomUUID()
+					                                               .toString() );
+					Entity datastoreUserSession = new Entity(
+					                                          "UserSession",
+					                                          userSession.getUserSessionID() );
+					datastoreUserSession.setProperty( "username",
+					                                  userSession.getUserName() );
+
+					synchronized ( DATASTORE )
+					{
+						DATASTORE.put( datastoreUserSession );
+					}
+
+					return userSession;
+				}
+			}
+			else
+			{
+				UserSession session = new UserSession();
+				session.setSessionMessage( UserSession.MESSAGE_BAD_AUTHENTICATION );
+				return session;
+			}
+		}
+		catch ( EntityNotFoundException e )
+		{
+			// Do nothing
+		}
+
+		UserSession session = new UserSession();
+		session.setSessionMessage( UserSession.MESSAGE_BAD_AUTHENTICATION );
+		return session;
+	}
+
+	public boolean checkUserSession( UserSession userSession )
+	{
+		try
+		{
+			Entity datastoreUserSession = DATASTORE.get( KeyFactory.createKey( "UserSession",
+			                                                                   userSession.getUserSessionID() ) );
+
+			if ( userSession.getUserName() != null
+			     && userSession.getUserName()
+			                   .equals( datastoreUserSession.getProperty( "username" ) ) )
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		catch ( EntityNotFoundException e )
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -149,9 +233,10 @@ public class TT_ServerControllerDAO
 				}
 			}
 		}
-		catch ( Throwable th )
+		catch ( RuntimeException ex )
 		{
 			tx.rollback();
+			throw ex;
 		}
 
 		tx.commit();

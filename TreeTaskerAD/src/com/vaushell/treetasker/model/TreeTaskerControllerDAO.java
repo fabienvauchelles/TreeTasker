@@ -432,8 +432,8 @@ public class TreeTaskerControllerDAO
 	// PRIVATE
 	private static final Gson	          GSON_SERIALIZER	= new Gson();
 	private static final String	          CACHE_FILENAME	= "user_cache.json";
-	private static final SimpleJsonClient	SYNCING_CLIENT1	= new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/syncing1" );
-	private static final SimpleJsonClient	SYNCING_CLIENT2	= new SimpleJsonClient().resource( "http://vsh2-test.appspot.com/resources/syncing2" );
+	private static final SimpleJsonClient	SYNCING_CLIENT1	= new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/syncing1" );
+	private static final SimpleJsonClient	SYNCING_CLIENT2	= new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/syncing2" );
 
 	private UserSession	                  userSession;
 	private TreeStateManager<TT_Task>	  treeManager;

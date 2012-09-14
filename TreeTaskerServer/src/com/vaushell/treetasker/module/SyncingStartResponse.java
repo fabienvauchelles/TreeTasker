@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @XmlRootElement
 public class SyncingStartResponse
@@ -75,6 +76,7 @@ public class SyncingStartResponse
 		this.tasksToAdd.add( taskToAdd );
 	}
 
+	@XmlJavaTypeAdapter(JerseyDateAdapter.class)
 	public Date getDate()
 	{
 		return date;

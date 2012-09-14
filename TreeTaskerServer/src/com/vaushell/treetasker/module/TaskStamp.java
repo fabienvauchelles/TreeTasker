@@ -3,6 +3,7 @@ package com.vaushell.treetasker.module;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @XmlRootElement
 public class TaskStamp
@@ -31,6 +32,7 @@ public class TaskStamp
 		this.taskID = taskID;
 	}
 
+	@XmlJavaTypeAdapter(JerseyDateAdapter.class)
 	public Date getLastModificationDate()
 	{
 		return lastModificationDate;
