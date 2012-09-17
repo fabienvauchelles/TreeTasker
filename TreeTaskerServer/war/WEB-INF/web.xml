@@ -30,6 +30,27 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 	<servlet-mapping>
 		<servlet-name>Cron Servlet</servlet-name>
 		<url-pattern>/cron/*</url-pattern>
+	</servlet-mapping>	
+	
+	<context-param>
+		<description>
+		Vaadin production mode</description>
+		<param-name>productionMode</param-name>
+		<param-value>false</param-value>
+	</context-param>
+	<servlet>
+		<servlet-name>Treetaskerwebapp Application</servlet-name>
+		<servlet-class>com.vaadin.terminal.gwt.server.GAEApplicationServlet</servlet-class>
+		<init-param>
+			<description>
+			Vaadin application class to start</description>
+			<param-name>application</param-name>
+			<param-value>com.vaushell.treetasker.TreeTaskerWebApplication</param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Treetaskerwebapp Application</servlet-name>
+		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 	
 	<security-constraint>
@@ -41,7 +62,7 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
         </auth-constraint>
     </security-constraint>
     
-	<welcome-file-list>
-		<welcome-file>index.html</welcome-file>
-	</welcome-file-list>
+<!-- 	<welcome-file-list> -->
+<!-- 		<welcome-file>index.html</welcome-file> -->
+<!-- 	</welcome-file-list> -->
 </web-app>
