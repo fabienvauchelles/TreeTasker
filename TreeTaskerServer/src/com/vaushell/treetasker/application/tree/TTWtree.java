@@ -37,6 +37,11 @@ public class TTWtree
     extends VerticalLayout
     implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	// PUBLIC
 	public TTWtree( TreeTaskerWebApplicationController controller )
 	{
@@ -128,6 +133,7 @@ public class TTWtree
 		navigationTree.expandItemsRecursively( node );
 	}
 
+	@SuppressWarnings("unchecked")
 	public void removeNodeRecursively( A_NavigationNode node )
 	{
 		if ( node != null )
@@ -147,6 +153,7 @@ public class TTWtree
 		return (A_NavigationNode) navigationTree.getParent( node );
 	}
 
+	@SuppressWarnings("unchecked")
 	public Collection<A_NavigationNode> getChildren( A_NavigationNode node )
 	{
 		return (Collection<A_NavigationNode>) navigationTree.getChildren( node );
@@ -177,9 +184,9 @@ public class TTWtree
 		}
 	}
 
-	public Set getValue()
+	public Set<?> getValue()
 	{
-		return (Set) navigationTree.getValue();
+		return (Set<?>) navigationTree.getValue();
 	}
 
 	// </editor-fold>
@@ -220,10 +227,16 @@ public class TTWtree
 		                                    TT_Task.TODO ), controller ) );
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void initListeners()
 	{
 		this.changeListener = new Property.ValueChangeListener()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void valueChange( ValueChangeEvent event )
 			{
 				Set<A_NavigationNode> values = (Set<A_NavigationNode>) event.getProperty()
@@ -260,6 +273,10 @@ public class TTWtree
 	private static class TreeSortDropHandler
 	    implements DropHandler
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private final Tree	tree;
 
 		public TreeSortDropHandler( Tree tree )
@@ -281,8 +298,6 @@ public class TTWtree
 			TreeTargetDetails dropData = ( (TreeTargetDetails) dropEvent.getTargetDetails() );
 
 			Object sourceItemId = ( (DataBoundTransferable) t ).getItemId();
-			// FIXME: Why "over", should be "targetItemId" or just
-			// "getItemId"
 			Object targetItemId = dropData.getItemIdOver();
 
 			// Location describes on which part of the node the drop took

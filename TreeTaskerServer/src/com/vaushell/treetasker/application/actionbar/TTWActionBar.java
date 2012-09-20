@@ -18,6 +18,10 @@ import java.util.Collection;
 public class TTWActionBar
     extends HorizontalLayout
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// PUBLIC
 	public static final String	ACTION_BAR_BUTTON_STYLE	= "ttw-action-bar";
 
@@ -96,7 +100,12 @@ public class TTWActionBar
 		Button vBTaddTask = new Button( "Ajouter une tâche",
 		                                new Button.ClickListener()
 		                                {
-			                                public void buttonClick( ClickEvent event )
+			                                /**
+											 * 
+											 */
+											private static final long serialVersionUID = 1L;
+
+											public void buttonClick( ClickEvent event )
 			                                {
 				                                controller.addNewTask();
 			                                }
@@ -107,7 +116,12 @@ public class TTWActionBar
 		Button vBTaddSubTask = new Button( "Ajouter une sous-tâche",
 		                                   new Button.ClickListener()
 		                                   {
-			                                   public void buttonClick( ClickEvent event )
+			                                   /**
+											 * 
+											 */
+											private static final long serialVersionUID = 1L;
+
+											public void buttonClick( ClickEvent event )
 			                                   {
 				                                   controller.addNewSubTask();
 			                                   }
@@ -118,7 +132,12 @@ public class TTWActionBar
 		Button vBTdeleteTask = new Button( "Supprimer",
 		                                   new Button.ClickListener()
 		                                   {
-			                                   public void buttonClick( ClickEvent event )
+			                                   /**
+											 * 
+											 */
+											private static final long serialVersionUID = 1L;
+
+											public void buttonClick( ClickEvent event )
 			                                   {
 				                                   controller.deleteTask();
 			                                   }
@@ -128,6 +147,11 @@ public class TTWActionBar
 
 		Button vBTcopyTask = new Button( "Copier", new Button.ClickListener()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void buttonClick( ClickEvent event )
 			{
 				controller.copyTask();
@@ -138,6 +162,11 @@ public class TTWActionBar
 
 		Button vBTpasteTask = new Button( "Coller", new Button.ClickListener()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void buttonClick( ClickEvent event )
 			{
 				controller.pasteTask();
@@ -149,7 +178,12 @@ public class TTWActionBar
 		Button vBTrefresh = new Button( "Actualiser",
 		                                new Button.ClickListener()
 		                                {
-			                                public void buttonClick( ClickEvent event )
+			                                /**
+											 * 
+											 */
+											private static final long serialVersionUID = 1L;
+
+											public void buttonClick( ClickEvent event )
 			                                {
 				                                controller.refresh();
 			                                }
@@ -159,6 +193,11 @@ public class TTWActionBar
 
 		Button vBTvalidate = new Button( "Valider", new Button.ClickListener()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void buttonClick( ClickEvent event )
 			{
 				controller.validTask();

@@ -13,7 +13,12 @@ import com.vaadin.ui.VerticalLayout;
 public class TTWcontent
         extends VerticalLayout
 {
-    // PUBLIC
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	// PUBLIC
     public TTWcontent()
     {
         init();

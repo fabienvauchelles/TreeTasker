@@ -19,6 +19,11 @@ import com.vaushell.treetasker.application.tree.node.TaskNode;
 public class EditTaskLayout
     extends VerticalLayout
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	// PUBLIC
 	public EditTaskLayout( TaskNode taskNode,
 	                       TreeTaskerWebApplicationController controller )
@@ -64,6 +69,11 @@ public class EditTaskLayout
 
 		addListener( new LayoutClickListener()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void layoutClick( LayoutClickEvent event )
 			{
 				if ( event.getChildComponent() == vTFtaskTitleValue )

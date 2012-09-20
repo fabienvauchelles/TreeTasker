@@ -15,208 +15,181 @@ import com.vaushell.treetasker.application.content.TTWcontent;
 import com.vaushell.treetasker.application.header.TTWHeader;
 import com.vaushell.treetasker.application.tree.TTWtree;
 import com.vaushell.treetasker.application.tree.node.TaskNode;
+import com.vaushell.treetasker.application.window.RegistrationWindow;
 import com.vaushell.treetasker.application.window.UserWindow;
+import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
 import com.vaushell.treetasker.model.TT_Task;
+import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.tools.TT_Tools;
 
 /**
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
-public class TreeTaskerWebApplicationController
-    implements Serializable
-{
+public class TreeTaskerWebApplicationController implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	// PUBLIC
-	public TreeTaskerWebApplicationController( TreeTaskerWebApplication application )
-	{
+	public TreeTaskerWebApplicationController(
+			TreeTaskerWebApplication application) {
 		this.application = application;
 		init();
 	}
 
-	public TreeTaskerWebApplication getApplication()
-	{
+	public TreeTaskerWebApplication getApplication() {
 		return application;
 	}
 
-	public void addNewTask()
-	{
-		TaskNode newNode = new TaskNode(
-		                                 new TT_Task( UUID.randomUUID()
-		                                                  .toString(),
-		                                              "Nouvelle tâche", null,
-		                                              new Date(), TT_Task.TODO ),
-		                                 this );
+	public void addNewTask() {
+		TaskNode newNode = new TaskNode(new TT_Task(UUID.randomUUID()
+				.toString(), "Nouvelle tâche", null, new Date(), TT_Task.TODO),
+				this);
 		TaskNode siblingNode = (TaskNode) getTree().getCurrentNode();
 		TaskNode parentNode = null;
-		if ( siblingNode != null )
-		{
-			parentNode = (TaskNode) getTree().getParent( siblingNode );
+		if (siblingNode != null) {
+			parentNode = (TaskNode) getTree().getParent(siblingNode);
 		}
 
-		if ( parentNode != null )
-		{
-			getTree().addNode( newNode, parentNode );
-			getTree().moveAfterSiblingNode( newNode, siblingNode );
-			newNode.getTask().setParent( parentNode.getTask() );
-		}
-		else
-		{
-			getTree().addNode( newNode );
-			if ( siblingNode != null )
-			{
-				getTree().moveAfterSiblingNode( newNode, siblingNode );
+		if (parentNode != null) {
+			getTree().addNode(newNode, parentNode);
+			getTree().moveAfterSiblingNode(newNode, siblingNode);
+			newNode.getTask().setParent(parentNode.getTask());
+		} else {
+			getTree().addNode(newNode);
+			if (siblingNode != null) {
+				getTree().moveAfterSiblingNode(newNode, siblingNode);
 			}
 		}
 	}
 
-	public void addNewSubTask()
-	{
-		TaskNode newNode = new TaskNode(
-		                                 new TT_Task( UUID.randomUUID()
-		                                                  .toString(),
-		                                              "Nouvelle tâche", null,
-		                                              new Date(), TT_Task.TODO ),
-		                                 this );
+	public void addNewSubTask() {
+		TaskNode newNode = new TaskNode(new TT_Task(UUID.randomUUID()
+				.toString(), "Nouvelle tâche", null, new Date(), TT_Task.TODO),
+				this);
 		TaskNode parentNode = (TaskNode) getTree().getCurrentNode();
 
-		if ( parentNode != null )
-		{
-			getTree().addNode( newNode, parentNode );
-			newNode.getTask().setParent( parentNode.getTask() );
-			getTree().expandNode( parentNode );
-		}
-		else
-		{
-			getTree().addNode( newNode );
+		if (parentNode != null) {
+			getTree().addNode(newNode, parentNode);
+			newNode.getTask().setParent(parentNode.getTask());
+			getTree().expandNode(parentNode);
+		} else {
+			getTree().addNode(newNode);
 		}
 	}
 
-	public void validTask()
-	{
-
+	@SuppressWarnings("unchecked")
+	public void validTask() {
 		int newStatus = TT_Task.TODO;
 
-		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
-		{
+		for (TaskNode node : (Set<TaskNode>) getTree().getValue()) {
 			TT_Task selectedTask = node.getTask();
-			if ( selectedTask.getStatus() == TT_Task.TODO )
-			{
+			if (selectedTask.getStatus() == TT_Task.TODO) {
 				newStatus = TT_Task.DONE;
 			}
 		}
-		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
-		{
+		for (TaskNode node : (Set<TaskNode>) getTree().getValue()) {
 			TT_Task selectedTask = node.getTask();
-			selectedTask.setStatus( newStatus );
-			getTree().refreshNodeIcon( node );
+			selectedTask.setStatus(newStatus);
+			getTree().refreshNodeIcon(node);
 		}
 	}
 
-	public void refresh()
-	{
+	public void refresh() {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void pasteTask()
-	{
+	public void pasteTask() {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void copyTask()
-	{
+	public void copyTask() {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void deleteTask()
-	{
+	public void deleteTask() {
 		// TODO Auto-generated method stub
 
 	}
 
-	public boolean login( String userName,
-	                      String password )
-	{
-		if ( !"".equals( userName ) && password != null )
-		{
-			this.userName = userName;
-			return true;
+	public boolean login(String userName, String password) {
+		if (!"".equals(userName) && password != null) {
+			this.userSession = TT_ServerControllerDAO.getInstance()
+					.authenticateUser(userName,
+							TT_Tools.encryptPassword(userName, password));
+			return userSession.isAuhtenticated();
 		}
 		return false;
 	}
 
-	public void showUserWindow()
-	{
+	public void showUserWindow() {
 		UserWindow userWindow = getUserWindow();
-		userWindow.setUserView( userName );
+		userWindow.setUserView(userSession.getUserName());
 		getHeader().setUserView();
-		// application.setMainWindow( userWindow );
 	}
 
-	public void showLoginWindow()
-	{
+	public void showLoginWindow() {
 		UserWindow userWindow = getUserWindow();
-		application.setMainWindow( userWindow );
+		application.setMainWindow(userWindow);
 	}
 
-	public UserWindow getUserWindow()
-	{
-		if ( userWindow == null )
-		{
-			userWindow = new UserWindow( this );
+	public UserWindow getUserWindow() {
+		if (userWindow == null) {
+			userWindow = new UserWindow(this);
 		}
 		return userWindow;
 	}
 
-	public TTWActionBar getActionBar()
-	{
-		if ( actionBar == null )
-		{
-			actionBar = new TTWActionBar( this );
+	public TTWActionBar getActionBar() {
+		if (actionBar == null) {
+			actionBar = new TTWActionBar(this);
 		}
 		return actionBar;
 	}
 
-	public TTWcontent getContent()
-	{
-		if ( content == null )
-		{
+	public TTWcontent getContent() {
+		if (content == null) {
 			content = new TTWcontent();
 		}
 		return content;
 	}
 
-	public TTWHeader getHeader()
-	{
-		if ( header == null )
-		{
-			header = new TTWHeader( this );
+	public TTWHeader getHeader() {
+		if (header == null) {
+			header = new TTWHeader(this);
 		}
 		return header;
 	}
 
-	public TTWtree getTree()
-	{
-		if ( tree == null )
-		{
-			tree = new TTWtree( this );
+	public TTWtree getTree() {
+		if (tree == null) {
+			tree = new TTWtree(this);
 		}
 		return tree;
 	}
 
+	public void queryRegistration() {
+		RegistrationWindow subWindow = new RegistrationWindow(this);
+		application.getMainWindow().addWindow(subWindow);
+		subWindow.center();
+	}
+
 	// PROTECTED
 	// PRIVATE
-	private TreeTaskerWebApplication	application;
-	private UserWindow	             userWindow;
-	private TTWActionBar	         actionBar;
-	private TTWHeader	             header;
-	private TTWtree	                 tree;
-	private TTWcontent	             content;
-	private String	                 userName;
+	private TreeTaskerWebApplication application;
+	private UserWindow userWindow;
+	private TTWActionBar actionBar;
+	private TTWHeader header;
+	private TTWtree tree;
+	private TTWcontent content;
+	private UserSession userSession;
 
-	private void init()
-	{
+	private void init() {
 	}
 
 }

@@ -69,6 +69,11 @@ public class UserSession
 	{
 		this.sessionMessage = sessionMessage;
 	}
+	
+	public boolean isAuhtenticated()
+	{
+		return sessionState == SESSION_OK;
+	}
 
 	// PROTECTED
 	// PRIVATE

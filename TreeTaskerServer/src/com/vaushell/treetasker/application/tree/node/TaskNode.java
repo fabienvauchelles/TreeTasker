@@ -15,6 +15,11 @@ import com.vaushell.treetasker.model.TT_Task;
 public class TaskNode
     extends A_NavigationNode
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	// PUBLIC
 	public TaskNode( TT_Task task,
 	                 TreeTaskerWebApplicationController controller )

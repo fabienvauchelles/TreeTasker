@@ -14,7 +14,11 @@ import java.io.Serializable;
 public abstract class A_NavigationNode
         implements Serializable
 {
-    // PUBLIC
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	// PUBLIC
     public A_NavigationNode( TreeTaskerWebApplicationController controller )
     {
         this.controller = controller;

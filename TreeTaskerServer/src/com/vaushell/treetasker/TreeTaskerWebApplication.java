@@ -16,7 +16,12 @@ import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 public class TreeTaskerWebApplication
         extends Application
 {
-    @Override
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Override
     public void init()
     {
         this.controller = new TreeTaskerWebApplicationController( this );

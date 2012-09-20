@@ -16,7 +16,12 @@ import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 public class UserWindow
         extends Window
 {
-    // PUBLIC
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	// PUBLIC
     public UserWindow( TreeTaskerWebApplicationController controller )
     {
         super( "TreeTasker WebApplication" );
