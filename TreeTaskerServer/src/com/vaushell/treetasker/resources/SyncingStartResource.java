@@ -32,7 +32,7 @@ public class SyncingStartResource
 		HashMap<String, EH_TT_Task> datastoreTasks = new HashMap<String, EH_TT_Task>();
 		for ( EH_TT_Task task : DAO.getAllTasks( userContainer ) )
 		{
-			datastoreTasks.put( task.getTask().getID(), task );
+			datastoreTasks.put( task.getTask().getId(), task );
 		}
 
 		SyncingStartResponse response = new SyncingStartResponse();

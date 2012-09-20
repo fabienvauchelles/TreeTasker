@@ -41,6 +41,7 @@ public class SyncingFinalResource
 		}
 		catch ( Throwable th )
 		{
+			th.printStackTrace();
 			return new SyncingFinalResponse( SyncingFinalResponse.SYNC_KO );
 
 		}

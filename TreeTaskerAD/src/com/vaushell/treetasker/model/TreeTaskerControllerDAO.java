@@ -26,6 +26,7 @@ import android.content.Context;
 
 import com.google.gson.Gson;
 import com.vaushell.treetasker.application.storage.TaskDB;
+import com.vaushell.treetasker.client.E_BadResponseStatus;
 import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.module.SyncingFinalRequest;
 import com.vaushell.treetasker.module.SyncingFinalResponse;
@@ -38,6 +39,10 @@ import com.vaushell.treetasker.module.WS_Task;
 public class TreeTaskerControllerDAO
 {
 	// PUBLIC
+	public static final String	TEST_RESOURCE	= "http://10.0.2.2:8888/";
+	public static final String	WEB_RESOURCE	= "http://vsh2-test.appspot.com/";
+	public static final String	RESOURCE	  = TEST_RESOURCE;
+
 	public static TreeTaskerControllerDAO getInstance()
 	{
 		return TreeTaskerControllerDAOHolder.INSTANCE;
@@ -360,7 +365,7 @@ public class TreeTaskerControllerDAO
 
 			for ( WS_Task wsTask : response.getMoreRecentTasks() )
 			{
-				wsTask.update( tasksMap.get( wsTask.getID() ), tasksMap );
+				wsTask.update( tasksMap.get( wsTask.getId() ), tasksMap );
 			}
 
 			TreeSet<WS_Task> sortedTasksToAdd = new TreeSet<WS_Task>(
@@ -427,13 +432,20 @@ public class TreeTaskerControllerDAO
 		{
 			return;
 		}
+		catch ( E_BadResponseStatus e )
+		{
+			e.printStackTrace();
+			return;
+		}
 	}
 
 	// PRIVATE
 	private static final Gson	          GSON_SERIALIZER	= new Gson();
 	private static final String	          CACHE_FILENAME	= "user_cache.json";
-	private static final SimpleJsonClient	SYNCING_CLIENT1	= new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/syncing1" );
-	private static final SimpleJsonClient	SYNCING_CLIENT2	= new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/syncing2" );
+	private static final SimpleJsonClient	SYNCING_CLIENT1	= new SimpleJsonClient().resource( TreeTaskerControllerDAO.RESOURCE )
+	                                                                                .path( "resources/syncing1" );
+	private static final SimpleJsonClient	SYNCING_CLIENT2	= new SimpleJsonClient().resource( TreeTaskerControllerDAO.RESOURCE )
+	                                                                                .path( "resources/syncing2" );
 
 	private UserSession	                  userSession;
 	private TreeStateManager<TT_Task>	  treeManager;

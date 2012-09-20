@@ -21,7 +21,7 @@ public class EH_TT_Task
 	public EH_TT_Task( WS_Task task,
 	                   EH_TT_UserTaskContainer container )
 	{
-		super( KIND, task.getID(), container.getEntity() );
+		super( KIND, task.getId(), container.getEntity() );
 		this.container = container;
 		this.task = task;
 		init();

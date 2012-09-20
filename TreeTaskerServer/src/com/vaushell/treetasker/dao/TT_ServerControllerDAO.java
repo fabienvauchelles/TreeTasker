@@ -1,9 +1,19 @@
 package com.vaushell.treetasker.dao;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -28,6 +38,91 @@ public class TT_ServerControllerDAO
 	public static TT_ServerControllerDAO getInstance()
 	{
 		return INSTANCE;
+	}
+
+	public UserSession registerUser( String username,
+	                                 String passwordHash )
+	{
+		EH_User alreadyExistingUser = null;
+		try
+		{
+			alreadyExistingUser = new EH_User(
+			                                   DATASTORE.get( KeyFactory.createKey( EH_User.KIND,
+			                                                                        username ) ) );
+		}
+		catch ( EntityNotFoundException e )
+		{
+			EH_User newUser = new EH_User( username,
+			                               passwordHash );
+			DATASTORE.put( newUser.getEntity() );
+
+			EH_RegisterValidationPending rvp = new EH_RegisterValidationPending(
+			                                                                     username,
+			                                                                     UUID.randomUUID()
+			                                                                         .toString() );
+			DATASTORE.put( rvp.getEntity() );
+
+			// Mail
+			Properties props = new Properties();
+			Session session = Session.getDefaultInstance( props, null );
+
+			String msgBody = "Bonjour,\n\n"
+			                 +
+			                 "Vous recevez ce message car vous vous êtes inscrit sur TreeTasker.\n"
+			                 +
+			                 "Afin de valider votre inscription, veuillez vous rendre à l'adresse suivante : http://vsh2-test.appspot.com/resources/valid?username="
+			                 + username
+			                 + "&valid-key="
+			                 + rvp.getValidKey()
+			                 + "\n\nUne fois votre adresse validée, vous pourrez vous connecter depuis votre mobile grâce à l'application TreeTasker."
+			                 +
+			                 "\n\n(Vous avez 48 heures pour valider votre inscription. Passé ce délai, vous devrez vous réinscrire.)\n\n"
+			                 +
+			                 "Toute l'équipe de TreeTasker vous remercie !";
+
+			try
+			{
+				Message msg = new MimeMessage( session );
+				msg.setFrom( new InternetAddress(
+				                                  "donotreply@vsh2-test.appspotmail.com",
+				                                  "TreeTasker Registration Mail" ) );
+				msg.addRecipient( Message.RecipientType.TO,
+				                  new InternetAddress( username,
+				                                       "User "
+				                                           + username ) );
+				msg.setSubject( "Mail d'activation de compte TreeTasker" );
+				msg.setText( msgBody );
+				Transport.send( msg );
+			}
+			catch ( UnsupportedEncodingException ex )
+			{
+
+			}
+			catch ( AddressException ex )
+			{
+				// ...
+			}
+			catch ( MessagingException ex )
+			{
+				// ...
+			}
+
+			return new UserSession( username, UUID.randomUUID()
+			                                      .toString() );
+		}
+
+		if ( alreadyExistingUser.isValidatedUser() )
+		{
+			UserSession session = new UserSession();
+			session.setSessionMessage( UserSession.MESSAGE_USER_ALREADY_EXISTS );
+			return session;
+		}
+		else
+		{
+			UserSession session = new UserSession();
+			session.setSessionMessage( UserSession.MESSAGE_REGISTRATION_NOT_VALIDATED );
+			return session;
+		}
 	}
 
 	/**

@@ -27,6 +27,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.vaushell.treetasker.R;
+import com.vaushell.treetasker.client.E_BadResponseStatus;
 import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.model.TT_Task;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
@@ -384,7 +385,8 @@ public class TT_TaskListActivity
 	private final static int	          ROOT_TASK_CREATION_REQUEST	= 1;
 	private final static int	          EDITION_REQUEST	         = 2;
 
-	private final static SimpleJsonClient	client	                 = new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/check" );
+	private final static SimpleJsonClient	client	                 = new SimpleJsonClient().resource( TreeTaskerControllerDAO.RESOURCE )
+	                                                                                         .path( "resources/check" );
 	private HashMap<View, TT_Task>	      view2taskMap;
 	private View	                      currentView;
 	private AlertDialog.Builder	          dialogBuilder;
@@ -413,6 +415,11 @@ public class TT_TaskListActivity
 			}
 			catch ( ClientProtocolException e )
 			{
+				return false;
+			}
+			catch ( E_BadResponseStatus e )
+			{
+				e.printStackTrace();
 				return false;
 			}
 		}

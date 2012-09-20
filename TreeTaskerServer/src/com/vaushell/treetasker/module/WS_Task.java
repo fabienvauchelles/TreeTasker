@@ -1,19 +1,15 @@
 package com.vaushell.treetasker.module;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.vaushell.treetasker.model.TT_Task;
 
 @XmlRootElement
 public class WS_Task
-    implements Serializable
 {
-	private static final long	serialVersionUID	= 1L;
 	public static final int	  TODO	             = 0;
 	public static final int	  DONE	             = 1;
 	public static final int	  DELETED	         = 2;
@@ -23,18 +19,19 @@ public class WS_Task
 		this( null, null, null, null, TODO, null );
 	}
 
-	public WS_Task( String ID,
+	public WS_Task( String id,
 	                String title,
 	                String description,
 	                Date lastModificationDate,
 	                int status,
 	                String parentId )
 	{
-		this.ID = ID;
+		this.id = id;
 		this.title = title;
 		this.description = description;
 		this.lastModificationDate = lastModificationDate;
 		this.status = status;
+		this.parentId = parentId;
 		init();
 	}
 
@@ -45,14 +42,14 @@ public class WS_Task
 		      ( task.getParent() != null ) ? task.getParent().getID() : null );
 	}
 
-	public String getID()
+	public String getId()
 	{
-		return ID;
+		return id;
 	}
 
-	public void setID( String ID )
+	public void setId( String id )
 	{
-		this.ID = ID;
+		this.id = id;
 	}
 
 	public String getTitle()
@@ -75,7 +72,6 @@ public class WS_Task
 		this.description = description;
 	}
 
-	@XmlJavaTypeAdapter(JerseyDateAdapter.class)
 	public Date getLastModificationDate()
 	{
 		return lastModificationDate;
@@ -126,7 +122,7 @@ public class WS_Task
 
 	// PROTECTED
 	// PRIVATE
-	private String	ID;
+	private String	id;
 	private String	title;
 	private String	description;
 	private Date	lastModificationDate;

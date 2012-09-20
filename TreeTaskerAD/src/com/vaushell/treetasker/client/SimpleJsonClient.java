@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -39,7 +40,7 @@ public class SimpleJsonClient
 
 	public <T> T post( Class<T> responseClass,
 	                   Object objectToSend )
-	    throws ClientProtocolException
+	    throws ClientProtocolException, E_BadResponseStatus
 	{
 		HttpPost request = new HttpPost(
 		                                 cleanURI( TT_Tools.convertNullStringToEmpty( resource )
@@ -70,6 +71,14 @@ public class SimpleJsonClient
 		catch ( IOException e )
 		{
 			throw new RuntimeException( e );
+		}
+
+		StatusLine statusLine = response.getStatusLine();
+
+		if ( statusLine.getStatusCode() / 100 != 2 ) // status code no success
+		{
+			throw new E_BadResponseStatus( statusLine.getStatusCode(),
+			                               statusLine.getReasonPhrase() );
 		}
 
 		try

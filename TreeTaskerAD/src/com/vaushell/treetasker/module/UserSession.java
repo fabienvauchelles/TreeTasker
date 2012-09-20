@@ -12,6 +12,7 @@ public class UserSession
 	public static final int	MESSAGE_REGISTRATION_NOT_VALIDATED	= 1;
 	public static final int	MESSAGE_BAD_AUTHENTICATION	       = 2;
 	public static final int	MESSAGE_NO_SESSION_AVAILABLE	   = 3;
+	public static final int	MESSAGE_USER_ALREADY_EXISTS	       = 4;
 
 	public UserSession()
 	{
@@ -67,14 +68,6 @@ public class UserSession
 	public void setSessionMessage( int sessionMessage )
 	{
 		this.sessionMessage = sessionMessage;
-	}
-
-	@Override
-	public String toString()
-	{
-		return "UserSession [userName=" + userName + ", userSessionID="
-		       + userSessionID + ", sessionState=" + sessionState
-		       + ", sessionMessage=" + sessionMessage + "]";
 	}
 
 	// PROTECTED

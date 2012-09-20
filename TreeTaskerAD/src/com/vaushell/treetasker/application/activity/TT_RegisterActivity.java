@@ -13,7 +13,9 @@ import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 import com.vaushell.treetasker.R;
+import com.vaushell.treetasker.client.E_BadResponseStatus;
 import com.vaushell.treetasker.client.SimpleJsonClient;
+import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
 import com.vaushell.treetasker.module.UserAuthenticationRequest;
 import com.vaushell.treetasker.module.UserSession;
 import com.vaushell.treetasker.tools.TT_Tools;
@@ -93,7 +95,8 @@ public class TT_RegisterActivity
 	private static final int	          REGISTER_OK_DIALOG	= -2;
 	private static final int	          SERVER_KO_DIALOG	 = -3;
 
-	private static final SimpleJsonClient	client	         = new SimpleJsonClient().resource( "http://10.0.2.2:8888/resources/register" );
+	private static final SimpleJsonClient	client	         = new SimpleJsonClient().resource( TreeTaskerControllerDAO.RESOURCE )
+	                                                                                 .path( "resources/register" );
 
 	private void initListeners()
 	{
@@ -152,6 +155,11 @@ public class TT_RegisterActivity
 		}
 		catch ( ClientProtocolException e )
 		{
+			showDialog( SERVER_KO_DIALOG );
+		}
+		catch ( E_BadResponseStatus e )
+		{
+			e.printStackTrace();
 			showDialog( SERVER_KO_DIALOG );
 		}
 	}
