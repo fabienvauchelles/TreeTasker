@@ -4,6 +4,9 @@ import com.vaadin.ui.Window;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 import com.vaushell.treetasker.application.ui.I_Form;
 import com.vaushell.treetasker.application.ui.RegistrationLayout;
+import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
+import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.tools.TT_Tools;
 
 /**
  * 
@@ -16,17 +19,30 @@ public class RegistrationWindow extends Window implements I_Form {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public RegistrationWindow(TreeTaskerWebApplicationController controller) {
+	public RegistrationWindow() {
 		super("Enregistrement");
-		this.controller = controller;
 		init();
 	}
 
 	public void ok() {
 		if (content.isValid()) {
-			showNotification("Enregistrement OK");
-		}
-		else {
+			String userName = content.getUserName();
+			String encryptedPassword = TT_Tools.encryptPassword(userName,
+					content.getPassword());
+			UserSession session = TT_ServerControllerDAO.getInstance()
+					.registerUser(userName, encryptedPassword);
+			if (session.isValid()) {
+				Notification n = new Notification("Enregistrement réussi",
+						"Un mail a été envoyé à " + userName
+								+ " afin de valider votre enregistrement");
+				n.setDelayMsec(Notification.DELAY_FOREVER);
+				getParent().showNotification(n);
+				close();
+			} else {
+				showNotification(userName + " est déjà utilisé.",
+						Notification.TYPE_ERROR_MESSAGE);
+			}
+		} else {
 			showNotification(content.getErrorMsg(),
 					Notification.TYPE_ERROR_MESSAGE);
 		}
@@ -37,7 +53,6 @@ public class RegistrationWindow extends Window implements I_Form {
 	}
 
 	private RegistrationLayout content;
-	private TreeTaskerWebApplicationController controller;
 
 	private void init() {
 		this.content = new RegistrationLayout(this);

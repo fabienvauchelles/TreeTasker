@@ -13,6 +13,7 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Window.Notification;
+import com.vaadin.ui.themes.BaseTheme;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 
 public class TTWHeader
@@ -140,7 +141,7 @@ public class TTWHeader
 			}
 		} );
 		//Register
-		vBTregister.setStyleName(Button.STYLE_LINK );
+		vBTregister.setStyleName(BaseTheme.BUTTON_LINK );
 		vBTregister.addListener(new Button.ClickListener() {
 
 			private static final long serialVersionUID = 1L;
@@ -234,16 +235,15 @@ public class TTWHeader
 		
 		// vTFuserNameValue
 		vTFuserNameValue = new TextField();
-		vTFuserNameValue.setImmediate(false);
+		vTFuserNameValue.setImmediate(true);
 		vTFuserNameValue.setWidth("-1px");
 		vTFuserNameValue.setHeight("-1px");
 		vTFuserNameValue.setInputPrompt("E-mail");
-		vTFuserNameValue.setSecret(false);
 		loginLayout.addComponent(vTFuserNameValue);
 		
 		// vTFpasswordValue
 		vTFpasswordValue = new PasswordField();
-		vTFpasswordValue.setImmediate(false);
+		vTFpasswordValue.setImmediate(true);
 		vTFpasswordValue.setWidth("-1px");
 		vTFpasswordValue.setHeight("-1px");
 		vTFpasswordValue.setInputPrompt("Mot de passe");

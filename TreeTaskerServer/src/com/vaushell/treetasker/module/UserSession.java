@@ -1,10 +1,16 @@
 package com.vaushell.treetasker.module;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class UserSession
+public class UserSession implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// PUBLIC
 	public static final int	SESSION_NOK	                       = 0;
 	public static final int	SESSION_OK	                       = 1;
@@ -70,7 +76,7 @@ public class UserSession
 		this.sessionMessage = sessionMessage;
 	}
 	
-	public boolean isAuhtenticated()
+	public boolean isValid()
 	{
 		return sessionState == SESSION_OK;
 	}

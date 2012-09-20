@@ -122,7 +122,7 @@ public class TreeTaskerWebApplicationController implements Serializable {
 			this.userSession = TT_ServerControllerDAO.getInstance()
 					.authenticateUser(userName,
 							TT_Tools.encryptPassword(userName, password));
-			return userSession.isAuhtenticated();
+			return userSession.isValid();
 		}
 		return false;
 	}
@@ -174,7 +174,7 @@ public class TreeTaskerWebApplicationController implements Serializable {
 	}
 
 	public void queryRegistration() {
-		RegistrationWindow subWindow = new RegistrationWindow(this);
+		RegistrationWindow subWindow = new RegistrationWindow();
 		application.getMainWindow().addWindow(subWindow);
 		subWindow.center();
 	}
