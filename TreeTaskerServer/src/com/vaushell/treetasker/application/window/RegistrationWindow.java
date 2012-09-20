@@ -1,7 +1,6 @@
 package com.vaushell.treetasker.application.window;
 
 import com.vaadin.ui.Window;
-import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 import com.vaushell.treetasker.application.ui.I_Form;
 import com.vaushell.treetasker.application.ui.RegistrationLayout;
 import com.vaushell.treetasker.dao.TT_ServerControllerDAO;

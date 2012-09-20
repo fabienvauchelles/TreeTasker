@@ -1,11 +1,17 @@
 package com.vaushell.treetasker.model;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 public class TT_UserTaskContainer
+		implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// PUBLIC
 	public static final String	DEFAULT_NAME	= "default";
 
@@ -68,6 +74,12 @@ public class TT_UserTaskContainer
 	public Set<TT_Task> getRootTasks()
 	{
 		return rootTasks;
+	}
+	
+	public void setRootTasks( Set<TT_Task> tasks )
+	{
+		rootTasks.clear();
+		rootTasks.addAll(tasks);
 	}
 
 	public void addRootTask( TT_Task rootTask )

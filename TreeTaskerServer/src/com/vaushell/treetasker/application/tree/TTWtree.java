@@ -4,6 +4,11 @@
  */
 package com.vaushell.treetasker.application.tree;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
+
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -22,12 +27,6 @@ import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 import com.vaushell.treetasker.application.tree.node.A_NavigationNode;
 import com.vaushell.treetasker.application.tree.node.TaskNode;
 import com.vaushell.treetasker.model.TT_Task;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * 
@@ -184,6 +183,12 @@ public class TTWtree
 		}
 	}
 
+	public void removeAllNodes()
+	{
+		navigationTree.removeAllItems();
+		currentNode = null;
+	}
+	
 	public Set<?> getValue()
 	{
 		return (Set<?>) navigationTree.getValue();
@@ -203,8 +208,8 @@ public class TTWtree
 		HierarchicalContainer container = new HierarchicalContainer();
 		this.navigationTree.setContainerDataSource( container );
 		this.navigationTree.setDragMode( Tree.TreeDragMode.NODE );
-		this.navigationTree.setDropHandler( new TreeSortDropHandler(
-		                                                             navigationTree ) );
+		this.navigationTree.setDropHandler( new TreeSortDropHandler(navigationTree,
+																	controller ) );
 		this.navigationTree.setMultiSelect( true );
 		this.currentNode = null;
 
@@ -212,19 +217,6 @@ public class TTWtree
 		addComponent( navigationTree );
 
 		initListeners();
-
-		addNode( new TaskNode( new TT_Task( UUID.randomUUID().toString(),
-		                                    "Titre1", "Desc1", new Date(),
-		                                    TT_Task.TODO ), controller ) );
-		addNode( new TaskNode( new TT_Task( UUID.randomUUID().toString(),
-		                                    "Titre2", "Desc1", new Date(),
-		                                    TT_Task.TODO ), controller ) );
-		addNode( new TaskNode( new TT_Task( UUID.randomUUID().toString(),
-		                                    "Titre3", "Desc1", new Date(),
-		                                    TT_Task.TODO ), controller ) );
-		addNode( new TaskNode( new TT_Task( UUID.randomUUID().toString(),
-		                                    "Titre4", "Desc1", new Date(),
-		                                    TT_Task.TODO ), controller ) );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -278,10 +270,12 @@ public class TTWtree
 		 */
 		private static final long serialVersionUID = 1L;
 		private final Tree	tree;
+		private final TreeTaskerWebApplicationController controller;
 
-		public TreeSortDropHandler( Tree tree )
+		public TreeSortDropHandler( Tree tree, TreeTaskerWebApplicationController controller )
 		{
 			this.tree = tree;
+			this.controller = controller;
 		}
 
 		public void drop( DragAndDropEvent dropEvent )
@@ -333,8 +327,7 @@ public class TTWtree
 				{
 					// move first in the container
 					container.moveAfterSibling( sourceItemId, null );
-					( (TaskNode) sourceItemId ).getTask()
-					                           .setParent( ( (TaskNode) targetItemId ).getTask() );
+					controller.setTaskParent(( (TaskNode) sourceItemId ).getTask(),  ((TaskNode) targetItemId ).getTask());					
 				}
 				tree.expandItem( targetItemId );
 			}
@@ -348,12 +341,11 @@ public class TTWtree
 					container.moveAfterSibling( targetItemId, sourceItemId );
 					if ( parentId == null )
 					{
-						( (TaskNode) sourceItemId ).getTask().setParent( null );
+						controller.setTaskParent(( (TaskNode) sourceItemId ).getTask(), null);
 					}
 					else
 					{
-						( (TaskNode) sourceItemId ).getTask()
-						                           .setParent( ( (TaskNode) parentId ).getTask() );
+						controller.setTaskParent(( (TaskNode) sourceItemId ).getTask(),  ((TaskNode) parentId ).getTask());
 					}
 				}
 			}
@@ -365,16 +357,14 @@ public class TTWtree
 					container.moveAfterSibling( sourceItemId, targetItemId );
 					if ( parentId == null )
 					{
-						( (TaskNode) sourceItemId ).getTask().setParent( null );
+						controller.setTaskParent(( (TaskNode) sourceItemId ).getTask(), null);
 					}
 					else
 					{
-						( (TaskNode) sourceItemId ).getTask()
-						                           .setParent( ( (TaskNode) parentId ).getTask() );
+						controller.setTaskParent(( (TaskNode) sourceItemId ).getTask(),  ((TaskNode) parentId ).getTask());
 					}
 				}
 			}
 		}
 	}
-
 }

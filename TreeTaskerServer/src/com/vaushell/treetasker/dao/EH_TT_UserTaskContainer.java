@@ -1,5 +1,6 @@
 package com.vaushell.treetasker.dao;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -8,7 +9,13 @@ import com.vaushell.treetasker.model.TT_UserTaskContainer;
 
 public class EH_TT_UserTaskContainer
     extends A_EntityHandler
+    implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	// PUBLIC
 	public static final String	KIND	       = "TaskContainer";
 
@@ -33,11 +40,22 @@ public class EH_TT_UserTaskContainer
 		return container;
 	}
 
+	public void setContainer(TT_UserTaskContainer container)
+	{
+		this.container = container;
+	}
+
+
 	public Set<EH_TT_Task> getChildrenTasks()
 	{
 		return childrenTasks;
 	}
 
+	public void setChildrenTasks(Set<EH_TT_Task> childrenTasks) 
+	{
+		this.childrenTasks = childrenTasks;
+	}
+	
 	public void addChildTask( EH_TT_Task childTask )
 	{
 		this.childrenTasks.add( childTask );

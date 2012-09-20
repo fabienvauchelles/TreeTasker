@@ -5,7 +5,11 @@
 package com.vaushell.treetasker.application;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,9 +21,12 @@ import com.vaushell.treetasker.application.tree.TTWtree;
 import com.vaushell.treetasker.application.tree.node.TaskNode;
 import com.vaushell.treetasker.application.window.RegistrationWindow;
 import com.vaushell.treetasker.application.window.UserWindow;
+import com.vaushell.treetasker.dao.EH_TT_Task;
+import com.vaushell.treetasker.dao.EH_TT_UserTaskContainer;
 import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
 import com.vaushell.treetasker.model.TT_Task;
 import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.module.WS_Task;
 import com.vaushell.treetasker.tools.TT_Tools;
 
 /**
@@ -62,6 +69,9 @@ public class TreeTaskerWebApplicationController implements Serializable {
 			if (siblingNode != null) {
 				getTree().moveAfterSiblingNode(newNode, siblingNode);
 			}
+			TT_ServerControllerDAO.getInstance().createOrUpdateTask(
+					new EH_TT_Task(new WS_Task(newNode.getTask()),
+							getUserContainer()));
 		}
 	}
 
@@ -73,7 +83,7 @@ public class TreeTaskerWebApplicationController implements Serializable {
 
 		if (parentNode != null) {
 			getTree().addNode(newNode, parentNode);
-			newNode.getTask().setParent(parentNode.getTask());
+			setTaskParent(newNode.getTask(), parentNode.getTask());
 			getTree().expandNode(parentNode);
 		} else {
 			getTree().addNode(newNode);
@@ -98,8 +108,28 @@ public class TreeTaskerWebApplicationController implements Serializable {
 	}
 
 	public void refresh() {
-		// TODO Auto-generated method stub
+		ArrayList<TT_Task> rootTasksList = new ArrayList<TT_Task>();
+		HashMap<String, TT_Task> idToTaskMap = new HashMap<String, TT_Task>();
+		LinkedHashMap<TT_Task, String> childrenToParentIdMap = new LinkedHashMap<TT_Task, String>();
+		for (EH_TT_Task ehTask : TT_ServerControllerDAO.getInstance()
+				.getAllTasks(getUserContainer())) {
+			TT_Task taskToLoad = new TT_Task();
+			ehTask.getTask().update(taskToLoad);
 
+			idToTaskMap.put(taskToLoad.getID(), taskToLoad);
+
+			String parentId = ehTask.getTask().getParentId();
+			if (parentId != null) {
+				childrenToParentIdMap.put(taskToLoad, parentId);
+			} else {
+				rootTasksList.add(taskToLoad);
+			}
+		}
+		for (TT_Task childTask : childrenToParentIdMap.keySet()) {
+			childTask.setParent(idToTaskMap.get(childrenToParentIdMap
+					.get(childTask)));
+		}
+		refreshTreeTasks(rootTasksList);
 	}
 
 	public void pasteTask() {
@@ -179,6 +209,29 @@ public class TreeTaskerWebApplicationController implements Serializable {
 		subWindow.center();
 	}
 
+	public EH_TT_UserTaskContainer getUserContainer() {
+		if (userSession != null) {
+			return TT_ServerControllerDAO.getInstance().getUserContainer(
+					userSession.getUserName());
+		}
+		return null;
+	}
+
+	public void setTaskParent(TT_Task child, TT_Task parent) {
+		child.setParent(parent);
+		WS_Task wsTask = new WS_Task(child);
+		TT_ServerControllerDAO.getInstance().createOrUpdateTask(
+				new EH_TT_Task(wsTask, getUserContainer()));
+	}
+
+	public void updateTaskContent(TT_Task task, String title, String description) {
+		task.setTitle(title);
+		task.setDescription(description);
+		WS_Task wsTask = new WS_Task(task);
+		TT_ServerControllerDAO.getInstance().createOrUpdateTask(
+				new EH_TT_Task(wsTask, getUserContainer()));
+	}
+
 	// PROTECTED
 	// PRIVATE
 	private TreeTaskerWebApplication application;
@@ -190,6 +243,25 @@ public class TreeTaskerWebApplicationController implements Serializable {
 	private UserSession userSession;
 
 	private void init() {
+	}
+
+	private void refreshTreeTasks(Collection<TT_Task> rootTasks) {
+		getTree().removeAllNodes();
+		for (TT_Task rootTask : rootTasks) {
+			TaskNode rootNode = new TaskNode(rootTask, this);
+			getTree().addNode(rootNode);
+			getTree().expandNode(rootNode);
+			addChildrenTaskNodesRecursively(rootNode);
+		}
+	}
+
+	private void addChildrenTaskNodesRecursively(TaskNode rootNode) {
+		for (TT_Task childTask : rootNode.getTask().getChildrenTask()) {
+			TaskNode childNode = new TaskNode(childTask, this);
+			getTree().addNode(childNode, rootNode);
+			getTree().expandNode(childNode);
+			addChildrenTaskNodesRecursively(childNode);
+		}
 	}
 
 }

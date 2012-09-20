@@ -44,7 +44,7 @@ public class UserWindow
         setContent( mainLayout );
     }
 
-	public void setUserView( String userName )
+	public void setUserView( String name )
     {
         mainLayout.addComponent( controller.getActionBar() );
 
@@ -53,6 +53,8 @@ public class UserWindow
         splitPanel.addComponent( controller.getTree() );
         splitPanel.addComponent( controller.getContent() );
 
+        controller.refresh();
+        
         mainLayout.addComponent( splitPanel );
         mainLayout.setExpandRatio( splitPanel ,
                                    1 );	    

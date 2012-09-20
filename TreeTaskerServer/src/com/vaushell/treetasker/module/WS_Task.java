@@ -104,6 +104,7 @@ public class WS_Task
 
 	public void update( TT_Task task )
 	{
+		task.setID( id );
 		task.setTitle( title );
 		task.setDescription( description );
 		task.setLastModificationDate( lastModificationDate );
@@ -113,6 +114,7 @@ public class WS_Task
 	public void update( TT_Task task,
 	                    HashMap<String, TT_Task> tasksMap )
 	{
+		task.setID( id );
 		task.setTitle( title );
 		task.setDescription( description );
 		task.setLastModificationDate( lastModificationDate );

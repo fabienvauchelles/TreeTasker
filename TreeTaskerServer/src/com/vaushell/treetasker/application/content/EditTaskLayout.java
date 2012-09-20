@@ -106,9 +106,7 @@ public class EditTaskLayout
 	{
 		vTFtaskTitleValue.setReadOnly( true );
 		vTAtaskDescriptionValue.setReadOnly( true );
-		taskNode.getTask().setTitle( (String) vTFtaskTitleValue.getValue() );
-		taskNode.getTask()
-		        .setDescription( (String) vTAtaskDescriptionValue.getValue() );
+		controller.updateTaskContent(taskNode.getTask(), (String) vTFtaskTitleValue.getValue(),(String) vTAtaskDescriptionValue.getValue() );		
 		controller.getTree().refreshNodeCaption( taskNode );
 	}
 }
