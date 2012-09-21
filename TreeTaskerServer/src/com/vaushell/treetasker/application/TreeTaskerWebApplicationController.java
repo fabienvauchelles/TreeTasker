@@ -294,6 +294,7 @@ public class TreeTaskerWebApplicationController
 	@SuppressWarnings( "unchecked" )
 	public void validTask() {
 		int newStatus = TT_Task.TODO;
+		List<EH_TT_Task> tasksToUpdate = new ArrayList<EH_TT_Task>();
 
 		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
 		{
@@ -306,9 +307,12 @@ public class TreeTaskerWebApplicationController
 		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
 		{
 			TT_Task selectedTask = node.getTask();
+			selectedTask.setLastModificationDate( new Date() );
 			selectedTask.setStatus( newStatus );
+			tasksToUpdate.add( new EH_TT_Task( new WS_Task( selectedTask ), getUserContainer() ) );
 			getTree().refreshNodeIcon( node );
 		}
+		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( tasksToUpdate );
 	}
 
 	private void addChildrenTaskNodesRecursively(
