@@ -38,3 +38,4 @@ build.properties
 database/
 licence.txt
 */gen/*
+*generated*

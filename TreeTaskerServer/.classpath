@@ -16,5 +16,6 @@
 	<classpathentry kind="lib" path="D:/GitRepos/treetasker/TreeTaskerServer/war/WEB-INF/lib/TreeTaskerModel.jar"/>
 	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/vaadin-6.8.3.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/vaadin-confirmdialog-1.2.1.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>
