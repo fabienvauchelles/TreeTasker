@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -95,9 +96,13 @@ public class TreeTaskerWebApplicationController
 		}
 	}
 
+	@SuppressWarnings( "unchecked" )
 	public void copyTask() {
-		// TODO Auto-generated method stub
-
+		copiedTasks.clear();
+		for ( TaskNode taskNode : (Set<TaskNode>) getTree().getValue() )
+		{
+			copiedTasks.add( taskNode.getTask().getCopy() );
+		}
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -149,11 +154,14 @@ public class TreeTaskerWebApplicationController
 	}
 
 	public EH_TT_UserTaskContainer getUserContainer() {
-		if ( userSession != null )
+		if ( userContainer == null )
 		{
-			return TT_ServerControllerDAO.getInstance().getUserContainer( userSession.getUserName() );
+			if ( userSession != null )
+			{
+				userContainer = TT_ServerControllerDAO.getInstance().getUserContainer( userSession.getUserName() );
+			}
 		}
-		return null;
+		return userContainer;
 	}
 
 	public UserWindow getUserWindow() {
@@ -177,8 +185,12 @@ public class TreeTaskerWebApplicationController
 	}
 
 	public void pasteTask() {
-		// TODO Auto-generated method stub
-
+		TaskNode parentNode = (TaskNode) getTree().getCurrentNode();
+		for ( TT_Task copiedTask : copiedTasks )
+		{
+			saveTasksRecursively( copiedTask.getCopy(), parentNode.getTask() );
+		}
+		refresh();
 	}
 
 	public void queryRegistration() {
@@ -288,7 +300,18 @@ public class TreeTaskerWebApplicationController
 		}
 	}
 
+	private void saveTasksRecursively(
+		TT_Task task,
+		TT_Task parentTask ) {
+		setTaskParent( task, parentTask );
+		for ( TT_Task childTask : task.getChildrenTask() )
+		{
+			saveTasksRecursively( childTask, task );
+		}
+	}
+
 	private void init() {
+		copiedTasks = new ArrayList<TT_Task>();
 	}
 
 	private void refreshTreeTasks(
@@ -303,18 +326,16 @@ public class TreeTaskerWebApplicationController
 		}
 	}
 
+	private List<TT_Task>						copiedTasks;
+
 	// PROTECTED
 	// PRIVATE
-	private final TreeTaskerWebApplication	application;
-	private UserWindow						userWindow;
-	private TTWActionBar					actionBar;
-
-	private TTWHeader						header;
-
-	private TTWtree							tree;
-
-	private TTWcontent						content;
-
-	private UserSession						userSession;
-
+	private final TreeTaskerWebApplication		application;
+	private UserWindow							userWindow;
+	private TTWActionBar						actionBar;
+	private TTWHeader							header;
+	private TTWtree								tree;
+	private TTWcontent							content;
+	private UserSession							userSession;
+	private transient EH_TT_UserTaskContainer	userContainer;
 }
