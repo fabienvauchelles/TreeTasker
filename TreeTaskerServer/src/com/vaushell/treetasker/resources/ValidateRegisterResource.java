@@ -1,5 +1,10 @@
 package com.vaushell.treetasker.resources;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -18,7 +23,7 @@ public class ValidateRegisterResource
 {
 	// PUBLIC
 	@GET
-	@Produces( MediaType.TEXT_PLAIN )
+	@Produces( MediaType.TEXT_HTML )
 	public String validateUser( @QueryParam( "username" ) String username,
 	                            @QueryParam( "valid-key" ) String validKey )
 	{
@@ -36,19 +41,82 @@ public class ValidateRegisterResource
 				user.setValidatedUser( true );
 				datastore.put( user.getEntity() );
 				datastore.delete( rvp.getEntity().getKey() );
-				
-				return "Validation réussie !";
+
+				return serveOk();
 			}
 			else
 			{
-				return "Validation échouée...";
+				return serveNok();
 			}
 		}
 		catch ( EntityNotFoundException e )
 		{
-
-			return "Validation échouée...";
+			return serveNok();
 		}
+	}
+
+	private synchronized String serveOk()
+	{
+		StringBuffer buffer = new StringBuffer();
+
+		try
+		{
+			BufferedReader br = new BufferedReader(
+			                                        new FileReader(
+			                                                        "validated.html" ) );
+
+			String line = br.readLine();
+			while ( line != null )
+			{
+				buffer.append( line );
+				buffer.append( '\n' );
+				line = br.readLine();
+			}
+		}
+		catch ( FileNotFoundException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch ( IOException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return buffer.toString();
+	}
+
+	private synchronized String serveNok()
+	{
+		StringBuffer buffer = new StringBuffer();
+
+		try
+		{
+			BufferedReader br = new BufferedReader(
+			                                        new FileReader(
+			                                                        "not-validated.html" ) );
+
+			String line = br.readLine();
+			while ( line != null )
+			{
+				buffer.append( line );
+				buffer.append( '\n' );
+				line = br.readLine();
+			}
+		}
+		catch ( FileNotFoundException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch ( IOException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return buffer.toString();
 	}
 
 	private static final DatastoreService	datastore	= DatastoreServiceFactory.getDatastoreService();

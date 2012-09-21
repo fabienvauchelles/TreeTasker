@@ -9,12 +9,12 @@ import java.util.Set;
 import java.util.UUID;
 
 public class TT_Task
-    implements Serializable
+	implements Serializable
 {
 	private static final long	serialVersionUID	= 1L;
-	public static final int	  TODO	             = 0;
-	public static final int	  DONE	             = 1;
-	public static final int	  DELETED	         = 2;
+	public static final int		TODO				= 0;
+	public static final int		DONE				= 1;
+	public static final int		DELETED				= 2;
 
 	public TT_Task()
 	{
@@ -22,11 +22,12 @@ public class TT_Task
 		init();
 	}
 
-	public TT_Task( String ID,
-	                String title,
-	                String description,
-	                Date lastModificationDate,
-	                int status )
+	public TT_Task(
+		String ID,
+		String title,
+		String description,
+		Date lastModificationDate,
+		int status )
 	{
 		this.ID = ID;
 		this.title = title;
@@ -36,87 +37,19 @@ public class TT_Task
 		init();
 	}
 
-	public String getID()
-	{
-		return ID;
-	}
-
-	public void setID( String iD )
-	{
-		ID = iD;
-	}
-
-	public String getTitle()
-	{
-		return title;
-	}
-
-	public void setTitle( String title )
-	{
-		this.title = title;
-	}
-
-	public String getDescription()
-	{
-		return description;
-	}
-
-	public void setDescription( String description )
-	{
-		this.description = description;
-	}
-
-	public Date getLastModificationDate()
-	{
-		return lastModificationDate;
-	}
-
-	public void setLastModificationDate( Date lastModificationDate )
-	{
-		this.lastModificationDate = lastModificationDate;
-	}
-
-	public void setLastModificationDateRecursively( Date lastModificationDate )
-	{
-		this.lastModificationDate = lastModificationDate;
-		for ( TT_Task childTask : childrenTask )
-		{
-			childTask.setLastModificationDateRecursively( lastModificationDate );
-		}
-	}
-
-	public int getStatus()
-	{
-		return status;
-	}
-
-	public void setStatus( int status )
-	{
-		this.status = status;
-	}
-
-	public void setStatusRecursively( int status )
-	{
-		this.status = status;
-		for ( TT_Task childTask : childrenTask )
-		{
-			childTask.setStatusRecursively( status );
-		}
-	}
-
-	public List<TT_Task> getChildrenTask()
-	{
-		return childrenTask;
-	}
-
-	public void addChildTask( TT_Task childTask )
-	{
+	public void addChildTask(
+		TT_Task childTask ) {
 		if ( childTask == null )
+		{
 			return;
+		}
 
 		if ( !getChildrenTask().contains( childTask ) )
 		{
-			if ( childTask != this && !getAllAncestors().contains( childTask ) )
+			if ( childTask != this /*
+									 * && !getAllAncestors().contains( childTask
+									 * )
+									 */)
 			{
 				childrenTask.add( childTask );
 				childTask.setParent( this );
@@ -124,45 +57,7 @@ public class TT_Task
 		}
 	}
 
-	public boolean removeChildTask( TT_Task childTask )
-	{
-		boolean res = false;
-		if ( childrenTask.contains( childTask ) )
-		{
-			res = childrenTask.remove( childTask );
-			childTask.setParent( null );
-		}
-		return res;
-	}
-
-	public TT_Task getParent()
-	{
-		return parentTask;
-	}
-
-	public void setParent( TT_Task parent )
-	{
-		if ( parent == getParent() )
-			return;
-
-		if ( parent == null )
-		{
-			this.parentTask.removeChildTask( this );
-			this.parentTask = parent;
-		}
-		else if ( parent != this && !parent.getAllAncestors().contains( this ) )
-		{
-			if ( getParent() != null )
-			{
-				getParent().removeChildTask( this );
-			}
-			this.parentTask = parent;
-			parent.addChildTask( this );
-		}
-	}
-
-	public Set<TT_Task> getAllAncestors()
-	{
+	public Set<TT_Task> getAllAncestors() {
 		if ( getParent() == null )
 		{
 			return new HashSet<TT_Task>();
@@ -175,10 +70,12 @@ public class TT_Task
 		}
 	}
 
-	public TT_Task getCopy()
-	{
-		TT_Task copy = new TT_Task( UUID.randomUUID().toString(), title,
-		                            description, new Date(), status );
+	public List<TT_Task> getChildrenTask() {
+		return childrenTask;
+	}
+
+	public TT_Task getCopy() {
+		TT_Task copy = new TT_Task( UUID.randomUUID().toString(), title, description, new Date(), status );
 		for ( TT_Task childTask : childrenTask )
 		{
 			childTask.getCopy().setParent( copy );
@@ -186,17 +83,117 @@ public class TT_Task
 		return copy;
 	}
 
-	private void init()
-	{
-		this.parentTask = null;
-		this.childrenTask = new ArrayList<TT_Task>();
+	public String getDescription() {
+		return description;
 	}
 
-	private String	      ID;
-	private String	      title;
-	private String	      description;
-	private Date	      lastModificationDate;
-	private int	          status;
+	public String getID() {
+		return ID;
+	}
+
+	public Date getLastModificationDate() {
+		return lastModificationDate;
+	}
+
+	public TT_Task getParent() {
+		return parentTask;
+	}
+
+	public int getStatus() {
+		return status;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public boolean removeChildTask(
+		TT_Task childTask ) {
+		boolean res = false;
+		if ( childrenTask.contains( childTask ) )
+		{
+			res = childrenTask.remove( childTask );
+			childTask.setParent( null );
+		}
+		return res;
+	}
+
+	public void setDescription(
+		String description ) {
+		this.description = description;
+	}
+
+	public void setID(
+		String iD ) {
+		ID = iD;
+	}
+
+	public void setLastModificationDate(
+		Date lastModificationDate ) {
+		this.lastModificationDate = lastModificationDate;
+	}
+
+	public void setLastModificationDateRecursively(
+		Date lastModificationDate ) {
+		this.lastModificationDate = lastModificationDate;
+		for ( TT_Task childTask : childrenTask )
+		{
+			childTask.setLastModificationDateRecursively( lastModificationDate );
+		}
+	}
+
+	public void setParent(
+		TT_Task parent ) {
+		if ( parent == getParent() )
+		{
+			return;
+		}
+
+		if ( parent == null )
+		{
+			parentTask.removeChildTask( this );
+			parentTask = parent;
+		}
+		else if ( parent != this && !parent.getAllAncestors().contains( this ) )
+		{
+			if ( getParent() != null )
+			{
+				getParent().removeChildTask( this );
+			}
+			parentTask = parent;
+			parent.addChildTask( this );
+		}
+	}
+
+	public void setStatus(
+		int status ) {
+		this.status = status;
+	}
+
+	public void setStatusRecursively(
+		int status ) {
+		this.status = status;
+		for ( TT_Task childTask : childrenTask )
+		{
+			childTask.setStatusRecursively( status );
+		}
+	}
+
+	public void setTitle(
+		String title ) {
+		this.title = title;
+	}
+
+	private void init() {
+		parentTask = null;
+		childrenTask = new ArrayList<TT_Task>();
+	}
+
+	private String			ID;
+	private String			title;
+	private String			description;
+	private Date			lastModificationDate;
+	private int				status;
 	private List<TT_Task>	childrenTask;
-	private TT_Task	      parentTask;
+	private TT_Task			parentTask;
 }

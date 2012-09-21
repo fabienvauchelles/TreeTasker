@@ -232,6 +232,7 @@ public class TreeTaskerWebApplicationController
 		TT_Task child,
 		TT_Task parent ) {
 		child.setParent( parent );
+		child.setLastModificationDate( new Date() );
 		WS_Task wsTask = new WS_Task( child );
 		TT_ServerControllerDAO.getInstance().createOrUpdateTask( new EH_TT_Task( wsTask, getUserContainer() ) );
 	}

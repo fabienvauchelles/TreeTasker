@@ -21,13 +21,12 @@ public class SyncingFinalResource
 
 	@POST
 	@Consumes( MediaType.APPLICATION_JSON )
-	public SyncingFinalResponse finalizeSync( SyncingFinalRequest finalisation )
-	{
-		try
-		{
-			EH_TT_UserTaskContainer datastoreContainer = DAO.getUserContainer( finalisation.getUserSession()
-			                                                                               .getUserName() );
+	public SyncingFinalResponse finalizeSync(
+		SyncingFinalRequest finalisation ) {
+		EH_TT_UserTaskContainer datastoreContainer = DAO.getUserContainer( finalisation.getUserSession().getUserName() );
 
+		if ( datastoreContainer != null )
+		{
 			ArrayList<EH_TT_Task> tasks = new ArrayList<EH_TT_Task>();
 
 			for ( WS_Task task : finalisation.getUpToDateTasks() )
@@ -39,11 +38,9 @@ public class SyncingFinalResource
 
 			return new SyncingFinalResponse();
 		}
-		catch ( Throwable th )
+		else
 		{
-			th.printStackTrace();
 			return new SyncingFinalResponse( SyncingFinalResponse.SYNC_KO );
-
 		}
 	}
 }

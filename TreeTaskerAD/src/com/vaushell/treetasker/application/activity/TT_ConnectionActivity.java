@@ -5,8 +5,10 @@ import org.apache.http.client.ClientProtocolException;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -19,175 +21,295 @@ import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
 import com.vaushell.treetasker.module.UserAuthenticationRequest;
 import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.module.UserSessionCheckRequest;
 import com.vaushell.treetasker.tools.TT_Tools;
 
 public class TT_ConnectionActivity
-    extends Activity
+	extends Activity
 {
 	// PUBLIC
+
+	private class CheckSessionActivity
+		extends AsyncTask<UserSession, Void, UserSession>
+	{
+
+		@Override
+		protected UserSession doInBackground(
+			UserSession... paramSession ) {
+			UserSession session = new UserSession();
+			try
+			{
+				session = CHECK_CLIENT
+					.post( UserSession.class, new UserSessionCheckRequest( paramSession[ 0 ].getUserSessionID(),
+						paramSession[ 0 ].getUserName() ) );
+			}
+			catch ( ClientProtocolException e )
+			{
+				e.printStackTrace();
+			}
+			catch ( E_BadResponseStatus e )
+			{
+				e.printStackTrace();
+			}
+			return session;
+		}
+
+		@Override
+		protected void onCancelled() {
+			dialog.dismiss();
+			finishCheck( null );
+		}
+
+		@Override
+		protected void onPostExecute(
+			UserSession userSession ) {
+			dialog.dismiss();
+			finishCheck( userSession );
+		}
+
+		@Override
+		protected void onPreExecute() {
+			dialog = ProgressDialog.show( TT_ConnectionActivity.this, "", getString( R.string.wait_session_check ) );
+		}
+
+		private ProgressDialog	dialog;
+	}
+
+	private class ConnectionActivity
+		extends AsyncTask<UserAuthenticationRequest, Void, UserSession>
+	{
+
+		@Override
+		protected UserSession doInBackground(
+			UserAuthenticationRequest... paramRequest ) {
+			UserSession session = new UserSession();
+			try
+			{
+				session = CONNECTION_CLIENT.post( UserSession.class, paramRequest[ 0 ] );
+			}
+			catch ( ClientProtocolException e )
+			{
+				e.printStackTrace();
+			}
+			catch ( E_BadResponseStatus e )
+			{
+				e.printStackTrace();
+			}
+			return session;
+		}
+
+		@Override
+		protected void onCancelled() {
+			dialog.dismiss();
+			finishConnection( null );
+		}
+
+		@Override
+		protected void onPostExecute(
+			UserSession userSession ) {
+			dialog.dismiss();
+			finishConnection( userSession );
+		}
+
+		@Override
+		protected void onPreExecute() {
+			dialog = ProgressDialog.show( TT_ConnectionActivity.this, "", getString( R.string.wait_connection ) );
+		}
+
+		private ProgressDialog	dialog;
+	}
+
+	// PRIVATE
+	private static final int						SERVER_KO_DIALOG	= 100;
+	private static final SimpleJsonClient			CONNECTION_CLIENT	= new SimpleJsonClient().resource(
+																			TreeTaskerControllerDAO.RESOURCE ).path(
+																			"resources/login" );
+	private static final SimpleJsonClient			CHECK_CLIENT		= new SimpleJsonClient().resource(
+																			TreeTaskerControllerDAO.RESOURCE ).path(
+																			"resources/check" );
+
+	private static final TreeTaskerControllerDAO	DAO					= TreeTaskerControllerDAO.getInstance();
+
 	/** Called when the activity is first created. */
 	@Override
-	public void onCreate( Bundle savedInstanceState )
-	{
+	public void onCreate(
+		Bundle savedInstanceState ) {
 		super.onCreate( savedInstanceState );
-		setContentView( R.layout.connection );
-		setResult( RESULT_CANCELED ); // Juste pour être sûr que si
-		                              // l'utilisateur ferme l'activity, elle
-		                              // retournera CANCELLED
+		setResult( RESULT_CANCELED );
 
-		initListeners();
+		checkCurrentSessionFromServer( DAO.loadUserSessionFromCache( getApplicationContext() ) );
 	}
 
 	// PROTECTED
 	@Override
-	protected void onActivityResult( int requestCode,
-	                                 int resultCode,
-	                                 Intent data )
-	{
+	protected void onActivityResult(
+		int requestCode,
+		int resultCode,
+		Intent data ) {
 		if ( resultCode == RESULT_OK )
 		{
 			// Utilisateur authentifié, charger les données. Utiliser un Loader
 			// apparemment
-			( (EditText) findViewById( R.id.aTXTloginValue ) ).setText( data.getStringExtra( TT_TaskListActivity.USERNAME ) );
+			( (EditText) findViewById( R.id.aTXTloginValue ) ).setText( data
+				.getStringExtra( TT_TaskListActivity.USERNAME ) );
 		}
 	}
 
 	@Override
-	protected Dialog onCreateDialog( int id )
-	{
+	protected Dialog onCreateDialog(
+		int id ) {
 		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder( this );
 		switch ( id )
 		{
 			case UserSession.MESSAGE_BAD_AUTHENTICATION:
-				dialogBuilder.setTitle( R.string.error )
-				             .setMessage( R.string.not_authenticated )
-				             .setNeutralButton( R.string.ok,
-				                                new DialogInterface.OnClickListener()
-				                                {
-					                                public void onClick( DialogInterface dialog,
-					                                                     int which )
-					                                {
-						                                dialog.dismiss();
-					                                }
-				                                } );
+				dialogBuilder.setTitle( R.string.error ).setMessage( R.string.not_authenticated )
+					.setNeutralButton( R.string.ok, new DialogInterface.OnClickListener()
+					{
+						@Override
+						public void onClick(
+							DialogInterface dialog,
+							int which ) {
+							dialog.dismiss();
+						}
+					} );
 				break;
 			case UserSession.MESSAGE_REGISTRATION_NOT_VALIDATED:
-				dialogBuilder.setTitle( R.string.error )
-				             .setMessage( R.string.registration_not_validated )
-				             .setNeutralButton( R.string.ok,
-				                                new DialogInterface.OnClickListener()
-				                                {
-					                                public void onClick( DialogInterface dialog,
-					                                                     int which )
-					                                {
-						                                dialog.dismiss();
-					                                }
-				                                } );
+				dialogBuilder.setTitle( R.string.error ).setMessage( R.string.registration_not_validated )
+					.setNeutralButton( R.string.ok, new DialogInterface.OnClickListener()
+					{
+						@Override
+						public void onClick(
+							DialogInterface dialog,
+							int which ) {
+							dialog.dismiss();
+						}
+					} );
 				break;
 			case SERVER_KO_DIALOG:
-				dialogBuilder.setTitle( R.string.error )
-				             .setMessage( R.string.server_not_reachable )
-				             .setNeutralButton( R.string.ok,
-				                                new DialogInterface.OnClickListener()
-				                                {
-					                                public void onClick( DialogInterface dialog,
-					                                                     int which )
-					                                {
-						                                dialog.dismiss();
-					                                }
-				                                } );
+				dialogBuilder.setTitle( R.string.error ).setMessage( R.string.server_not_reachable )
+					.setNeutralButton( R.string.ok, new DialogInterface.OnClickListener()
+					{
+						@Override
+						public void onClick(
+							DialogInterface dialog,
+							int which ) {
+							dialog.dismiss();
+						}
+					} );
 				break;
 			default:
-				throw new RuntimeException( "ID de dialog inconnu: " + id );
+				throw new RuntimeException( "Unknown dialog ID: " + id );
 		}
 
 		return dialogBuilder.create();
 	}
 
-	// PRIVATE
-	private static final int	          SERVER_KO_DIALOG	= -1;
-
-	private static final SimpleJsonClient	client	       = new SimpleJsonClient().resource( TreeTaskerControllerDAO.RESOURCE )
-	                                                                               .path( "resources/login" );
-
-	private void initListeners()
-	{
-		findViewById( R.id.aBTconnect ).setOnClickListener( new OnClickListener()
+	private void checkCurrentSessionFromServer(
+		UserSession currentSession ) {
+		if ( currentSession != null )
 		{
-			public void onClick( View v )
+			if ( currentSession.getUserSessionID() != null )
 			{
-				login();
+				new CheckSessionActivity().execute( currentSession );
 			}
-		} );
-		findViewById( R.id.aBTregister ).setOnClickListener( new OnClickListener()
-		{
-			public void onClick( View v )
+			else
 			{
-				launchRegisterActivity();
+				displayActivity( currentSession.getUserName() );
 			}
-		} );
-	}
-
-	private void login()
-	{
-		String username = ( (TextView) findViewById( R.id.aTXTloginValue ) ).getText()
-		                                                                    .toString()
-		                                                                    .trim();
-		String password = ( (TextView) findViewById( R.id.aTXTpasswordValue ) ).getText()
-		                                                                       .toString()
-		                                                                       .trim();
-
-		if ( username.length() == 0
-		     || password.length() == 0 )
-		{
-			showDialog( UserSession.MESSAGE_BAD_AUTHENTICATION );
 		}
 		else
 		{
-			checkForUserAuthentication( username, password );
+			displayActivity( null );
 		}
 	}
 
-	private void checkForUserAuthentication( String username,
-	                                         String password )
-	{
-		try
-		{
-			UserSession session = client.post( UserSession.class,
-			                                   new UserAuthenticationRequest(
-			                                                                  username,
-			                                                                  TT_Tools.encryptPassword( username,
-			                                                                                            password ) ) );
+	private void connect(
+		String username,
+		String password ) {
+		new ConnectionActivity().execute( new UserAuthenticationRequest( username, TT_Tools.encryptPassword( username,
+			password ) ) );
+	}
 
-			boolean authenticated = session.getSessionState() == UserSession.SESSION_OK;
-			if ( authenticated )
+	private void displayActivity(
+		String username ) {
+		setContentView( R.layout.connection );
+		if ( username != null )
+		{
+			( (EditText) findViewById( R.id.aTXTloginValue ) ).setText( username );
+		}
+		initListeners();
+	}
+
+	private void finishCheck(
+		UserSession userSession ) {
+		if ( userSession != null && userSession.getSessionState() == UserSession.SESSION_OK )
+		{
+			Intent okIntent = new Intent();
+			okIntent.putExtra( TT_TaskListActivity.USERNAME, userSession.getUserName() );
+			okIntent.putExtra( TT_TaskListActivity.SESSIONID, userSession.getUserSessionID() );
+			setResult( RESULT_OK, okIntent );
+			finish();
+		}
+		else
+		{
+			displayActivity( userSession.getUserName() );
+		}
+	}
+
+	private void finishConnection(
+		UserSession userSession ) {
+		if ( userSession != null )
+		{
+			if ( userSession.getSessionState() == UserSession.SESSION_OK )
 			{
 				Intent okIntent = new Intent();
-				okIntent.putExtra( TT_TaskListActivity.USERNAME, username );
-				okIntent.putExtra( TT_TaskListActivity.SESSIONID,
-				                   session.getUserSessionID() );
+				okIntent.putExtra( TT_TaskListActivity.USERNAME, userSession.getUserName() );
+				okIntent.putExtra( TT_TaskListActivity.SESSIONID, userSession.getUserSessionID() );
 				setResult( RESULT_OK, okIntent );
 				finish();
 			}
 			else
 			{
-				showDialog( session.getSessionMessage() );
+				showDialog( userSession.getSessionMessage() );
 			}
-		}
-		catch ( ClientProtocolException e )
-		{
-			showDialog( SERVER_KO_DIALOG );
-		}
-		catch ( E_BadResponseStatus e )
-		{
-			e.printStackTrace();
-			showDialog( SERVER_KO_DIALOG );
 		}
 	}
 
-	private void launchRegisterActivity()
-	{
+	private void initListeners() {
+		findViewById( R.id.aBTconnect ).setOnClickListener( new OnClickListener()
+		{
+			@Override
+			public void onClick(
+				View v ) {
+				login();
+			}
+		} );
+		findViewById( R.id.aBTregister ).setOnClickListener( new OnClickListener()
+		{
+			@Override
+			public void onClick(
+				View v ) {
+				launchRegisterActivity();
+			}
+		} );
+	}
+
+	private void launchRegisterActivity() {
 		Intent intent = new Intent( this, TT_RegisterActivity.class );
 		startActivityForResult( intent, 0 );
+	}
+
+	private void login() {
+		String username = ( (TextView) findViewById( R.id.aTXTloginValue ) ).getText().toString().trim();
+		String password = ( (TextView) findViewById( R.id.aTXTpasswordValue ) ).getText().toString().trim();
+
+		if ( username.length() == 0 || password.length() == 0 )
+		{
+			showDialog( UserSession.MESSAGE_BAD_AUTHENTICATION );
+		}
+		else
+		{
+			connect( username, password );
+		}
 	}
 }

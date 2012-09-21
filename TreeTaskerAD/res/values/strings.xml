@@ -30,5 +30,8 @@
     <string name="description">Description</string>
     <color name="canary_yellow">#FCF0AD</color>
     <string name="menu_synchronize">Synchroniser</string>
+    <string name="wait_session_check">Vérification de session…</string>
+    <string name="wait_connection">Connexion…</string>
+    <string name="wait_synchronization">Synchronisation…</string>
 
 </resources>
