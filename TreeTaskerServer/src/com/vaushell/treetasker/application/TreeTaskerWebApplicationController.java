@@ -251,9 +251,42 @@ public class TreeTaskerWebApplicationController
 		TT_Task task,
 		String title,
 		String description ) {
+
+		boolean isModified = false;
+		String oldTitle = task.getTitle();
+		String oldDescription = task.getDescription();
+		// Détection de modification (amélioration possible : comparer l'objet
+		// sérialiser)
+
+		if ( oldTitle != null )
+		{
+			if ( !oldTitle.equals( title ) )
+			{
+				isModified = true;
+			}
+		}
+		else if ( title != null )
+		{
+			isModified = true;
+		}
+		if ( oldDescription != null )
+		{
+			if ( !oldDescription.equals( description ) )
+			{
+				isModified = true;
+			}
+		}
+		else if ( description != null )
+		{
+			isModified = true;
+		}
+
 		task.setTitle( title );
 		task.setDescription( description );
-		task.setLastModificationDate( new Date() );
+		if ( isModified )
+		{
+			task.setLastModificationDate( new Date() );
+		}
 		WS_Task wsTask = new WS_Task( task );
 		TT_ServerControllerDAO.getInstance().createOrUpdateTask( new EH_TT_Task( wsTask, getUserContainer() ) );
 	}
@@ -300,16 +333,6 @@ public class TreeTaskerWebApplicationController
 		}
 	}
 
-	private void saveTasksRecursively(
-		TT_Task task,
-		TT_Task parentTask ) {
-		setTaskParent( task, parentTask );
-		for ( TT_Task childTask : task.getChildrenTask() )
-		{
-			saveTasksRecursively( childTask, task );
-		}
-	}
-
 	private void init() {
 		copiedTasks = new ArrayList<TT_Task>();
 	}
@@ -323,6 +346,16 @@ public class TreeTaskerWebApplicationController
 			getTree().addNode( rootNode );
 			getTree().expandNode( rootNode );
 			addChildrenTaskNodesRecursively( rootNode );
+		}
+	}
+
+	private void saveTasksRecursively(
+		TT_Task task,
+		TT_Task parentTask ) {
+		setTaskParent( task, parentTask );
+		for ( TT_Task childTask : task.getChildrenTask() )
+		{
+			saveTasksRecursively( childTask, task );
 		}
 	}
 
