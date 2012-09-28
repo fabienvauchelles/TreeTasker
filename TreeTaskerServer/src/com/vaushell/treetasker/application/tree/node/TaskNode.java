@@ -13,16 +13,17 @@ import com.vaushell.treetasker.model.TT_Task;
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
 public class TaskNode
-    extends A_NavigationNode
+	extends A_NavigationNode
 {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	private static final long	serialVersionUID	= 1L;
 
 	// PUBLIC
-	public TaskNode( TT_Task task,
-	                 TreeTaskerWebApplicationController controller )
+	public TaskNode(
+		TT_Task task,
+		TreeTaskerWebApplicationController controller )
 	{
 		super( controller );
 		this.task = task;
@@ -30,36 +31,30 @@ public class TaskNode
 	}
 
 	@Override
-	public String getCaption()
-	{
+	public String getCaption() {
 		return task.getTitle();
 	}
 
-	public TT_Task getTask()
-	{
+	public TT_Task getTask() {
 		return task;
 	}
 
 	@Override
-	public void onEnter()
-	{
-		controller.getContent()
-		          .setView( new EditTaskLayout( this, controller ) );
+	public void onEnter() {
+		controller.getContent().setView( new EditTaskLayout( this, controller ) );
 	}
 
 	@Override
-	public void onExit()
-	{
+	public void onExit() {
 		controller.getContent().getView().onExit();
 		controller.getTree().refreshNodeCaption( this );
 		controller.getTree().refreshNodeIcon( this );
 	}
 
+	private void init() {
+	}
+
 	// PROTECTED
 	// PRIVATE
-	private TT_Task	task;
-
-	private void init()
-	{
-	}
+	private final TT_Task	task;
 }

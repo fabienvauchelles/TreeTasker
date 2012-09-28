@@ -4,59 +4,70 @@
  */
 package com.vaushell.treetasker.application.window;
 
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 
 /**
- *
+ * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
 public class UserWindow
-        extends Window
+	extends Window
 {
-    /**
+	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	private static final long	serialVersionUID	= 1L;
 
 	// PUBLIC
-    public UserWindow( TreeTaskerWebApplicationController controller )
-    {
-        super( "TreeTasker WebApplication" );
-        this.controller = controller;
-        init();
-    }
-    // PROTECTED
-    // PRIVATE
-    private TreeTaskerWebApplicationController controller;
-    private VerticalLayout mainLayout;
+	public UserWindow(
+		TreeTaskerWebApplicationController controller )
+	{
+		super( "TreeTasker WebApplication" );
+		this.controller = controller;
+		init();
+	}
 
-    private void init()
-    {
-        mainLayout = new VerticalLayout();
-        mainLayout.setSizeFull();
-        mainLayout.setMargin( true );
-        mainLayout.setSpacing( true );
+	public void setUserView(
+		String name ) {
+		mainLayout.removeComponent( controller.getLoginLayout() );
 
-        mainLayout.addComponent( controller.getHeader() );
-        setContent( mainLayout );
-    }
+		mainLayout.addComponent( controller.getActionBar() );
 
-	public void setUserView( String name )
-    {
-        mainLayout.addComponent( controller.getActionBar() );
+		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+		splitPanel.setWidth( "1000px" );
+		splitPanel.setHeight( "100%" );
+		splitPanel.setSplitPosition( 30 );
+		splitPanel.setLocked( true );
+		splitPanel.setMargin( true );
+		splitPanel.setStyleName( "content" );
+		splitPanel.addComponent( controller.getTree() );
+		splitPanel.addComponent( controller.getContent() );
 
-        HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-        splitPanel.setSizeFull();
-        splitPanel.addComponent( controller.getTree() );
-        splitPanel.addComponent( controller.getContent() );
+		controller.refresh();
 
-        controller.refresh();
-        
-        mainLayout.addComponent( splitPanel );
-        mainLayout.setExpandRatio( splitPanel ,
-                                   1 );	    
-    }
+		mainLayout.addComponent( splitPanel );
+		mainLayout.setExpandRatio( splitPanel, 1 );
+		mainLayout.setComponentAlignment( splitPanel, Alignment.TOP_CENTER );
+	}
+
+	private void init() {
+		mainLayout = (VerticalLayout) getContent();
+		mainLayout.setSizeFull();
+		mainLayout.setMargin( true );
+		mainLayout.setSpacing( true );
+
+		mainLayout.addComponent( controller.getHeader() );
+		mainLayout.addComponent( controller.getLoginLayout() );
+		mainLayout.setExpandRatio( controller.getLoginLayout(), 1 );
+	}
+
+	// PROTECTED
+	// PRIVATE
+	private final TreeTaskerWebApplicationController	controller;
+
+	private VerticalLayout								mainLayout;
 }

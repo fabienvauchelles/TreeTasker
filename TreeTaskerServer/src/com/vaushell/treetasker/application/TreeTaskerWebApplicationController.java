@@ -19,6 +19,7 @@ import com.vaushell.treetasker.TreeTaskerWebApplication;
 import com.vaushell.treetasker.application.actionbar.TTWActionBar;
 import com.vaushell.treetasker.application.content.TTWcontent;
 import com.vaushell.treetasker.application.header.TTWHeader;
+import com.vaushell.treetasker.application.login.TTWLoginLayout;
 import com.vaushell.treetasker.application.tree.TTWtree;
 import com.vaushell.treetasker.application.tree.node.TaskNode;
 import com.vaushell.treetasker.application.window.RegistrationWindow;
@@ -140,9 +141,17 @@ public class TreeTaskerWebApplicationController
 	public TTWHeader getHeader() {
 		if ( header == null )
 		{
-			header = new TTWHeader( this );
+			header = new TTWHeader();
 		}
 		return header;
+	}
+
+	public TTWLoginLayout getLoginLayout() {
+		if ( loginLayout == null )
+		{
+			loginLayout = new TTWLoginLayout( this );
+		}
+		return loginLayout;
 	}
 
 	public TTWtree getTree() {
@@ -245,7 +254,6 @@ public class TreeTaskerWebApplicationController
 	public void showUserWindow() {
 		UserWindow userWindow = getUserWindow();
 		userWindow.setUserView( userSession.getUserName() );
-		getHeader().setUserView();
 	}
 
 	public void updateTaskContent(
@@ -293,7 +301,13 @@ public class TreeTaskerWebApplicationController
 	}
 
 	@SuppressWarnings( "unchecked" )
-	public void validTask() {
+	public void validTask(
+		Object itemId ) {
+		if ( !getTree().getValue().contains( itemId ) )
+		{
+			getTree().unselectAll();
+			getTree().select( itemId );
+		}
 		int newStatus = TT_Task.TODO;
 		List<EH_TT_Task> tasksToUpdate = new ArrayList<EH_TT_Task>();
 
@@ -313,6 +327,8 @@ public class TreeTaskerWebApplicationController
 			tasksToUpdate.add( new EH_TT_Task( new WS_Task( selectedTask ), getUserContainer() ) );
 			getTree().refreshNodeIcon( node );
 		}
+
+		getContent().getView().refreshStyle();
 		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( tasksToUpdate );
 	}
 
@@ -372,6 +388,7 @@ public class TreeTaskerWebApplicationController
 	private UserWindow							userWindow;
 	private TTWActionBar						actionBar;
 	private TTWHeader							header;
+	private TTWLoginLayout						loginLayout;
 	private TTWtree								tree;
 	private TTWcontent							content;
 	private UserSession							userSession;

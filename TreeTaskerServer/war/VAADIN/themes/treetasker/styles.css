@@ -1,0 +1,102 @@
+@import "../reindeer/styles.css";
+
+.v-app {
+	background-color: rgb(235, 255, 235);
+}
+
+/*
+Style des boutons de la barre d'action
+*/
+.action-bar {
+	background-color: transparent;
+}
+
+.action-bar .v-button {
+	display: block;
+	height: 55px;
+	background: transparent;
+	border: none;
+	text-align: center;
+	cursor: pointer;
+}
+
+.action-bar .v-button img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 0px;
+}
+
+.action-bar .v-button span {
+	font-size: x-small;
+	text-shadow: #fafafa 1px 1px 0;
+}
+
+.action-bar .v-button .v-button-wrap,.action-bar .v-disabled.v-button .v-button-wrap
+	{
+	background: transparent;
+	border: none;
+	-webkit-border-radius: 0;
+	-moz-border-radius: 0;
+	border-radius: 0;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+}
+
+.action-bar .v-button:active .v-button-wrap,.action-bar .v-button.v-pressed .v-button-wrap
+	{
+	background: transparent;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+}
+
+/* Split panel */
+.v-app .v-splitpanel-hsplitter div {
+	background: none;
+}
+
+.v-app .v-splitpanel-hsplitter-locked {
+	width: 2px;
+}
+
+.v-app .treetask .v-captiontext,.v-app .bold-lbl {
+}
+
+.v-app .content
+{
+	background-color: #f6ffb2;
+}
+
+.v-app .content .tree-caption
+{
+	background-color: #ffdf80;
+	font-size: large;
+}
+
+/* Title view */
+.v-app .content .v-textfield
+{	
+	font-size: large;
+}
+
+.v-app .content .title-todo-layout
+{
+	background-color: #ffbfbf;
+}
+
+.v-app .content .title-done-layout
+{
+	background-color: #bfffbf;
+}
+
+.v-app .content .description-todo-layout
+{
+	background-color: #ffd9d9;
+}
+
+.v-app .content .description-done-layout
+{
+	background-color: #d9ffd9;
+}

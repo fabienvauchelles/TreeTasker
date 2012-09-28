@@ -73,7 +73,7 @@ public class TreeTaskerControllerDAO
 		construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Acheter terrain", "", new Date(),
 			TT_Task.DONE ) );
 
-		TT_Task acheterMatos = new TT_Task( UUID.randomUUID().toString(), "Acheter matériel", "", new Date(),
+		TT_Task acheterMatos = new TT_Task( UUID.randomUUID().toString(), "Acheter matï¿½riel", "", new Date(),
 			TT_Task.TODO );
 		acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Acheter brique", "", new Date(),
 			TT_Task.TODO ) );
@@ -88,21 +88,21 @@ public class TreeTaskerControllerDAO
 
 		TT_Task passerPermis = new TT_Task( UUID.randomUUID().toString(), "Passer le permis", "", new Date(),
 			TT_Task.TODO );
-		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(), "S'inscrire à l'auto-école", "",
+		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(), "S'inscrire ï¿½ l'auto-ï¿½cole", "",
 			new Date(), TT_Task.DONE ) );
 		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Obtenir le code", "", new Date(),
 			TT_Task.TODO ) );
 		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Faire 20h de conduite", "", new Date(),
 			TT_Task.TODO ) );
 
-		TT_Task accederAuLevelDesPoneys = new TT_Task( UUID.randomUUID().toString(), "Accéder au niveau caché", "",
+		TT_Task accederAuLevelDesPoneys = new TT_Task( UUID.randomUUID().toString(), "Accï¿½der au niveau cachï¿½", "",
 			new Date(), TT_Task.TODO );
 
-		TT_Task rassemblerIngredients = new TT_Task( UUID.randomUUID().toString(), "Trouver les ingrédients", "",
+		TT_Task rassemblerIngredients = new TT_Task( UUID.randomUUID().toString(), "Trouver les ingrï¿½dients", "",
 			new Date(), TT_Task.TODO );
 		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Trouver champignon noir", "",
 			new Date(), TT_Task.TODO ) );
-		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Trouver tibia de léoric", "",
+		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Trouver tibia de lï¿½oric", "",
 			new Date(), TT_Task.TODO ) );
 		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Trouver arc-en-ciel liquide",
 			"", new Date(), TT_Task.TODO ) );
@@ -386,7 +386,7 @@ public class TreeTaskerControllerDAO
 			// On vide l'arbre
 			treeManager.clear();
 
-			// On se débarasse des noeuds supprimés
+			// On se dï¿½barasse des noeuds supprimï¿½s
 			for ( String deletedId : response.getDeletedIds() )
 			{
 				tasksMap.get( deletedId ).setParent( null );
@@ -395,7 +395,7 @@ public class TreeTaskerControllerDAO
 
 			rootDeletedTasksList.clear();
 
-			// On met tout l'arbre à jour
+			// On met tout l'arbre ï¿½ jour
 			for ( WS_Task taskToAdd : response.getTasksToAdd() )
 			{
 				TT_Task currentNewTask = new TT_Task();
@@ -429,7 +429,7 @@ public class TreeTaskerControllerDAO
 				treeManager.expandDirectChildren( expandedTask );
 			}
 
-			// S'il y'a des informations à envoyer…
+			// S'il y'a des informations ï¿½ envoyerï¿½
 			if ( !response.getNeedUpdateIds().isEmpty() )
 			{
 				SyncingFinalRequest finalRequest = new SyncingFinalRequest( userSession,

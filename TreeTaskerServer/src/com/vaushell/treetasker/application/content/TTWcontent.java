@@ -7,41 +7,39 @@ package com.vaushell.treetasker.application.content;
 import com.vaadin.ui.VerticalLayout;
 
 /**
- *
+ * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
 public class TTWcontent
-        extends VerticalLayout
+	extends VerticalLayout
 {
-    /**
+	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	private static final long	serialVersionUID	= 1L;
 
 	// PUBLIC
-    public TTWcontent()
-    {
-        init();
-    }
+	public TTWcontent()
+	{
+		init();
+	}
 
-    public void setView( EditTaskLayout view )
-    {
-        removeAllComponents();
-        addComponent( view );
-        currentView = view;
-    }
+	public EditTaskLayout getView() {
+		return currentView;
+	}
 
-    public EditTaskLayout getView()
-    {
-        return currentView;
-    }
-    // PROTECTED
-    // PRIVATE
-    private EditTaskLayout currentView;
+	public void setView(
+		EditTaskLayout view ) {
+		removeAllComponents();
+		addComponent( view );
+		currentView = view;
+	}
 
-    private void init()
-    {
-        this.setMargin( true );
-        setSizeFull();
-    }
+	private void init() {
+		setSizeFull();
+	}
+
+	// PROTECTED
+	// PRIVATE
+	private EditTaskLayout	currentView;
 }

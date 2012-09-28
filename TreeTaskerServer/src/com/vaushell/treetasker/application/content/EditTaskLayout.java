@@ -11,71 +11,102 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 import com.vaushell.treetasker.application.tree.node.TaskNode;
+import com.vaushell.treetasker.model.TT_Task;
 
 /**
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
 public class EditTaskLayout
-    extends VerticalLayout
+	extends VerticalLayout
 {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	private static final long	serialVersionUID	= 1L;
 
 	// PUBLIC
-	public EditTaskLayout( TaskNode taskNode,
-	                       TreeTaskerWebApplicationController controller )
+	public EditTaskLayout(
+		TaskNode taskNode,
+		TreeTaskerWebApplicationController controller )
 	{
 		this.controller = controller;
 		this.taskNode = taskNode;
 		init();
 	}
 
-	public void onExit()
-	{
+	public void onExit() {
 		saveAll();
 	}
 
-	// PROTECTED
-	// PRIVATE
-	private TaskNode	                       taskNode;
-	private TreeTaskerWebApplicationController	controller;
-	private TextField	                       vTFtaskTitleValue;
-	private TextArea	                       vTAtaskDescriptionValue;
+	public void refreshStyle() {
+		switch ( taskNode.getTask().getStatus() )
+		{
+			case TT_Task.DONE:
+				getTitleLayout().setStyleName( "title-done-layout" );
+				getDescriptionLayout().setStyleName( "description-done-layout" );
+				break;
+			case TT_Task.TODO:
+				getTitleLayout().setStyleName( "title-todo-layout" );
+				getDescriptionLayout().setStyleName( "description-todo-layout" );
+				break;
+		}
+	}
 
-	private void init()
-	{
+	private VerticalLayout getDescriptionLayout() {
+		if ( descriptionLayout == null )
+		{
+			descriptionLayout = new VerticalLayout();
+			descriptionLayout.setMargin( true );
+			descriptionLayout.setHeight( "100%" );
+
+			vTAtaskDescriptionValue = new TextArea();
+			vTAtaskDescriptionValue.setValue( taskNode.getTask().getDescription() );
+			vTAtaskDescriptionValue.setReadOnly( true );
+			vTAtaskDescriptionValue.setRows( 20 );
+			vTAtaskDescriptionValue.setWidth( "100%" );
+			vTAtaskDescriptionValue.setNullRepresentation( "Ajouter une description..." );
+
+			descriptionLayout.addComponent( vTAtaskDescriptionValue );
+		}
+		return descriptionLayout;
+	}
+
+	private VerticalLayout getTitleLayout() {
+		if ( titleLayout == null )
+		{
+			titleLayout = new VerticalLayout();
+			titleLayout.setMargin( true );
+
+			refreshStyle();
+
+			vTFtaskTitleValue = new TextField();
+			vTFtaskTitleValue.setWidth( "100%" );
+			vTFtaskTitleValue.setValue( taskNode.getTask().getTitle() );
+			vTFtaskTitleValue.setReadOnly( true );
+
+			titleLayout.addComponent( vTFtaskTitleValue );
+		}
+		return titleLayout;
+	}
+
+	private void init() {
 		setSizeFull();
-		setMargin( true );
-		setSpacing( true );
 
-		vTFtaskTitleValue = new TextField( "Titre :" );
-		vTFtaskTitleValue.setWidth( "100%" );
-		vTFtaskTitleValue.setValue( taskNode.getTask().getTitle() );
-		vTFtaskTitleValue.setReadOnly( true );
+		addComponent( getTitleLayout() );
+		addComponent( getDescriptionLayout() );
+		setExpandRatio( getDescriptionLayout(), 1 );
 
-		vTAtaskDescriptionValue = new TextArea( "Description" );
-		vTAtaskDescriptionValue.setValue( taskNode.getTask().getDescription() );
-		vTAtaskDescriptionValue.setReadOnly( true );
-		vTAtaskDescriptionValue.setRows( 20 );
-		vTAtaskDescriptionValue.setWidth( "100%" );
-		vTAtaskDescriptionValue.setNullRepresentation( "" );
-
-		addComponent( vTFtaskTitleValue );
-		addComponent( vTAtaskDescriptionValue );
-		setExpandRatio( vTAtaskDescriptionValue, 1 );
-
-		addListener( new LayoutClickListener()
+		getTitleLayout().addListener( new LayoutClickListener()
 		{
 			/**
 			 * 
 			 */
-			private static final long serialVersionUID = 1L;
+			private static final long	serialVersionUID	= 1L;
 
-			public void layoutClick( LayoutClickEvent event )
-			{
+			@Override
+			public void layoutClick(
+				LayoutClickEvent event ) {
 				if ( event.getChildComponent() == vTFtaskTitleValue )
 				{
 					if ( vTFtaskTitleValue.isReadOnly() )
@@ -84,7 +115,24 @@ public class EditTaskLayout
 						vTFtaskTitleValue.setReadOnly( false );
 					}
 				}
-				else if ( event.getChildComponent() == vTAtaskDescriptionValue )
+				else
+				{
+					saveAll();
+				}
+			}
+		} );
+
+		getDescriptionLayout().addListener( new LayoutClickListener()
+		{
+			/**
+			 * 
+			 */
+			private static final long	serialVersionUID	= 1L;
+
+			@Override
+			public void layoutClick(
+				LayoutClickEvent event ) {
+				if ( event.getChildComponent() == vTAtaskDescriptionValue )
 				{
 
 					if ( vTAtaskDescriptionValue.isReadOnly() )
@@ -99,14 +147,22 @@ public class EditTaskLayout
 				}
 			}
 		} );
-
 	}
 
-	private void saveAll()
-	{
+	private void saveAll() {
 		vTFtaskTitleValue.setReadOnly( true );
 		vTAtaskDescriptionValue.setReadOnly( true );
-		controller.updateTaskContent(taskNode.getTask(), (String) vTFtaskTitleValue.getValue(),(String) vTAtaskDescriptionValue.getValue() );		
+		controller.updateTaskContent( taskNode.getTask(), (String) vTFtaskTitleValue.getValue(),
+			(String) vTAtaskDescriptionValue.getValue() );
 		controller.getTree().refreshNodeCaption( taskNode );
 	}
+
+	// PROTECTED
+	// PRIVATE
+	private final TaskNode								taskNode;
+	private final TreeTaskerWebApplicationController	controller;
+	private VerticalLayout								titleLayout;
+	private VerticalLayout								descriptionLayout;
+	private TextField									vTFtaskTitleValue;
+	private TextArea									vTAtaskDescriptionValue;
 }
