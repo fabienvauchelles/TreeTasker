@@ -28,11 +28,12 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeTargetDetails;
 import com.vaadin.ui.VerticalLayout;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
-import com.vaushell.treetasker.application.tree.node.A_NavigationNode;
-import com.vaushell.treetasker.application.tree.node.TaskNode;
 import com.vaushell.treetasker.model.TT_Task;
 
 /**
+ * This is the navigation tree that displays the task list.
+ * 
+ * The tree node can be dragged and dropped on the menu. *
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
@@ -40,12 +41,13 @@ public class TTWtree
 	extends VerticalLayout
 	implements Serializable
 {
+	/**
+	 * Handles the drag and drop behavior
+	 * 
+	 */
 	private static class TreeSortDropHandler
 		implements DropHandler
 	{
-		/**
-		 * 
-		 */
 		private static final long	serialVersionUID	= 1L;
 
 		public TreeSortDropHandler(
@@ -165,7 +167,7 @@ public class TTWtree
 	}
 
 	/**
-	 * Ajoute un noeud à la racine
+	 * Adds <code>node</code> as a root node.
 	 * 
 	 * @param node
 	 */
@@ -177,8 +179,8 @@ public class TTWtree
 	}
 
 	/**
-	 * Ajoute childNode à parentNode. parentNode doit être contenu dans le
-	 * menu.
+	 * Adds <code>childNode</code> to <code>parentNode</code>.
+	 * <code>parentNode</code> must already be in the tree.
 	 * 
 	 * @param childNode
 	 * @param parentNode
@@ -190,41 +192,82 @@ public class TTWtree
 		navigationTree.setParent( childNode, parentNode );
 	}
 
+	/**
+	 * Expands a <code>node</code>
+	 * 
+	 * @param node
+	 */
 	public void expandNode(
 		A_NavigationNode node ) {
 		navigationTree.expandItem( node );
 	}
 
+	/**
+	 * Expands all the children recursively starting from <code>node</code>.
+	 * 
+	 * @param node
+	 */
 	public void expandNodeRecursively(
 		A_NavigationNode node ) {
 		navigationTree.expandItemsRecursively( node );
 	}
 
 	@SuppressWarnings( "unchecked" )
+	/**
+	 * Return all the children from <code>node</code>
+	 * 
+	 * @param node
+	 * @return
+	 */
 	public Collection<A_NavigationNode> getChildren(
 		A_NavigationNode node ) {
 		return (Collection<A_NavigationNode>) navigationTree.getChildren( node );
 	}
 
+	/**
+	 * 
+	 * @return the node that is currently displaying its content.
+	 */
 	public A_NavigationNode getCurrentNode() {
 		return currentNode;
 	}
 
+	/**
+	 * 
+	 * @param node
+	 * @return the parent node of the specified node
+	 */
 	public A_NavigationNode getParent(
 		A_NavigationNode node ) {
 		return (A_NavigationNode) navigationTree.getParent( node );
 	}
 
+	/**
+	 * 
+	 * @return a set of the selected nodes
+	 */
 	public Set<?> getValue() {
 		return (Set<?>) navigationTree.getValue();
 	}
 
+	/**
+	 * Moves <code>node</code> immediately after <code>siblingNode</code>. The
+	 * two nodes must have the same parent
+	 * 
+	 * @param node
+	 * @param siblingNode
+	 */
 	public void moveAfterSiblingNode(
 		A_NavigationNode node,
 		A_NavigationNode siblingNode ) {
 		( (HierarchicalContainer) navigationTree.getContainerDataSource() ).moveAfterSibling( node, siblingNode );
 	}
 
+	/**
+	 * Refreshes <code>node</code> caption in the menu.
+	 * 
+	 * @param node
+	 */
 	public void refreshNodeCaption(
 		A_NavigationNode node ) {
 		if ( navigationTree.containsId( node ) )
@@ -233,6 +276,11 @@ public class TTWtree
 		}
 	}
 
+	/**
+	 * Refreshes <code>node</code> icon in the menu.
+	 * 
+	 * @param node
+	 */
 	public void refreshNodeIcon(
 		TaskNode node ) {
 		if ( navigationTree.containsId( node ) )
@@ -248,59 +296,79 @@ public class TTWtree
 		}
 	}
 
+	/**
+	 * Clears the tree content.
+	 */
 	public void removeAllNodes() {
 		navigationTree.removeAllItems();
 		currentNode = null;
 	}
 
-	public void removeNode(
-		A_NavigationNode node ) {
-		if ( navigationTree.containsId( node ) )
-		{
-			navigationTree.removeItem( node );
-		}
-	}
-
 	@SuppressWarnings( "unchecked" )
+	/**
+	 * Removes <code>node</code> and all its children from the tree.
+	 * @param node
+	 */
 	public void removeNodeRecursively(
 		A_NavigationNode node ) {
 		if ( node != null )
 		{
-			Collection<A_NavigationNode> childNodes = new ArrayList<A_NavigationNode>(
-				(Collection<A_NavigationNode>) navigationTree.getChildren( node ) );
-			for ( A_NavigationNode childNode : childNodes )
+			if ( navigationTree.hasChildren( node ) )
 			{
-				removeNodeRecursively( childNode );
+				Collection<A_NavigationNode> childNodes = new ArrayList<A_NavigationNode>(
+					(Collection<A_NavigationNode>) navigationTree.getChildren( node ) );
+				for ( A_NavigationNode childNode : childNodes )
+				{
+					removeNodeRecursively( childNode );
+				}
 			}
 			removeNode( node );
 		}
 	}
 
+	/**
+	 * Selects <code>node</code> in the tree. Listeners are triggered.
+	 * 
+	 * @param node
+	 */
 	public void select(
-		Object itemId ) {
-		select( itemId, true );
+		A_NavigationNode node ) {
+		select( node, true );
 	}
 
+	/**
+	 * Selects <code>node</code> in the tree.
+	 * 
+	 * @param node
+	 * @param triggerListeners
+	 *            whether the selection triggers listeners or not.
+	 */
 	public void select(
-		Object itemId,
+		A_NavigationNode node,
 		boolean triggerListeners ) {
 		if ( triggerListeners )
 		{
-			navigationTree.select( itemId );
+			navigationTree.select( node );
 		}
 		else
 		{
 			navigationTree.removeListener( changeListener );
-			navigationTree.select( itemId );
+			navigationTree.select( node );
 			navigationTree.addListener( changeListener );
 		}
 	}
 
+	/**
+	 * Unselects all the nodes.
+	 */
 	public void unselectAll() {
 		currentNode = null;
 		navigationTree.setValue( Collections.EMPTY_SET );
 	}
 
+	/**
+	 * Unselects the node
+	 */
 	public void unselectNode() {
 		if ( currentNode != null )
 		{
@@ -311,7 +379,13 @@ public class TTWtree
 	}
 
 	@SuppressWarnings( "unchecked" )
+	/**
+	 * Initializes listeners to control the tree behaviors.
+	 */
 	protected void initListeners() {
+
+		// This listener updates the content view depending on what is selected
+		// on the tree.
 		changeListener = new Property.ValueChangeListener()
 		{
 			/**
@@ -349,7 +423,7 @@ public class TTWtree
 			}
 		};
 
-		// Double-clic validation
+		// Right-clic validation
 		navigationTree.addListener( new ItemClickEvent.ItemClickListener()
 		{
 			private static final long	serialVersionUID	= 1L;
@@ -359,7 +433,7 @@ public class TTWtree
 				ItemClickEvent event ) {
 				if ( event.getButton() == ClickEvent.BUTTON_RIGHT )
 				{
-					controller.validTask( event.getItemId() );
+					controller.validTask( (A_NavigationNode) event.getItemId() );
 				}
 			}
 		} );
@@ -395,6 +469,20 @@ public class TTWtree
 		setExpandRatio( treeLayout, 1 );
 
 		initListeners();
+	}
+
+	/**
+	 * Removes <code>node</code> from the tree. Does not remove any children the
+	 * node might have.
+	 * 
+	 * @param node
+	 */
+	private void removeNode(
+		A_NavigationNode node ) {
+		if ( navigationTree.containsId( node ) )
+		{
+			navigationTree.removeItem( node );
+		}
 	}
 
 	// </editor-fold>

@@ -2,20 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/asm-3.1.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jackson-core-asl-1.9.2.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jackson-jaxrs-1.9.2.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jackson-mapper-asl-1.9.2.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jackson-xc-1.9.2.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-core-1.12.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-json-1.12.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-servlet-1.12.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jettison-1.1.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jsr311-api-1.1.1.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-server-1.12.jar"/>
-	<classpathentry kind="lib" path="D:/GitRepos/treetasker/TreeTaskerServer/war/WEB-INF/lib/TreeTaskerModel.jar"/>
 	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/tree-tasker-model.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/vaadin-6.8.3.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/vaadin-confirmdialog-1.2.1.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-core-1.12.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-json-1.12.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-server-1.12.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-servlet-1.12.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

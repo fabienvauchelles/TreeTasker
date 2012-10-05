@@ -11,6 +11,8 @@ import com.vaadin.ui.Window;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 
 /**
+ * This is the web application main window. It displays the login layout at
+ * first, and the user view once logged in.
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
@@ -31,8 +33,10 @@ public class UserWindow
 		init();
 	}
 
-	public void setUserView(
-		String name ) {
+	/**
+	 * Displays the user's view.
+	 */
+	public void setUserView() {
 		mainLayout.removeComponent( controller.getLoginLayout() );
 
 		mainLayout.addComponent( controller.getActionBar() );

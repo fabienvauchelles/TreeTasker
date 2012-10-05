@@ -18,10 +18,11 @@ import java.util.UUID;
 import com.vaushell.treetasker.TreeTaskerWebApplication;
 import com.vaushell.treetasker.application.actionbar.TTWActionBar;
 import com.vaushell.treetasker.application.content.TTWcontent;
+import com.vaushell.treetasker.application.content.layout.LoginLayout;
 import com.vaushell.treetasker.application.header.TTWHeader;
-import com.vaushell.treetasker.application.login.TTWLoginLayout;
+import com.vaushell.treetasker.application.tree.A_NavigationNode;
 import com.vaushell.treetasker.application.tree.TTWtree;
-import com.vaushell.treetasker.application.tree.node.TaskNode;
+import com.vaushell.treetasker.application.tree.TaskNode;
 import com.vaushell.treetasker.application.window.RegistrationWindow;
 import com.vaushell.treetasker.application.window.UserWindow;
 import com.vaushell.treetasker.dao.EH_TT_Task;
@@ -33,6 +34,7 @@ import com.vaushell.treetasker.module.WS_Task;
 import com.vaushell.treetasker.tools.TT_Tools;
 
 /**
+ * The web application controller.
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
@@ -52,6 +54,9 @@ public class TreeTaskerWebApplicationController
 		init();
 	}
 
+	/**
+	 * Adds a subtask to the currentNode.
+	 */
 	public void addNewSubTask() {
 		TaskNode newNode = new TaskNode( new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(),
 			TT_Task.TODO ), this );
@@ -69,6 +74,10 @@ public class TreeTaskerWebApplicationController
 		}
 	}
 
+	/**
+	 * Adds a new task after the current node. Adds a new task if there is no
+	 * selection.
+	 */
 	public void addNewTask() {
 		TaskNode newNode = new TaskNode( new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(),
 			TT_Task.TODO ), this );
@@ -98,6 +107,9 @@ public class TreeTaskerWebApplicationController
 	}
 
 	@SuppressWarnings( "unchecked" )
+	/**
+	 * Copies all the selected tasks to the clipboard.
+	 */
 	public void copyTask() {
 		copiedTasks.clear();
 		for ( TaskNode taskNode : (Set<TaskNode>) getTree().getValue() )
@@ -107,17 +119,25 @@ public class TreeTaskerWebApplicationController
 	}
 
 	@SuppressWarnings( "unchecked" )
+	/**
+	 * Deletes all the selected tasks.
+	 */
 	public void deleteTasks() {
 		Set<EH_TT_Task> tasksToDelete = new HashSet<EH_TT_Task>();
 		EH_TT_UserTaskContainer userContainer = getUserContainer();
 		for ( TaskNode taskNode : (Set<TaskNode>) getTree().getValue() )
 		{
-			getTree().removeNode( taskNode );
+			getTree().removeNodeRecursively( taskNode );
 			addTasksToDeleteRecursively( taskNode.getTask(), tasksToDelete, userContainer );
 		}
 		TT_ServerControllerDAO.getInstance().deleteTasks( tasksToDelete );
+		getContent().setView( null );
 	}
 
+	/**
+	 * 
+	 * @return the application action bar.
+	 */
 	public TTWActionBar getActionBar() {
 		if ( actionBar == null )
 		{
@@ -126,10 +146,18 @@ public class TreeTaskerWebApplicationController
 		return actionBar;
 	}
 
+	/**
+	 * 
+	 * @return the application instance.
+	 */
 	public TreeTaskerWebApplication getApplication() {
 		return application;
 	}
 
+	/**
+	 * 
+	 * @return the application content view.
+	 */
 	public TTWcontent getContent() {
 		if ( content == null )
 		{
@@ -138,6 +166,10 @@ public class TreeTaskerWebApplicationController
 		return content;
 	}
 
+	/**
+	 * 
+	 * @return the application header.
+	 */
 	public TTWHeader getHeader() {
 		if ( header == null )
 		{
@@ -146,14 +178,22 @@ public class TreeTaskerWebApplicationController
 		return header;
 	}
 
-	public TTWLoginLayout getLoginLayout() {
+	/**
+	 * 
+	 * @return the application login layout.
+	 */
+	public LoginLayout getLoginLayout() {
 		if ( loginLayout == null )
 		{
-			loginLayout = new TTWLoginLayout( this );
+			loginLayout = new LoginLayout( this );
 		}
 		return loginLayout;
 	}
 
+	/**
+	 * 
+	 * @return the application tree, which is the tasks list.
+	 */
 	public TTWtree getTree() {
 		if ( tree == null )
 		{
@@ -162,6 +202,10 @@ public class TreeTaskerWebApplicationController
 		return tree;
 	}
 
+	/**
+	 * 
+	 * @return the user's container entity handler. Used with GAE.
+	 */
 	public EH_TT_UserTaskContainer getUserContainer() {
 		if ( userContainer == null )
 		{
@@ -173,6 +217,10 @@ public class TreeTaskerWebApplicationController
 		return userContainer;
 	}
 
+	/**
+	 * 
+	 * @return the application user window.
+	 */
 	public UserWindow getUserWindow() {
 		if ( userWindow == null )
 		{
@@ -181,6 +229,13 @@ public class TreeTaskerWebApplicationController
 		return userWindow;
 	}
 
+	/**
+	 * Try to log an user.
+	 * 
+	 * @param userName
+	 * @param password
+	 * @return if the login suceed or not.
+	 */
 	public boolean login(
 		String userName,
 		String password ) {
@@ -193,21 +248,41 @@ public class TreeTaskerWebApplicationController
 		return false;
 	}
 
+	/**
+	 * Paste the tasks copied in the clipboard as children of the current task,
+	 * or as roots if there is no task selected.
+	 */
 	public void pasteTask() {
 		TaskNode parentNode = (TaskNode) getTree().getCurrentNode();
-		for ( TT_Task copiedTask : copiedTasks )
+		if ( parentNode != null )
 		{
-			saveTasksRecursively( copiedTask.getCopy(), parentNode.getTask() );
+			for ( TT_Task copiedTask : copiedTasks )
+			{
+				saveTasksRecursively( copiedTask.getCopy(), parentNode.getTask() );
+			}
+		}
+		else
+		{
+			for ( TT_Task copiedTask : copiedTasks )
+			{
+				saveTasksRecursively( copiedTask.getCopy(), null );
+			}
 		}
 		refresh();
 	}
 
+	/**
+	 * Opens the registration window.
+	 */
 	public void queryRegistration() {
 		RegistrationWindow subWindow = new RegistrationWindow();
 		application.getMainWindow().addWindow( subWindow );
 		subWindow.center();
 	}
 
+	/**
+	 * Reloads the tasks list from the server.
+	 */
 	public void refresh() {
 		ArrayList<TT_Task> rootTasksList = new ArrayList<TT_Task>();
 		HashMap<String, TT_Task> idToTaskMap = new HashMap<String, TT_Task>();
@@ -237,6 +312,12 @@ public class TreeTaskerWebApplicationController
 		refreshTreeTasks( rootTasksList );
 	}
 
+	/**
+	 * Set <code>parent</code> as <code>child</code>'s parent.
+	 * 
+	 * @param child
+	 * @param parent
+	 */
 	public void setTaskParent(
 		TT_Task child,
 		TT_Task parent ) {
@@ -246,16 +327,31 @@ public class TreeTaskerWebApplicationController
 		TT_ServerControllerDAO.getInstance().createOrUpdateTask( new EH_TT_Task( wsTask, getUserContainer() ) );
 	}
 
+	/**
+	 * Displays the login layout.
+	 */
 	public void showLoginWindow() {
 		UserWindow userWindow = getUserWindow();
 		application.setMainWindow( userWindow );
 	}
 
+	/**
+	 * Displays the user's view.
+	 */
 	public void showUserWindow() {
 		UserWindow userWindow = getUserWindow();
-		userWindow.setUserView( userSession.getUserName() );
+		userWindow.setUserView();
 	}
 
+	/**
+	 * Updates the task content.
+	 * 
+	 * @param task
+	 * @param title
+	 *            new title
+	 * @param description
+	 *            new description
+	 */
 	public void updateTaskContent(
 		TT_Task task,
 		String title,
@@ -301,12 +397,16 @@ public class TreeTaskerWebApplicationController
 	}
 
 	@SuppressWarnings( "unchecked" )
+	/**
+	 * Valid all the selected tasks if at most one is not validated. Unvalid all the selected tasks otherwise.
+	 * @param selectedNode the last node selected.
+	 */
 	public void validTask(
-		Object itemId ) {
-		if ( !getTree().getValue().contains( itemId ) )
+		A_NavigationNode selectedNode ) {
+		if ( !getTree().getValue().contains( selectedNode ) )
 		{
 			getTree().unselectAll();
-			getTree().select( itemId );
+			getTree().select( selectedNode );
 		}
 		int newStatus = TT_Task.TODO;
 		List<EH_TT_Task> tasksToUpdate = new ArrayList<EH_TT_Task>();
@@ -327,8 +427,10 @@ public class TreeTaskerWebApplicationController
 			tasksToUpdate.add( new EH_TT_Task( new WS_Task( selectedTask ), getUserContainer() ) );
 			getTree().refreshNodeIcon( node );
 		}
-
-		getContent().getView().refreshStyle();
+		if ( getContent().getView() != null )
+		{
+			getContent().getView().refreshStyle();
+		}
 		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( tasksToUpdate );
 	}
 
@@ -388,7 +490,7 @@ public class TreeTaskerWebApplicationController
 	private UserWindow							userWindow;
 	private TTWActionBar						actionBar;
 	private TTWHeader							header;
-	private TTWLoginLayout						loginLayout;
+	private LoginLayout							loginLayout;
 	private TTWtree								tree;
 	private TTWcontent							content;
 	private UserSession							userSession;

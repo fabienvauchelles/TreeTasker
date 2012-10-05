@@ -14,6 +14,12 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.VerticalLayout;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
 
+/**
+ * This component is the action bar. Buttons are directly added here.
+ * 
+ * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
+ * 
+ */
 public class TTWActionBar
 	extends CustomComponent
 {

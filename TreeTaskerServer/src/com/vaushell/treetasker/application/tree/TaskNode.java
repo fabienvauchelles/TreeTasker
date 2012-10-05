@@ -2,13 +2,14 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.vaushell.treetasker.application.tree.node;
+package com.vaushell.treetasker.application.tree;
 
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
-import com.vaushell.treetasker.application.content.EditTaskLayout;
+import com.vaushell.treetasker.application.content.layout.EditTaskLayout;
 import com.vaushell.treetasker.model.TT_Task;
 
 /**
+ * This is an implementation of A_NavigationNode for a task.
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
@@ -46,7 +47,10 @@ public class TaskNode
 
 	@Override
 	public void onExit() {
-		controller.getContent().getView().onExit();
+		if ( controller.getContent().getView() != null )
+		{
+			controller.getContent().getView().onExit();
+		}
 		controller.getTree().refreshNodeCaption( this );
 		controller.getTree().refreshNodeIcon( this );
 	}

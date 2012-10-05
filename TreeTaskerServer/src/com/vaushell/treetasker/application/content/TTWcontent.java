@@ -5,8 +5,11 @@
 package com.vaushell.treetasker.application.content;
 
 import com.vaadin.ui.VerticalLayout;
+import com.vaushell.treetasker.application.content.layout.EditTaskLayout;
 
 /**
+ * This layout is where content can be put. The layout is on the right side of
+ * the tree of tasks.
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
@@ -31,7 +34,10 @@ public class TTWcontent
 	public void setView(
 		EditTaskLayout view ) {
 		removeAllComponents();
-		addComponent( view );
+		if ( view != null )
+		{
+			addComponent( view );
+		}
 		currentView = view;
 	}
 

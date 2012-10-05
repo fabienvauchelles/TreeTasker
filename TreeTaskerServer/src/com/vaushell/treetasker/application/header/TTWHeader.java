@@ -6,6 +6,12 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
 
+/**
+ * This component is the web application header.
+ * 
+ * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
+ * 
+ */
 public class TTWHeader
 	extends CustomComponent
 {

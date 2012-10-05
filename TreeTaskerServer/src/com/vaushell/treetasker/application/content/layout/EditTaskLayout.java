@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.vaushell.treetasker.application.content;
+package com.vaushell.treetasker.application.content.layout;
 
 import com.vaadin.event.LayoutEvents.LayoutClickEvent;
 import com.vaadin.event.LayoutEvents.LayoutClickListener;
@@ -10,10 +10,12 @@ import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
-import com.vaushell.treetasker.application.tree.node.TaskNode;
+import com.vaushell.treetasker.application.tree.TaskNode;
 import com.vaushell.treetasker.model.TT_Task;
 
 /**
+ * This layout is related to one task. It has an editable title and description.
+ * The background color depends on the task status.
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
