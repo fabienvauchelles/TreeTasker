@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (c) 2012 - VAUSHELL - contact@vaushell.com.
+  All rights reserved. This program and the accompanying materials
+  are made available under the terms of the GNU Public License v3.0
+  which accompanies this distribution, and is available at
+  http://www.gnu.org/licenses/gpl.html
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
     android:gravity="center"
     android:orientation="vertical" >
-
+
+
+
+
+
+
+
+
+
+
+
     <TextView
         android:id="@+id/aLBLtitle"
         android:layout_width="wrap_content"
@@ -13,7 +30,11 @@
         android:layout_marginTop="20dp"
         android:text="@string/app_display_name"
         android:textAppearance="?android:attr/textAppearanceLarge" />
-
+
+
+
+
+
     <TextView
         android:id="@+id/aLBLconnectTitle"
         android:layout_width="wrap_content"
@@ -21,7 +42,14 @@
         android:layout_marginBottom="40dp"
         android:text="@string/connect"
         android:textAppearance="?android:attr/textAppearanceMedium" />
-
+
+
+
+
+
+
+
+
     <EditText
         android:id="@+id/aTXTloginValue"
         android:layout_width="match_parent"
@@ -32,7 +60,11 @@
 
         <requestFocus />
     </EditText>
-
+
+
+
+
+
     <EditText
         android:id="@+id/aTXTpasswordValue"
         android:layout_width="match_parent"
@@ -41,14 +73,21 @@
         android:ems="10"
         android:hint="@string/password"
         android:inputType="textPassword" />
-
+
+
+
+
+
     <Button
         android:id="@+id/aBTconnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:text="@string/connect" />
-
+
+
+
+
     <Button
         android:id="@+id/aBTregister"
         style="?android:attr/buttonStyleSmall"
