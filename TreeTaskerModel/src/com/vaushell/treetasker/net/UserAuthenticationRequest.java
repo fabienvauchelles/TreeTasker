@@ -5,35 +5,25 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  ******************************************************************************/
-package com.vaushell.treetasker.module;
+package com.vaushell.treetasker.net;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class UserSessionCheckRequest
+public class UserAuthenticationRequest
 {
 	// PUBLIC
-	public UserSessionCheckRequest()
+	public UserAuthenticationRequest()
 	{
 		this( null, null );
 	}
 
-	public UserSessionCheckRequest( String sessionId,
-	                                String login )
+	public UserAuthenticationRequest( String login,
+	                                  String password )
 	{
-		this.sessionId = sessionId;
 		this.login = login;
+		this.password = password;
 		init();
-	}
-
-	public String getSessionId()
-	{
-		return sessionId;
-	}
-
-	public void setSessionId( String sessionId )
-	{
-		this.sessionId = sessionId;
 	}
 
 	public String getLogin()
@@ -46,10 +36,20 @@ public class UserSessionCheckRequest
 		this.login = login;
 	}
 
+	public String getPassword()
+	{
+		return password;
+	}
+
+	public void setPassword( String password )
+	{
+		this.password = password;
+	}
+
 	// PROTECTED
 	// PRIVATE
-	private String	sessionId;
 	private String	login;
+	private String	password;
 
 	private void init()
 	{

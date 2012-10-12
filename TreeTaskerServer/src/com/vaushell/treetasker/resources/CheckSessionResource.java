@@ -14,8 +14,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
-import com.vaushell.treetasker.module.UserSession;
-import com.vaushell.treetasker.module.UserSessionCheckRequest;
+import com.vaushell.treetasker.net.UserSession;
+import com.vaushell.treetasker.net.UserSessionCheckRequest;
 
 @Path( "/check" )
 public class CheckSessionResource

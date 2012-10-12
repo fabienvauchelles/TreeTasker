@@ -1,32 +1,14 @@
-/*******************************************************************************
- * Copyright (c) 2012 - VAUSHELL - contact@vaushell.com.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Public License v3.0
- * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/gpl.html
- ******************************************************************************/
-//    TreeTasker is a simple task organizer based on a tree component.
-//    Copyright (C) 2012 - VAUSHELL - contact_at_vaushell.com
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package com.vaushell.treetasker.application.tree;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.vaadin.data.Property;
@@ -42,17 +24,19 @@ import com.vaadin.event.dd.acceptcriteria.AcceptAll;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.terminal.ThemeResource;
 import com.vaadin.terminal.gwt.client.ui.dd.VerticalDropLocation;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeTargetDetails;
 import com.vaadin.ui.VerticalLayout;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
+import com.vaushell.treetasker.dao.EH_WS_Task;
+import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
 import com.vaushell.treetasker.model.TT_Task;
+import com.vaushell.treetasker.net.WS_Task;
 
 /**
  * This is the navigation tree that displays the task list.
  * 
- * The tree node can be dragged and dropped on the menu. *
+ * The tree node can be dragged and dropped on the menu.
  * 
  * @author VAUSHELL - Frederic PEAK <fred@vaushell.com>
  */
@@ -88,7 +72,7 @@ public class TTWtree
 				return;
 			}
 
-			TreeTargetDetails dropData = ( (TreeTargetDetails) dropEvent.getTargetDetails() );
+			TreeTargetDetails dropData = (TreeTargetDetails) dropEvent.getTargetDetails();
 
 			Object sourceItemId = ( (DataBoundTransferable) t ).getItemId();
 			Object targetItemId = dropData.getItemIdOver();
@@ -111,6 +95,33 @@ public class TTWtree
 			Object targetItemId,
 			VerticalDropLocation location ) {
 			HierarchicalContainer container = (HierarchicalContainer) tree.getContainerDataSource();
+			Set<TT_Task> tasksToUpdate = new HashSet<TT_Task>();
+
+			// Dans un premier temps, on retire le nï¿½ud
+			TaskNode taskNode = (TaskNode) sourceItemId;
+			if ( taskNode.getTask().getParent() != null )
+			{
+				int taskIndex = taskNode.getTask().getParent().getChildrenTask().indexOf( taskNode.getTask() );
+				if ( taskIndex != taskNode.getTask().getParent().getChildrenTask().size() - 1 )
+				{
+					taskNode.getTask().getParent().getChildrenTask().get( taskIndex + 1 )
+						.setPreviousTask( taskNode.getTask().getPreviousTask() );
+					tasksToUpdate.add( taskNode.getTask().getParent().getChildrenTask().get( taskIndex + 1 ) );
+				}
+			}
+			else
+			{
+				int taskIndex = controller.getUserContainer().getContainer().getRootTasks()
+					.indexOf( taskNode.getTask() );
+				if ( taskIndex != controller.getUserContainer().getContainer().getRootTasks().size() - 1 )
+				{
+					controller.getUserContainer().getContainer().getRootTasks().get( taskIndex + 1 )
+						.setPreviousTask( taskNode.getTask().getPreviousTask() );
+					tasksToUpdate
+						.add( controller.getUserContainer().getContainer().getRootTasks().get( taskIndex + 1 ) );
+				}
+			}
+			taskNode.getTask().setPreviousTask( null );
 
 			// Sorting goes as
 			// - If dropped ON a node, we append it as a child
@@ -121,8 +132,24 @@ public class TTWtree
 
 			if ( location == VerticalDropLocation.MIDDLE )
 			{
-				if ( container.setParent( sourceItemId, targetItemId ) && container.hasChildren( targetItemId ) )
+				if ( container.setParent( sourceItemId, targetItemId )/*
+																	 * &&
+																	 * container
+																	 * .
+																	 * hasChildren
+																	 * (
+																	 * targetItemId
+																	 * )
+																	 */)
 				{
+					// Mise ï¿½ jour prï¿½cï¿½dence
+					TT_Task newParentTask = ( (TaskNode) targetItemId ).getTask();
+					if ( !newParentTask.getChildrenTask().isEmpty() )
+					{
+						newParentTask.getChildrenTask().get( 0 ).setPreviousTask( taskNode.getTask() );
+						tasksToUpdate.add( newParentTask.getChildrenTask().get( 0 ) );
+					}
+
 					// move first in the container
 					container.moveAfterSibling( sourceItemId, null );
 					controller.setTaskParent( ( (TaskNode) sourceItemId ).getTask(),
@@ -135,6 +162,12 @@ public class TTWtree
 				Object parentId = container.getParent( targetItemId );
 				if ( container.setParent( sourceItemId, parentId ) )
 				{
+					TT_Task sourceTask = ( (TaskNode) sourceItemId ).getTask();
+					TT_Task targetTask = ( (TaskNode) targetItemId ).getTask();
+					sourceTask.setPreviousTask( targetTask.getPreviousTask() );
+					targetTask.setPreviousTask( sourceTask );
+					tasksToUpdate.add( targetTask );
+
 					// reorder only the two items, moving source above target
 					container.moveAfterSibling( sourceItemId, targetItemId );
 					container.moveAfterSibling( targetItemId, sourceItemId );
@@ -154,6 +187,39 @@ public class TTWtree
 				Object parentId = container.getParent( targetItemId );
 				if ( container.setParent( sourceItemId, parentId ) )
 				{
+					TT_Task sourceTask = ( (TaskNode) sourceItemId ).getTask();
+					TT_Task targetTask = ( (TaskNode) targetItemId ).getTask();
+					if ( parentId == null )
+					{
+						int targetTaskIndex = controller.getUserContainer().getContainer().getRootTasks()
+							.indexOf( targetTask );
+						if ( targetTaskIndex > 0 )
+						{
+							sourceTask.setPreviousTask( targetTask );
+							if ( targetTaskIndex != controller.getUserContainer().getContainer().getRootTasks().size() - 1 )
+							{
+								controller.getUserContainer().getContainer().getRootTasks().get( targetTaskIndex + 1 )
+									.setPreviousTask( sourceTask );
+								tasksToUpdate.add( controller.getUserContainer().getContainer().getRootTasks()
+									.get( targetTaskIndex + 1 ) );
+							}
+						}
+					}
+					else
+					{
+						int targetTaskIndex = targetTask.getParent().getChildrenTask().indexOf( targetTask );
+						if ( targetTaskIndex > 0 )
+						{
+							sourceTask.setPreviousTask( targetTask );
+							if ( targetTaskIndex != targetTask.getParent().getChildrenTask().size() - 1 )
+							{
+								targetTask.getParent().getChildrenTask().get( targetTaskIndex + 1 )
+									.setPreviousTask( sourceTask );
+								tasksToUpdate.add( targetTask.getParent().getChildrenTask().get( targetTaskIndex + 1 ) );
+							}
+						}
+					}
+
 					container.moveAfterSibling( sourceItemId, targetItemId );
 					if ( parentId == null )
 					{
@@ -166,9 +232,16 @@ public class TTWtree
 					}
 				}
 			}
+
+			for ( TT_Task task : tasksToUpdate )
+			{
+				TT_ServerControllerDAO.getInstance().createOrUpdateTask(
+					new EH_WS_Task( new WS_Task( task ), controller.getUserContainer() ) );
+			}
 		}
 
 		private final Tree									tree;
+
 		private final TreeTaskerWebApplicationController	controller;
 	}
 
@@ -231,15 +304,19 @@ public class TTWtree
 		navigationTree.expandItemsRecursively( node );
 	}
 
-	@SuppressWarnings( "unchecked" )
 	/**
 	 * Return all the children from <code>node</code>
 	 * 
 	 * @param node
 	 * @return
 	 */
+	@SuppressWarnings( "unchecked" )
 	public Collection<A_NavigationNode> getChildren(
 		A_NavigationNode node ) {
+		if ( node == null )
+		{
+			return (Collection<A_NavigationNode>) navigationTree.rootItemIds();
+		}
 		return (Collection<A_NavigationNode>) navigationTree.getChildren( node );
 	}
 
@@ -441,7 +518,6 @@ public class TTWtree
 				}
 			}
 		};
-
 		// Right-clic validation
 		navigationTree.addListener( new ItemClickEvent.ItemClickListener()
 		{
@@ -456,23 +532,11 @@ public class TTWtree
 				}
 			}
 		} );
-
 		navigationTree.addListener( changeListener );
 		navigationTree.setImmediate( true );
 	}
 
 	private void init() {
-		VerticalLayout captionLayout = new VerticalLayout();
-		captionLayout.setMargin( true );
-		TextField caption = new TextField();
-		caption.setValue( "Liste des tâches" );
-		caption.setReadOnly( true );
-		captionLayout.addComponent( caption );
-		captionLayout.setWidth( "300px" );
-		captionLayout.setStyleName( "tree-caption" );
-
-		VerticalLayout treeLayout = new VerticalLayout();
-		treeLayout.setMargin( false, true, true, true );
 		navigationTree = new Tree();
 		HierarchicalContainer container = new HierarchicalContainer();
 		navigationTree.setContainerDataSource( container );
@@ -482,10 +546,7 @@ public class TTWtree
 		currentNode = null;
 
 		setSizeUndefined();
-		treeLayout.addComponent( navigationTree );
-		addComponent( captionLayout );
-		addComponent( treeLayout );
-		setExpandRatio( treeLayout, 1 );
+		addComponent( navigationTree );
 
 		initListeners();
 	}
@@ -507,9 +568,11 @@ public class TTWtree
 	// </editor-fold>
 	// PROTECTED
 	protected TreeTaskerWebApplicationController	controller;
+
 	protected Tree									navigationTree;
 
 	// PRIVATE
 	private Property.ValueChangeListener			changeListener;
+
 	private A_NavigationNode						currentNode;
 }

@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -32,12 +31,13 @@ import com.vaushell.treetasker.application.tree.TTWtree;
 import com.vaushell.treetasker.application.tree.TaskNode;
 import com.vaushell.treetasker.application.window.RegistrationWindow;
 import com.vaushell.treetasker.application.window.UserWindow;
-import com.vaushell.treetasker.dao.EH_TT_Task;
 import com.vaushell.treetasker.dao.EH_TT_UserTaskContainer;
+import com.vaushell.treetasker.dao.EH_WS_Task;
 import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
 import com.vaushell.treetasker.model.TT_Task;
-import com.vaushell.treetasker.module.UserSession;
-import com.vaushell.treetasker.module.WS_Task;
+import com.vaushell.treetasker.model.TT_UserTaskContainer;
+import com.vaushell.treetasker.net.UserSession;
+import com.vaushell.treetasker.net.WS_Task;
 import com.vaushell.treetasker.tools.TT_Tools;
 
 /**
@@ -65,19 +65,37 @@ public class TreeTaskerWebApplicationController
 	 * Adds a subtask to the currentNode.
 	 */
 	public void addNewSubTask() {
-		TaskNode newNode = new TaskNode( new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(),
-			TT_Task.TODO ), this );
 		TaskNode parentNode = (TaskNode) getTree().getCurrentNode();
 
 		if ( parentNode != null )
 		{
+			TT_Task newTask = new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(),
+				TT_Task.TODO );
+			TaskNode newNode = new TaskNode( newTask, this );
+
+			List<TT_Task> childrenList = parentNode.getTask().getChildrenTask();
+			if ( !childrenList.isEmpty() )
+			{
+				newTask.setPreviousTask( childrenList.get( childrenList.size() - 1 ) );
+			}
+
 			getTree().addNode( newNode, parentNode );
 			setTaskParent( newNode.getTask(), parentNode.getTask() );
 			getTree().expandNode( parentNode );
 		}
 		else
 		{
-			getTree().addNode( newNode );
+			TT_Task newTask = new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(),
+				TT_Task.TODO );
+
+			TT_UserTaskContainer container = getUserContainer().getContainer();
+			if ( !container.getRootTasks().isEmpty() )
+			{
+				newTask.setPreviousTask( container.getRootTasks().get( container.getRootTasks().size() - 1 ) );
+			}
+			container.addRootTask( newTask );
+
+			getTree().addNode( new TaskNode( newTask, this ) );
 		}
 	}
 
@@ -86,10 +104,11 @@ public class TreeTaskerWebApplicationController
 	 * selection.
 	 */
 	public void addNewTask() {
-		TaskNode newNode = new TaskNode( new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(),
-			TT_Task.TODO ), this );
+		ArrayList<EH_WS_Task> tasksToUpdate = new ArrayList<EH_WS_Task>();
+
 		TaskNode siblingNode = (TaskNode) getTree().getCurrentNode();
 		TaskNode parentNode = null;
+
 		if ( siblingNode != null )
 		{
 			parentNode = (TaskNode) getTree().getParent( siblingNode );
@@ -97,20 +116,63 @@ public class TreeTaskerWebApplicationController
 
 		if ( parentNode != null )
 		{
+			TaskNode newNode = new TaskNode( new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null,
+				new Date(), TT_Task.TODO ), this );
+
+			int siblingIndex = parentNode.getTask().getChildrenTask().indexOf( siblingNode.getTask() );
+			if ( siblingIndex != parentNode.getTask().getChildrenTask().size() - 1 )
+			{
+				parentNode.getTask().getChildrenTask().get( siblingIndex + 1 ).setPreviousTask( newNode.getTask() );
+				tasksToUpdate.add( new EH_WS_Task( new WS_Task( parentNode.getTask().getChildrenTask()
+					.get( siblingIndex + 1 ) ), getUserContainer() ) );
+			}
+			newNode.getTask().setPreviousTask( siblingNode.getTask() );
+
 			getTree().addNode( newNode, parentNode );
 			getTree().moveAfterSiblingNode( newNode, siblingNode );
 			newNode.getTask().setParent( parentNode.getTask() );
 		}
 		else
 		{
-			getTree().addNode( newNode );
+			TaskNode newNode = null;
+
 			if ( siblingNode != null )
 			{
+				newNode = new TaskNode( new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(),
+					TT_Task.TODO ), this );
+
+				int siblingIndex = getUserContainer().getContainer().getRootTasks().indexOf( siblingNode.getTask() );
+				if ( siblingIndex != getUserContainer().getContainer().getRootTasks().size() - 1 )
+				{
+					getUserContainer().getContainer().getRootTasks().get( siblingIndex + 1 )
+						.setPreviousTask( newNode.getTask() );
+					tasksToUpdate.add( new EH_WS_Task( new WS_Task( getUserContainer().getContainer().getRootTasks()
+						.get( siblingIndex + 1 ) ), getUserContainer() ) );
+				}
+				newNode.getTask().setPreviousTask( siblingNode.getTask() );
+
+				getTree().addNode( newNode );
 				getTree().moveAfterSiblingNode( newNode, siblingNode );
 			}
-			TT_ServerControllerDAO.getInstance().createOrUpdateTask(
-				new EH_TT_Task( new WS_Task( newNode.getTask() ), getUserContainer() ) );
+			else
+			{
+				TT_Task newTask = new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(),
+					TT_Task.TODO );
+				newNode = new TaskNode( newTask, this );
+
+				TT_UserTaskContainer container = getUserContainer().getContainer();
+				if ( !container.getRootTasks().isEmpty() )
+				{
+					newTask.setPreviousTask( container.getRootTasks().get( container.getRootTasks().size() - 1 ) );
+				}
+				container.addRootTask( newTask );
+
+				getTree().addNode( newNode );
+			}
+
+			tasksToUpdate.add( new EH_WS_Task( new WS_Task( newNode.getTask() ), getUserContainer() ) );
 		}
+		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( tasksToUpdate );
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -130,15 +192,49 @@ public class TreeTaskerWebApplicationController
 	 * Deletes all the selected tasks.
 	 */
 	public void deleteTasks() {
-		Set<EH_TT_Task> tasksToDelete = new HashSet<EH_TT_Task>();
+		Set<TT_Task> tasksToUpdate = new HashSet<TT_Task>();
+		Set<EH_WS_Task> tasksToDelete = new HashSet<EH_WS_Task>();
 		EH_TT_UserTaskContainer userContainer = getUserContainer();
+
 		for ( TaskNode taskNode : (Set<TaskNode>) getTree().getValue() )
 		{
-			getTree().removeNodeRecursively( taskNode );
+			tasksToUpdate.remove( taskNode.getTask() ); // Si le noeud doit être
+														// supprimé, il n'y a
+														// pas de mise à jour à
+														// faire
+
+			// Mise à jour de la position du noeud suivant
+			if ( taskNode.getTask().getParent() != null )
+			{
+				int taskIndex = taskNode.getTask().getParent().getChildrenTask().indexOf( taskNode.getTask() );
+				if ( taskIndex != taskNode.getTask().getParent().getChildrenTask().size() - 1 )
+				{
+					taskNode.getTask().getParent().getChildrenTask().get( taskIndex + 1 )
+						.setPreviousTask( taskNode.getTask().getPreviousTask() );
+					tasksToUpdate.add( taskNode.getTask().getParent().getChildrenTask().get( taskIndex + 1 ) );
+				}
+			}
+			else
+			{
+				int taskIndex = getUserContainer().getContainer().getRootTasks().indexOf( taskNode.getTask() );
+				if ( taskIndex != getUserContainer().getContainer().getRootTasks().size() - 1 )
+				{
+					getUserContainer().getContainer().getRootTasks().get( taskIndex + 1 )
+						.setPreviousTask( taskNode.getTask().getPreviousTask() );
+					tasksToUpdate.add( getUserContainer().getContainer().getRootTasks().get( taskIndex + 1 ) );
+				}
+			}
+
 			addTasksToDeleteRecursively( taskNode.getTask(), tasksToDelete, userContainer );
 		}
+
 		TT_ServerControllerDAO.getInstance().deleteTasks( tasksToDelete );
 		getContent().setView( null );
+		for ( TT_Task task : tasksToUpdate )
+		{
+			TT_ServerControllerDAO.getInstance().createOrUpdateTask(
+				new EH_WS_Task( new WS_Task( task ), getUserContainer() ) );
+		}
 	}
 
 	/**
@@ -293,29 +389,55 @@ public class TreeTaskerWebApplicationController
 	public void refresh() {
 		ArrayList<TT_Task> rootTasksList = new ArrayList<TT_Task>();
 		HashMap<String, TT_Task> idToTaskMap = new HashMap<String, TT_Task>();
-		LinkedHashMap<TT_Task, String> childrenToParentIdMap = new LinkedHashMap<TT_Task, String>();
-		for ( EH_TT_Task ehTask : TT_ServerControllerDAO.getInstance().getAllTasks( getUserContainer() ) )
+
+		HashMap<String, String> orderMap = new HashMap<String, String>();
+		HashMap<String, String> firstChildrenMap = new HashMap<String, String>();
+
+		for ( EH_WS_Task ehTask : TT_ServerControllerDAO.getInstance().getAllTasks( getUserContainer() ) )
 		{
-			TT_Task taskToLoad = new TT_Task();
-			ehTask.getTask().update( taskToLoad );
+			WS_Task wsTask = ehTask.getTask();
 
-			idToTaskMap.put( taskToLoad.getID(), taskToLoad );
-
-			String parentId = ehTask.getTask().getParentId();
-			if ( parentId != null )
+			if ( wsTask.getPreviousId() == null )
 			{
-				childrenToParentIdMap.put( taskToLoad, parentId );
+				firstChildrenMap.put( wsTask.getParentId(), wsTask.getId() );
 			}
 			else
 			{
-				rootTasksList.add( taskToLoad );
+				orderMap.put( wsTask.getPreviousId(), wsTask.getId() );
 			}
 
+			idToTaskMap.put( wsTask.getId(), wsTask.update( new TT_Task() ) );
 		}
-		for ( TT_Task childTask : childrenToParentIdMap.keySet() )
+
+		for ( String parentId : firstChildrenMap.keySet() )
 		{
-			childTask.setParent( idToTaskMap.get( childrenToParentIdMap.get( childTask ) ) );
+			if ( parentId == null )
+			{
+				TT_Task currentTask = idToTaskMap.get( firstChildrenMap.get( null ) );
+
+				while ( currentTask != null )
+				{
+					TT_Task nextTask = idToTaskMap.get( orderMap.get( currentTask.getID() ) );
+					currentTask.setPreviousTask( nextTask );
+					rootTasksList.add( currentTask );
+					currentTask = nextTask;
+				}
+			}
+			else
+			{
+				TT_Task parentTask = idToTaskMap.get( parentId );
+				TT_Task currentTask = idToTaskMap.get( firstChildrenMap.get( parentId ) );
+
+				while ( currentTask != null )
+				{
+					TT_Task nextTask = idToTaskMap.get( orderMap.get( currentTask.getID() ) );
+					currentTask.setPreviousTask( nextTask );
+					currentTask.setParent( parentTask );
+					currentTask = nextTask;
+				}
+			}
 		}
+
 		refreshTreeTasks( rootTasksList );
 	}
 
@@ -331,7 +453,7 @@ public class TreeTaskerWebApplicationController
 		child.setParent( parent );
 		child.setLastModificationDate( new Date() );
 		WS_Task wsTask = new WS_Task( child );
-		TT_ServerControllerDAO.getInstance().createOrUpdateTask( new EH_TT_Task( wsTask, getUserContainer() ) );
+		TT_ServerControllerDAO.getInstance().createOrUpdateTask( new EH_WS_Task( wsTask, getUserContainer() ) );
 	}
 
 	/**
@@ -400,7 +522,7 @@ public class TreeTaskerWebApplicationController
 			task.setLastModificationDate( new Date() );
 		}
 		WS_Task wsTask = new WS_Task( task );
-		TT_ServerControllerDAO.getInstance().createOrUpdateTask( new EH_TT_Task( wsTask, getUserContainer() ) );
+		TT_ServerControllerDAO.getInstance().createOrUpdateTask( new EH_WS_Task( wsTask, getUserContainer() ) );
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -416,7 +538,7 @@ public class TreeTaskerWebApplicationController
 			getTree().select( selectedNode );
 		}
 		int newStatus = TT_Task.TODO;
-		List<EH_TT_Task> tasksToUpdate = new ArrayList<EH_TT_Task>();
+		List<EH_WS_Task> tasksToUpdate = new ArrayList<EH_WS_Task>();
 
 		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
 		{
@@ -431,7 +553,7 @@ public class TreeTaskerWebApplicationController
 			TT_Task selectedTask = node.getTask();
 			selectedTask.setLastModificationDate( new Date() );
 			selectedTask.setStatus( newStatus );
-			tasksToUpdate.add( new EH_TT_Task( new WS_Task( selectedTask ), getUserContainer() ) );
+			tasksToUpdate.add( new EH_WS_Task( new WS_Task( selectedTask ), getUserContainer() ) );
 			getTree().refreshNodeIcon( node );
 		}
 		if ( getContent().getView() != null )
@@ -454,9 +576,9 @@ public class TreeTaskerWebApplicationController
 
 	private void addTasksToDeleteRecursively(
 		TT_Task task,
-		Set<EH_TT_Task> tasksToDelete,
+		Set<EH_WS_Task> tasksToDelete,
 		EH_TT_UserTaskContainer userContainer ) {
-		tasksToDelete.add( new EH_TT_Task( new WS_Task( task ), userContainer ) );
+		tasksToDelete.add( new EH_WS_Task( new WS_Task( task ), userContainer ) );
 		for ( TT_Task childTask : task.getChildrenTask() )
 		{
 			addTasksToDeleteRecursively( childTask, tasksToDelete, userContainer );

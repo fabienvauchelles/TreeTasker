@@ -24,7 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
-import com.vaushell.treetasker.module.GsonDateAdapter;
+import com.vaushell.treetasker.net.GsonDateAdapter;
 import com.vaushell.treetasker.tools.TT_Tools;
 
 public class SimpleJsonClient

@@ -26,7 +26,6 @@ public class TT_Task
 	public TT_Task()
 	{
 		this( null, null, "", null, TODO );
-		init();
 	}
 
 	public TT_Task(
@@ -106,6 +105,10 @@ public class TT_Task
 		return parentTask;
 	}
 
+	public TT_Task getPreviousTask() {
+		return previousTask;
+	}
+
 	public int getStatus() {
 		return status;
 	}
@@ -172,6 +175,11 @@ public class TT_Task
 		}
 	}
 
+	public void setPreviousTask(
+		TT_Task previousTask ) {
+		this.previousTask = previousTask;
+	}
+
 	public void setStatus(
 		int status ) {
 		this.status = status;
@@ -193,6 +201,7 @@ public class TT_Task
 
 	private void init() {
 		parentTask = null;
+		previousTask = null;
 		childrenTask = new ArrayList<TT_Task>();
 	}
 
@@ -203,4 +212,5 @@ public class TT_Task
 	private int				status;
 	private List<TT_Task>	childrenTask;
 	private TT_Task			parentTask;
+	private TT_Task			previousTask;
 }

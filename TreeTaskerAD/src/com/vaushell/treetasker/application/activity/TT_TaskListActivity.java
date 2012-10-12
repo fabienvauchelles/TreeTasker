@@ -34,7 +34,7 @@ import android.widget.TextView;
 import com.vaushell.treetasker.R;
 import com.vaushell.treetasker.model.TT_Task;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
-import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.net.UserSession;
 
 public class TT_TaskListActivity
 	extends Activity

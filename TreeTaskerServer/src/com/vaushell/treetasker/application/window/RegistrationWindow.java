@@ -10,7 +10,7 @@ package com.vaushell.treetasker.application.window;
 import com.vaadin.ui.Window;
 import com.vaushell.treetasker.application.content.layout.RegistrationLayout;
 import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
-import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.net.UserSession;
 import com.vaushell.treetasker.tools.TT_Tools;
 
 /**

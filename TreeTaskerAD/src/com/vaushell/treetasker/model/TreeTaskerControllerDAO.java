@@ -33,13 +33,13 @@ import com.google.gson.Gson;
 import com.vaushell.treetasker.application.storage.TaskDB;
 import com.vaushell.treetasker.client.E_BadResponseStatus;
 import com.vaushell.treetasker.client.SimpleJsonClient;
-import com.vaushell.treetasker.module.SyncingFinalRequest;
-import com.vaushell.treetasker.module.SyncingFinalResponse;
-import com.vaushell.treetasker.module.SyncingStartRequest;
-import com.vaushell.treetasker.module.SyncingStartResponse;
-import com.vaushell.treetasker.module.TaskStamp;
-import com.vaushell.treetasker.module.UserSession;
-import com.vaushell.treetasker.module.WS_Task;
+import com.vaushell.treetasker.net.SyncingFinalRequest;
+import com.vaushell.treetasker.net.SyncingFinalResponse;
+import com.vaushell.treetasker.net.SyncingStartRequest;
+import com.vaushell.treetasker.net.SyncingStartResponse;
+import com.vaushell.treetasker.net.TaskStamp;
+import com.vaushell.treetasker.net.UserSession;
+import com.vaushell.treetasker.net.WS_Task;
 
 public class TreeTaskerControllerDAO
 {
@@ -52,7 +52,7 @@ public class TreeTaskerControllerDAO
 	public static final String				TEST_RESOURCE	= "http://10.0.2.2:8888/";
 	public static final String				WEB_RESOURCE	= "https://vsh2-test.appspot.com/";
 
-	public static final String				RESOURCE		= WEB_RESOURCE;
+	public static final String				RESOURCE		= TEST_RESOURCE;
 
 	// PRIVATE
 	private static final Gson				GSON_SERIALIZER	= new Gson();
@@ -139,6 +139,10 @@ public class TreeTaskerControllerDAO
 	public void addRootTask(
 		TT_Task rootTask ) {
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
+		if ( !rootTasksList.isEmpty() )
+		{
+			rootTask.setPreviousTask( rootTasksList.get( rootTasksList.size() - 1 ) );
+		}
 		rootTasksList.add( rootTask );
 		treeBuilder.sequentiallyAddNextNode( rootTask, 0 );
 	}
@@ -147,6 +151,10 @@ public class TreeTaskerControllerDAO
 		TT_Task parentTask,
 		TT_Task childTask ) {
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
+		if ( !parentTask.getChildrenTask().isEmpty() )
+		{
+			childTask.setPreviousTask( parentTask.getChildrenTask().get( parentTask.getChildrenTask().size() - 1 ) );
+		}
 		childTask.setParent( parentTask );
 		treeBuilder.addRelation( parentTask, childTask );
 	}
@@ -172,7 +180,27 @@ public class TreeTaskerControllerDAO
 
 	public void deleteTask(
 		TT_Task task ) {
-		rootTasksList.remove( task );
+		if ( task.getParent() == null )
+		{
+			int taskIndex = rootTasksList.indexOf( task );
+
+			if ( taskIndex < rootTasksList.size() - 1 )
+			{
+				TT_Task nextTask = rootTasksList.get( taskIndex + 1 );
+				if ( taskIndex == 0 )
+				{
+					nextTask.setPreviousTask( null );
+				}
+				else
+				{
+					nextTask.setPreviousTask( rootTasksList.get( taskIndex - 1 ) );
+				}
+				nextTask.setLastModificationDate( new Date() );
+			}
+
+			rootTasksList.remove( task );
+		}
+
 		rootDeletedTasksList.add( task );
 		task.setStatusRecursively( TT_Task.DELETED );
 		task.setLastModificationDateRecursively( new Date() );
@@ -268,6 +296,13 @@ public class TreeTaskerControllerDAO
 	public void pasteTask(
 		TT_Task destParentTask ) {
 		TT_Task childTask = copiedTask.getCopy();
+
+		if ( !destParentTask.getChildrenTask().isEmpty() )
+		{
+			childTask.setPreviousTask( destParentTask.getChildrenTask().get(
+				destParentTask.getChildrenTask().size() - 1 ) );
+		}
+
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
 		treeBuilder.addRelation( destParentTask, childTask );
 		childTask.setParent( destParentTask );
@@ -296,7 +331,6 @@ public class TreeTaskerControllerDAO
 		}
 
 		taskDB.close();
-
 	}
 
 	public void saveUserSession(
@@ -347,7 +381,6 @@ public class TreeTaskerControllerDAO
 		int status ) {
 		task.setStatus( status );
 		task.setLastModificationDate( new Date() );
-
 	}
 
 	public void setTreeManager(
@@ -420,23 +453,7 @@ public class TreeTaskerControllerDAO
 				tasksMap.get( taskToAdd.getId() ).setParent( tasksMap.get( taskToAdd.getParentId() ) );
 			}
 
-			// On reconstruit l'arbre
-			TreeBuilder<TT_Task> builder = new TreeBuilder<TT_Task>( getTreeManager() );
-			for ( TT_Task task : tasksMap.values() )
-			{
-				if ( task.getParent() == null )
-				{
-					addRootTask( task );
-					buildTreeRecursively( task, builder );
-				}
-			}
-
-			for ( TT_Task expandedTask : expandedSet )
-			{
-				treeManager.expandDirectChildren( expandedTask );
-			}
-
-			// S'il y'a des informations ï¿½ envoyerï¿½
+			// S'il y'a des informations à envoyer…
 			if ( !response.getNeedUpdateIds().isEmpty() )
 			{
 				SyncingFinalRequest finalRequest = new SyncingFinalRequest( userSession,
@@ -447,11 +464,72 @@ public class TreeTaskerControllerDAO
 					finalRequest.addUpToDateTask( new WS_Task( tasksMap.get( needUpdateId ) ) );
 				}
 
-				SYNCING_CLIENT2.post( SyncingFinalResponse.class, finalRequest );
+				SyncingFinalResponse finalResponse = SYNCING_CLIENT2.post( SyncingFinalResponse.class, finalRequest );
+
+				for ( WS_Task wsTask : finalResponse.getUpToDateTasks() )
+				{
+					wsTask.update( tasksMap.get( wsTask.getId() ), tasksMap );
+				}
 			}
-			else
+
+			// On reconstruit l'arbre…
+			HashMap<String, TT_Task> orderMap = new HashMap<String, TT_Task>();
+			HashMap<String, TT_Task> firstChildrenMap = new HashMap<String, TT_Task>();
+			for ( TT_Task task : tasksMap.values() )
 			{
-				return;
+				if ( task.getPreviousTask() == null )
+				{
+					firstChildrenMap.put( task.getParent() == null ? null : task.getParent().getID(), task );
+				}
+				else
+				{
+					orderMap.put( task.getPreviousTask().getID(), task );
+				}
+			}
+
+			ArrayList<TT_Task> orderedRootTasks = new ArrayList<TT_Task>();
+			for ( String parentId : firstChildrenMap.keySet() )
+			{
+				if ( parentId == null )
+				{
+					orderedRootTasks.add( firstChildrenMap.get( null ) );
+					TT_Task currentTask = firstChildrenMap.get( null );
+					while ( orderMap.get( currentTask.getID() ) != null )
+					{
+						orderedRootTasks.add( orderMap.get( currentTask.getID() ) );
+						currentTask = orderMap.get( currentTask.getID() );
+					}
+
+				}
+				else
+				{
+					TT_Task parentTask = tasksMap.get( parentId );
+					parentTask.getChildrenTask().clear();
+					parentTask.getChildrenTask().add( firstChildrenMap.get( parentId ) );
+
+					TT_Task currentTask = firstChildrenMap.get( parentId );
+					while ( orderMap.get( currentTask.getID() ) != null )
+					{
+						parentTask.getChildrenTask().add( orderMap.get( currentTask.getID() ) );
+						currentTask = orderMap.get( currentTask.getID() );
+					}
+				}
+			}
+
+			TreeBuilder<TT_Task> builder = new TreeBuilder<TT_Task>( getTreeManager() );
+			for ( TT_Task task : orderedRootTasks )
+			{
+				if ( task.getParent() == null )
+				{
+					addRootTask( task );
+					buildTreeRecursively( task, builder );
+				}
+			}
+
+			// … sans oublier de redéplier les noeuds déjà dépliés.
+			for ( TT_Task expandedTask : expandedSet )
+			{
+				treeManager.expandDirectChildren( expandedTask );
 			}
 		}
 		catch ( ClientProtocolException e )

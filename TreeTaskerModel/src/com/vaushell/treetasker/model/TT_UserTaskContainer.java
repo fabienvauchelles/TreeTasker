@@ -8,39 +8,43 @@
 package com.vaushell.treetasker.model;
 
 import java.io.Serializable;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 public class TT_UserTaskContainer
-		implements Serializable
+	implements Serializable
 {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	private static final long	serialVersionUID	= 1L;
 	// PUBLIC
-	public static final String	DEFAULT_NAME	= "default";
+	public static final String	DEFAULT_NAME		= "default";
 
 	public TT_UserTaskContainer()
 	{
 		this( DEFAULT_NAME, null );
 	}
 
-	public TT_UserTaskContainer( String owner )
+	public TT_UserTaskContainer(
+		String owner )
 	{
 		this( DEFAULT_NAME, owner );
 	}
 
-	public TT_UserTaskContainer( String name,
-	                             String owner )
+	public TT_UserTaskContainer(
+		String name,
+		String owner )
 	{
 		this( UUID.randomUUID().toString(), name, owner );
 	}
 
-	public TT_UserTaskContainer( String id,
-	                             String name,
-	                             String owner )
+	public TT_UserTaskContainer(
+		String id,
+		String name,
+		String owner )
 	{
 		this.id = id;
 		this.name = name;
@@ -48,61 +52,57 @@ public class TT_UserTaskContainer
 		init();
 	}
 
-	public String getId()
-	{
+	public void addRootTask(
+		TT_Task rootTask ) {
+		rootTasks.add( rootTask );
+	}
+
+	public String getId() {
 		return id;
 	}
 
-	public void setId( String id )
-	{
-		this.id = id;
-	}
-
-	public String getOwner()
-	{
-		return owner;
-	}
-
-	public void setOwner( String owner )
-	{
-		this.owner = owner;
-	}
-
-	public String getName()
-	{
+	public String getName() {
 		return name;
 	}
 
-	public void setName( String name )
-	{
+	public String getOwner() {
+		return owner;
+	}
+
+	public List<TT_Task> getRootTasks() {
+		return rootTasks;
+	}
+
+	public void setId(
+		String id ) {
+		this.id = id;
+	}
+
+	public void setName(
+		String name ) {
 		this.name = name;
 	}
 
-	public Set<TT_Task> getRootTasks()
-	{
-		return rootTasks;
-	}
-	
-	public void setRootTasks( Set<TT_Task> tasks )
-	{
-		rootTasks.clear();
-		rootTasks.addAll(tasks);
+	public void setOwner(
+		String owner ) {
+		this.owner = owner;
 	}
 
-	public void addRootTask( TT_Task rootTask )
-	{
-		rootTasks.add( rootTask );
+	public void setRootTasks(
+		Set<TT_Task> tasks ) {
+		rootTasks.clear();
+		rootTasks.addAll( tasks );
+	}
+
+	private void init() {
+		rootTasks = new ArrayList<TT_Task>();
 	}
 
 	// PROTECTED
 	// PRIVATE
-	private String	     id;
-	private String	     owner;
-	private String	     name;
-	private Set<TT_Task>	rootTasks;
+	private String			id;
+	private String			owner;
+	private String			name;
 
-	private void init()
-	{
-		this.rootTasks = new HashSet<TT_Task>();
-	}
+	private List<TT_Task>	rootTasks;
 }

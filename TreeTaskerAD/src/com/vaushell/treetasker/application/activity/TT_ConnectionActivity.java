@@ -26,9 +26,9 @@ import com.vaushell.treetasker.R;
 import com.vaushell.treetasker.client.E_BadResponseStatus;
 import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
-import com.vaushell.treetasker.module.UserAuthenticationRequest;
-import com.vaushell.treetasker.module.UserSession;
-import com.vaushell.treetasker.module.UserSessionCheckRequest;
+import com.vaushell.treetasker.net.UserAuthenticationRequest;
+import com.vaushell.treetasker.net.UserSession;
+import com.vaushell.treetasker.net.UserSessionCheckRequest;
 import com.vaushell.treetasker.tools.TT_Tools;
 
 public class TT_ConnectionActivity

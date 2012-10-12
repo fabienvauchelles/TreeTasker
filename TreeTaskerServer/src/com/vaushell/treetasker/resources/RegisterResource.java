@@ -14,8 +14,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
-import com.vaushell.treetasker.module.UserAuthenticationRequest;
-import com.vaushell.treetasker.module.UserSession;
+import com.vaushell.treetasker.net.UserAuthenticationRequest;
+import com.vaushell.treetasker.net.UserSession;
 
 @Path( "/register" )
 public class RegisterResource

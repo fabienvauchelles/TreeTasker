@@ -5,11 +5,12 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  ******************************************************************************/
-package com.vaushell.treetasker.module;
+package com.vaushell.treetasker.net;
 
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @XmlRootElement
 public class TaskStamp
@@ -38,6 +39,7 @@ public class TaskStamp
 		this.taskID = taskID;
 	}
 
+	@XmlJavaTypeAdapter(JerseyDateAdapter.class)
 	public Date getLastModificationDate()
 	{
 		return lastModificationDate;

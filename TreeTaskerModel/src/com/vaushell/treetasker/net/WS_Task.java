@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  ******************************************************************************/
-package com.vaushell.treetasker.module;
+package com.vaushell.treetasker.net;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -24,7 +24,7 @@ public class WS_Task
 
 	public WS_Task()
 	{
-		this( null, null, null, null, TODO, null );
+		this( null, null, null, null, TODO, null, null );
 	}
 
 	public WS_Task(
@@ -33,7 +33,8 @@ public class WS_Task
 		String description,
 		Date lastModificationDate,
 		int status,
-		String parentId )
+		String parentId,
+		String nextId )
 	{
 		this.id = id;
 		this.title = title;
@@ -41,6 +42,7 @@ public class WS_Task
 		this.lastModificationDate = lastModificationDate;
 		this.status = status;
 		this.parentId = parentId;
+		previousId = nextId;
 		init();
 	}
 
@@ -48,7 +50,8 @@ public class WS_Task
 		TT_Task task )
 	{
 		this( task.getID(), task.getTitle(), task.getDescription(), task.getLastModificationDate(), task.getStatus(),
-			task.getParent() != null ? task.getParent().getID() : null );
+			task.getParent() != null ? task.getParent().getID() : null, task.getPreviousTask() != null ? task
+				.getPreviousTask().getID() : null );
 	}
 
 	@Override
@@ -146,6 +149,10 @@ public class WS_Task
 		return parentId;
 	}
 
+	public String getPreviousId() {
+		return previousId;
+	}
+
 	public int getStatus() {
 		return status;
 	}
@@ -187,6 +194,11 @@ public class WS_Task
 		this.parentId = parentId;
 	}
 
+	public void setPreviousId(
+		String previousId ) {
+		this.previousId = previousId;
+	}
+
 	public void setStatus(
 		int status ) {
 		this.status = status;
@@ -197,16 +209,18 @@ public class WS_Task
 		this.title = title;
 	}
 
-	public void update(
+	public TT_Task update(
 		TT_Task task ) {
 		task.setID( id );
 		task.setTitle( title );
 		task.setDescription( description );
 		task.setLastModificationDate( lastModificationDate );
 		task.setStatus( status );
+
+		return task;
 	}
 
-	public void update(
+	public TT_Task update(
 		TT_Task task,
 		HashMap<String, TT_Task> tasksMap ) {
 		task.setID( id );
@@ -215,6 +229,9 @@ public class WS_Task
 		task.setLastModificationDate( lastModificationDate );
 		task.setStatus( status );
 		task.setParent( tasksMap.get( parentId ) );
+		task.setPreviousTask( tasksMap.get( previousId ) );
+
+		return task;
 	}
 
 	private void init() {
@@ -227,6 +244,6 @@ public class WS_Task
 	private String	description;
 	private Date	lastModificationDate;
 	private int		status;
-
 	private String	parentId;
+	private String	previousId;
 }

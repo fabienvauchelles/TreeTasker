@@ -27,6 +27,7 @@ public class TaskOpenHelper
 	static final String			COL_STATUS			= "status";
 	static final String			COL_EXPANDED		= "expanded";
 	static final String			COL_MODIF_DATE		= "modif_date";
+	static final String			COL_PREVIOUS_ID		= "previous_id";
 	static final int			NUM_COL_ID			= 0;
 	static final int			NUM_COL_PARENT_ID	= 1;
 	static final int			NUM_COL_TITLE		= 2;
@@ -34,11 +35,13 @@ public class TaskOpenHelper
 	static final int			NUM_COL_STATUS		= 4;
 	static final int			NUM_COL_EXPANDED	= 5;
 	static final int			NUM_COL_MODIF_DATE	= 6;
+	static final int			NUM_COL_PREVIOUS_ID	= 7;
 	private static final String	CREATE_BDD			= "CREATE TABLE " + TASK_TABLE_NAME + " (" + COL_ID
 														+ " VARCHAR(36) NOT NULL, " + COL_PARENT_ID + " VARCHAR(36), "
 														+ COL_TITLE + " VARCHAR(512) NOT NULL, " + COL_DESCRIPTION
 														+ " VARCHAR(1024), " + COL_STATUS + " INTEGER, " + COL_EXPANDED
-														+ " BOOLEAN, " + COL_MODIF_DATE + " DATE); ";
+														+ " BOOLEAN, " + COL_MODIF_DATE + " DATE, " + COL_PREVIOUS_ID
+														+ " VARCHAR(36) ); ";
 
 	public TaskOpenHelper(
 		Context context,
