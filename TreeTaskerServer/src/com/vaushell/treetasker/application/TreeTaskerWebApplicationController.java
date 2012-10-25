@@ -11,17 +11,27 @@
  */
 package com.vaushell.treetasker.application;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import com.vaadin.ui.Window.Notification;
+import com.vaushell.tools.xmldirtyparser.XPathDirtyParserMultiple;
 import com.vaushell.treetasker.TreeTaskerWebApplication;
 import com.vaushell.treetasker.application.actionbar.TTWActionBar;
+import com.vaushell.treetasker.application.actionbar.TaskerCoachParserAction;
 import com.vaushell.treetasker.application.content.TTWcontent;
 import com.vaushell.treetasker.application.content.layout.LoginLayout;
 import com.vaushell.treetasker.application.header.TTWHeader;
@@ -169,6 +179,12 @@ public class TreeTaskerWebApplicationController
 		}
 	}
 
+	public void deleteAllTasks() {
+		getTree().removeAllNodes();
+		sendDeleteTasks( treeController.getTaskMap().values() );
+		treeController.reinit( Collections.<WS_Task> emptyList() );
+	}
+
 	@SuppressWarnings( "unchecked" )
 	/**
 	 * Deletes all the selected tasks.
@@ -308,6 +324,32 @@ public class TreeTaskerWebApplicationController
 		return userWindow;
 	}
 
+	public void importFromTaskCoach(
+		InputStream is ) {
+		deleteAllTasks();
+		XPathDirtyParserMultiple parser = new XPathDirtyParserMultiple();
+		TaskerCoachParserAction parseAction = new TaskerCoachParserAction( treeController );
+		parser.addAction( parseAction );
+		try
+		{
+			parser.parse( new InputSource( is ) );
+		}
+		catch ( FileNotFoundException e )
+		{
+			e.printStackTrace();
+		}
+		catch ( IOException e )
+		{
+			e.printStackTrace();
+		}
+		catch ( SAXException e )
+		{
+			getUserWindow().showNotification( "Format inconnu", Notification.TYPE_ERROR_MESSAGE );
+		}
+		sendTasks( treeController.getTaskMap().values() );
+		refresh();
+	}
+
 	/**
 	 * Try to log an user.
 	 * 
@@ -337,7 +379,6 @@ public class TreeTaskerWebApplicationController
 		TaskNode nodeToMove,
 		TaskNode parentNode,
 		TaskNode previousNode ) {
-		// TODO
 		HashSet<TT_Task> tasksToUpdate = new HashSet<TT_Task>();
 
 		TT_Task taskToMove = nodeToMove.getTask();
@@ -426,6 +467,18 @@ public class TreeTaskerWebApplicationController
 		treeController.reinit( tasksFromDatastore );
 
 		refreshTreeTasks( treeController.getRootTasksList() );
+	}
+
+	public void refreshTreeTasks(
+		Collection<TT_Task> rootTasks ) {
+		getTree().removeAllNodes();
+		for ( TT_Task rootTask : rootTasks )
+		{
+			TaskNode rootNode = new TaskNode( rootTask, this );
+			getTree().addNode( rootNode );
+			getTree().expandNode( rootNode );
+			addChildrenTaskNodesRecursively( rootNode );
+		}
 	}
 
 	/**
@@ -578,19 +631,6 @@ public class TreeTaskerWebApplicationController
 		copiedTasks = new ArrayList<TT_Task>();
 	}
 
-	private void refreshTreeTasks(
-		Collection<TT_Task> rootTasks ) {
-		getTree().removeAllNodes();
-
-		for ( TT_Task rootTask : rootTasks )
-		{
-			TaskNode rootNode = new TaskNode( rootTask, this );
-			getTree().addNode( rootNode );
-			getTree().expandNode( rootNode );
-			addChildrenTaskNodesRecursively( rootNode );
-		}
-	}
-
 	//
 	// private void saveTasksRecursively(
 	// TT_Task task,
@@ -601,6 +641,18 @@ public class TreeTaskerWebApplicationController
 	// saveTasksRecursively( childTask, task );
 	// }
 	// }
+
+	private void sendDeleteTasks(
+		Collection<TT_Task> tasksToDelete ) {
+		ArrayList<EH_WS_Task> ehTasksToDelete = new ArrayList<EH_WS_Task>();
+
+		for ( TT_Task taskToDelete : tasksToDelete )
+		{
+			ehTasksToDelete.add( new EH_WS_Task( new WS_Task( taskToDelete ), getUserContainer() ) );
+		}
+
+		TT_ServerControllerDAO.getInstance().deleteTasks( ehTasksToDelete );
+	}
 
 	private void sendTask(
 		TT_Task taskToSend ) {

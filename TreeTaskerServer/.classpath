@@ -10,5 +10,8 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-json-1.12.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-server-1.12.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-servlet-1.12.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/XmlDirtyParser"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/commons-lang-2.6.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/xml-dirty-parser.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

@@ -52,6 +52,36 @@ Style des boutons de la barre d'action
 	box-shadow: none;
 }
 
+/*Bouton upload*/
+.action-bar .v-upload
+{
+	bottom: 40px;
+}
+
+.action-bar .gwt-FileUpload
+{
+	cursor: pointer;
+}
+
+.action-bar .v-icon
+{
+	padding-top: 5px;
+	display: block;
+	float: none;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.action-bar .v-upload .v-button-wrap
+{
+	padding-top: 43px;
+}
+
+.action-bar .v-upload .v-button
+{
+	margin-bottom: 5px;
+}
+
 /* Split panel */
 .v-app .v-splitpanel-hsplitter div {
 	background: none;
