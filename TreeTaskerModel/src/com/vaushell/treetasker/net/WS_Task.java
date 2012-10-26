@@ -234,6 +234,19 @@ public class WS_Task
 		return task;
 	}
 
+	public WS_Task update(
+		WS_Task task ) {
+		task.setId( id );
+		task.setTitle( title );
+		task.setDescription( description );
+		task.setLastModificationDate( lastModificationDate );
+		task.setStatus( status );
+		task.setParentId( parentId );
+		task.setPreviousId( previousId );
+
+		return task;
+	}
+
 	private void init() {
 	}
 

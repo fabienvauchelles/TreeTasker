@@ -8,9 +8,9 @@
 package com.vaushell.treetasker.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 public class TT_UserTaskContainer
@@ -89,13 +89,13 @@ public class TT_UserTaskContainer
 	}
 
 	public void setRootTasks(
-		Set<TT_Task> tasks ) {
+		Collection<TT_Task> tasks ) {
 		rootTasks.clear();
 		rootTasks.addAll( tasks );
 	}
 
 	private void init() {
-		rootTasks = new ArrayList<TT_Task>();
+		rootTasks = new LinkedList<TT_Task>();
 	}
 
 	// PROTECTED

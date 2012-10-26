@@ -40,10 +40,13 @@ public class SyncingFinalResource
 
 			for ( WS_Task task : finalisation.getUpToDateTasks() )
 			{
-				EH_WS_Task datastoreTaskWithSamePrecedence = DAO.getNextTask( datastoreContainer, task.getPreviousId() );
+				EH_WS_Task datastoreTaskWithSamePrecedence = DAO.getNextTask( datastoreContainer, task.getParentId(),
+					task.getPreviousId() );
 
-				if ( datastoreTaskWithSamePrecedence != null ) // Conflit de
-																// précédence
+				if ( datastoreTaskWithSamePrecedence != null
+					&& !task.getId().equals( datastoreTaskWithSamePrecedence.getTask().getId() ) ) // Conflit
+																									// de
+				// précédence
 				{
 					datastoreTaskWithSamePrecedence.getTask().setPreviousId( task.getId() );
 					datastoreTaskWithSamePrecedence.getTask().setLastModificationDate( new Date() );

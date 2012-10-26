@@ -14,13 +14,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 import org.apache.http.client.ClientProtocolException;
 
@@ -71,65 +68,86 @@ public class TreeTaskerControllerDAO
 		return TreeTaskerControllerDAOHolder.INSTANCE;
 	}
 
-	public static List<TT_Task> getMockTaskList1() {
-		List<TT_Task> mockList = new ArrayList<TT_Task>();
-
-		TT_Task construireMaison = new TT_Task( UUID.randomUUID().toString(), "Construire la maison", "", new Date(),
-			TT_Task.TODO );
-
-		construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Acheter terrain", "", new Date(),
-			TT_Task.DONE ) );
-
-		TT_Task acheterMatos = new TT_Task( UUID.randomUUID().toString(), "Acheter matï¿½riel", "", new Date(),
-			TT_Task.TODO );
-		acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Acheter brique", "", new Date(),
-			TT_Task.TODO ) );
-		acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Acheter brouette", "", new Date(),
-			TT_Task.TODO ) );
-		construireMaison.addChildTask( acheterMatos );
-
-		construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Construire les murs", "",
-			new Date(), TT_Task.TODO ) );
-		construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Construire le toit", "", new Date(),
-			TT_Task.TODO ) );
-
-		TT_Task passerPermis = new TT_Task( UUID.randomUUID().toString(), "Passer le permis", "", new Date(),
-			TT_Task.TODO );
-		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(), "S'inscrire ï¿½ l'auto-ï¿½cole", "",
-			new Date(), TT_Task.DONE ) );
-		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Obtenir le code", "", new Date(),
-			TT_Task.TODO ) );
-		passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Faire 20h de conduite", "", new Date(),
-			TT_Task.TODO ) );
-
-		TT_Task accederAuLevelDesPoneys = new TT_Task( UUID.randomUUID().toString(), "Accï¿½der au niveau cachï¿½", "",
-			new Date(), TT_Task.TODO );
-
-		TT_Task rassemblerIngredients = new TT_Task( UUID.randomUUID().toString(), "Trouver les ingrï¿½dients", "",
-			new Date(), TT_Task.TODO );
-		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Trouver champignon noir", "",
-			new Date(), TT_Task.TODO ) );
-		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Trouver tibia de lï¿½oric", "",
-			new Date(), TT_Task.TODO ) );
-		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Trouver arc-en-ciel liquide",
-			"", new Date(), TT_Task.TODO ) );
-		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Trouver pierre baragouinante",
-			"", new Date(), TT_Task.TODO ) );
-		rassemblerIngredients.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Acheter cloche de Wirt", "",
-			new Date(), TT_Task.TODO ) );
-		accederAuLevelDesPoneys.addChildTask( rassemblerIngredients );
-
-		accederAuLevelDesPoneys.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-			"Construire le baton de bouvier", "", new Date(), TT_Task.DONE ) );
-		accederAuLevelDesPoneys.addChildTask( new TT_Task( UUID.randomUUID().toString(), "Ouvrir le portail", "",
-			new Date(), TT_Task.TODO ) );
-
-		mockList.add( construireMaison );
-		mockList.add( passerPermis );
-		mockList.add( accederAuLevelDesPoneys );
-
-		return mockList;
-	}
+	//
+	// public static List<TT_Task> getMockTaskList1() {
+	// List<TT_Task> mockList = new ArrayList<TT_Task>();
+	//
+	// TT_Task construireMaison = new TT_Task( UUID.randomUUID().toString(),
+	// "Construire la maison", "", new Date(),
+	// TT_Task.TODO );
+	//
+	// construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(),
+	// "Acheter terrain", "", new Date(),
+	// TT_Task.DONE ) );
+	//
+	// TT_Task acheterMatos = new TT_Task( UUID.randomUUID().toString(),
+	// "Acheter matï¿½riel", "", new Date(),
+	// TT_Task.TODO );
+	// acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(),
+	// "Acheter brique", "", new Date(),
+	// TT_Task.TODO ) );
+	// acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(),
+	// "Acheter brouette", "", new Date(),
+	// TT_Task.TODO ) );
+	// construireMaison.addChildTask( acheterMatos );
+	//
+	// construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(),
+	// "Construire les murs", "",
+	// new Date(), TT_Task.TODO ) );
+	// construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(),
+	// "Construire le toit", "", new Date(),
+	// TT_Task.TODO ) );
+	//
+	// TT_Task passerPermis = new TT_Task( UUID.randomUUID().toString(),
+	// "Passer le permis", "", new Date(),
+	// TT_Task.TODO );
+	// passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
+	// "S'inscrire ï¿½ l'auto-ï¿½cole", "",
+	// new Date(), TT_Task.DONE ) );
+	// passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
+	// "Obtenir le code", "", new Date(),
+	// TT_Task.TODO ) );
+	// passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
+	// "Faire 20h de conduite", "", new Date(),
+	// TT_Task.TODO ) );
+	//
+	// TT_Task accederAuLevelDesPoneys = new TT_Task(
+	// UUID.randomUUID().toString(), "Accï¿½der au niveau cachï¿½", "",
+	// new Date(), TT_Task.TODO );
+	//
+	// TT_Task rassemblerIngredients = new TT_Task(
+	// UUID.randomUUID().toString(), "Trouver les ingrï¿½dients", "",
+	// new Date(), TT_Task.TODO );
+	// rassemblerIngredients.addChildTask( new TT_Task(
+	// UUID.randomUUID().toString(), "Trouver champignon noir", "",
+	// new Date(), TT_Task.TODO ) );
+	// rassemblerIngredients.addChildTask( new TT_Task(
+	// UUID.randomUUID().toString(), "Trouver tibia de lï¿½oric", "",
+	// new Date(), TT_Task.TODO ) );
+	// rassemblerIngredients.addChildTask( new TT_Task(
+	// UUID.randomUUID().toString(), "Trouver arc-en-ciel liquide",
+	// "", new Date(), TT_Task.TODO ) );
+	// rassemblerIngredients.addChildTask( new TT_Task(
+	// UUID.randomUUID().toString(), "Trouver pierre baragouinante",
+	// "", new Date(), TT_Task.TODO ) );
+	// rassemblerIngredients.addChildTask( new TT_Task(
+	// UUID.randomUUID().toString(), "Acheter cloche de Wirt", "",
+	// new Date(), TT_Task.TODO ) );
+	// accederAuLevelDesPoneys.addChildTask( rassemblerIngredients );
+	//
+	// accederAuLevelDesPoneys.addChildTask( new TT_Task(
+	// UUID.randomUUID().toString(),
+	// "Construire le baton de bouvier", "", new Date(), TT_Task.DONE ) );
+	// accederAuLevelDesPoneys.addChildTask( new TT_Task(
+	// UUID.randomUUID().toString(), "Ouvrir le portail", "",
+	// new Date(), TT_Task.TODO ) );
+	//
+	// mockList.add( construireMaison );
+	// mockList.add( passerPermis );
+	// mockList.add( accederAuLevelDesPoneys );
+	//
+	// return mockList;
+	// }
 
 	private TreeTaskerControllerDAO()
 	{
@@ -139,11 +157,7 @@ public class TreeTaskerControllerDAO
 	public void addRootTask(
 		TT_Task rootTask ) {
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
-		if ( !rootTasksList.isEmpty() )
-		{
-			rootTask.setPreviousTask( rootTasksList.get( rootTasksList.size() - 1 ) );
-		}
-		rootTasksList.add( rootTask );
+		treeController.addRootTask( rootTask );
 		treeBuilder.sequentiallyAddNextNode( rootTask, 0 );
 	}
 
@@ -151,22 +165,8 @@ public class TreeTaskerControllerDAO
 		TT_Task parentTask,
 		TT_Task childTask ) {
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
-		if ( !parentTask.getChildrenTask().isEmpty() )
-		{
-			childTask.setPreviousTask( parentTask.getChildrenTask().get( parentTask.getChildrenTask().size() - 1 ) );
-		}
-		childTask.setParent( parentTask );
+		treeController.addTask( childTask, parentTask.getID() );
 		treeBuilder.addRelation( parentTask, childTask );
-	}
-
-	public void buildTreeRecursively(
-		TT_Task parent,
-		TreeBuilder<TT_Task> builder ) {
-		for ( TT_Task child : parent.getChildrenTask() )
-		{
-			builder.addRelation( parent, child );
-			buildTreeRecursively( child, builder );
-		}
 	}
 
 	public boolean canPaste() {
@@ -180,31 +180,11 @@ public class TreeTaskerControllerDAO
 
 	public void deleteTask(
 		TT_Task task ) {
-		if ( task.getParent() == null )
+		for ( TT_Task deletedTask : treeController.removeTask( task.getID() ) )
 		{
-			int taskIndex = rootTasksList.indexOf( task );
-
-			if ( taskIndex < rootTasksList.size() - 1 )
-			{
-				TT_Task nextTask = rootTasksList.get( taskIndex + 1 );
-				if ( taskIndex == 0 )
-				{
-					nextTask.setPreviousTask( null );
-				}
-				else
-				{
-					nextTask.setPreviousTask( rootTasksList.get( taskIndex - 1 ) );
-				}
-				nextTask.setLastModificationDate( new Date() );
-			}
-
-			rootTasksList.remove( task );
+			deletedTasksList.add( new WS_Task( deletedTask ) );
 		}
 
-		rootDeletedTasksList.add( task );
-		task.setStatusRecursively( TT_Task.DELETED );
-		task.setLastModificationDateRecursively( new Date() );
-		task.setParent( null );
 		treeManager.removeNodeRecursively( task );
 	}
 
@@ -217,12 +197,12 @@ public class TreeTaskerControllerDAO
 		task.setLastModificationDate( new Date() );
 	}
 
-	public ArrayList<TT_Task> getRootDeletedTasksList() {
-		return rootDeletedTasksList;
+	public ArrayList<WS_Task> getDeletedTasksList() {
+		return deletedTasksList;
 	}
 
-	public ArrayList<TT_Task> getRootTasksList() {
-		return rootTasksList;
+	public List<TT_Task> getRootTasksList() {
+		return treeController.getRootTasksList();
 	}
 
 	public TreeStateManager<TT_Task> getTreeManager() {
@@ -236,26 +216,29 @@ public class TreeTaskerControllerDAO
 	public void load(
 		Context applicationContext ) {
 		loadUserSession( applicationContext );
+		treeController = new OrderedTaskTreeController( userSession.getUserName() );
 
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
 		TaskDB taskDB = new TaskDB( applicationContext );
 		taskDB.open();
 		taskDB.readTasksInfo();
-		rootTasksList.addAll( taskDB.getRootTasks() );
-		rootDeletedTasksList.addAll( taskDB.getRootDeletedTasks() );
+
+		treeController.reinit( taskDB.getTasks() );
+		deletedTasksList.addAll( taskDB.getDeletedTasks() );
+
 		taskDB.close();
 
-		for ( TT_Task task : rootTasksList )
+		for ( TT_Task task : treeController.getRootTasksList() )
 		{
 			treeBuilder.sequentiallyAddNextNode( task, 0 );
 			buildTreeRecursively( task, treeBuilder );
 		}
 
-		for ( TT_Task task : taskDB.getExpandedMap().keySet() )
+		for ( TT_Task task : treeController.getTaskMap().values() )
 		{
 			if ( treeManager.isInTree( task ) )
 			{
-				if ( !taskDB.getExpandedMap().get( task ) )
+				if ( !taskDB.getExpandedSet().contains( task ) )
 				{
 					treeManager.collapseChildren( task );
 				}
@@ -297,15 +280,10 @@ public class TreeTaskerControllerDAO
 		TT_Task destParentTask ) {
 		TT_Task childTask = copiedTask.getCopy();
 
-		if ( !destParentTask.getChildrenTask().isEmpty() )
-		{
-			childTask.setPreviousTask( destParentTask.getChildrenTask().get(
-				destParentTask.getChildrenTask().size() - 1 ) );
-		}
+		treeController.addTask( childTask, destParentTask.getID() );
 
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
 		treeBuilder.addRelation( destParentTask, childTask );
-		childTask.setParent( destParentTask );
 		buildTreeRecursively( childTask, treeBuilder );
 	}
 
@@ -319,15 +297,16 @@ public class TreeTaskerControllerDAO
 
 		TaskDB taskDB = new TaskDB( applicationContext );
 		taskDB.open();
-
 		taskDB.resetTable();
-		for ( TT_Task taskToSave : rootTasksList )
+
+		for ( TT_Task taskToSave : treeController.getTaskMap().values() )
 		{
-			saveRecursively( taskToSave, taskDB );
+			saveTaskToDB( taskToSave, taskDB );
 		}
-		for ( TT_Task deletedTaskToSave : rootDeletedTasksList )
+
+		for ( WS_Task deletedTaskToSave : deletedTasksList )
 		{
-			saveRecursively( deletedTaskToSave, taskDB );
+			saveTaskToDB( deletedTaskToSave.update( new TT_Task() ), taskDB );
 		}
 
 		taskDB.close();
@@ -366,14 +345,14 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
-	public void setRootDeletedTasksList(
-		ArrayList<TT_Task> rootDeletedTasksList ) {
-		this.rootDeletedTasksList = rootDeletedTasksList;
+	public void setDeletedTasksList(
+		ArrayList<WS_Task> deletedTasksList ) {
+		this.deletedTasksList = deletedTasksList;
 	}
 
 	public void setRootTasksList(
 		ArrayList<TT_Task> rootTasksList ) {
-		this.rootTasksList = rootTasksList;
+		treeController.getRootContainer().setRootTasks( rootTasksList );
 	}
 
 	public void setStatus(
@@ -394,29 +373,24 @@ public class TreeTaskerControllerDAO
 	}
 
 	public void synchronizeWithDatastore() {
-
 		SyncingStartRequest request = new SyncingStartRequest( userSession, TT_UserTaskContainer.DEFAULT_NAME );
 
-		HashMap<String, TT_Task> tasksMap = new HashMap<String, TT_Task>();
-		HashSet<TT_Task> expandedSet = new HashSet<TT_Task>();
+		HashMap<String, WS_Task> wsTasksMap = new HashMap<String, WS_Task>();
+		HashSet<String> collapsedSet = new HashSet<String>();
 
-		for ( TT_Task task : unrecursifyTasks( rootTasksList ) )
+		for ( TT_Task task : treeController.getTaskMap().values() )
 		{
-			tasksMap.put( task.getID(), task );
-			if ( treeManager.getNodeInfo( task ).isExpanded() )
+			wsTasksMap.put( task.getID(), new WS_Task( task ) );
+			request.addId( new TaskStamp( task.getID(), task.getLastModificationDate() ) );
+			if ( !task.getChildrenTask().isEmpty() && !treeManager.getNodeInfo( task ).isExpanded() )
 			{
-				expandedSet.add( task );
+				collapsedSet.add( task.getID() );
 			}
 		}
 
-		for ( TT_Task task : tasksMap.values() )
+		for ( WS_Task task : deletedTasksList )
 		{
-			request.addId( new TaskStamp( task.getID(), task.getLastModificationDate() ) );
-		}
-
-		for ( TT_Task task : unrecursifyTasks( rootDeletedTasksList ) )
-		{
-			request.addRemovedId( task.getID() );
+			request.addRemovedId( task.getId() );
 		}
 
 		try
@@ -426,31 +400,25 @@ public class TreeTaskerControllerDAO
 			// On vide l'arbre
 			treeManager.clear();
 
-			// On se dï¿½barasse des noeuds supprimï¿½s
+			// On se débarasse des noeuds supprimés
 			for ( String deletedId : response.getDeletedIds() )
 			{
-				tasksMap.get( deletedId ).setParent( null );
-				tasksMap.remove( deletedId );
+				// tasksMap.get( deletedId ).setParent( null );
+				wsTasksMap.remove( deletedId );
+				collapsedSet.remove( deletedId );
 			}
 
-			rootDeletedTasksList.clear();
+			deletedTasksList.clear();
 
-			// On met tout l'arbre ï¿½ jour
+			// On met tout l'arbre à jour
 			for ( WS_Task taskToAdd : response.getTasksToAdd() )
 			{
-				TT_Task currentNewTask = new TT_Task();
-				taskToAdd.update( currentNewTask );
-				tasksMap.put( currentNewTask.getID(), currentNewTask );
+				wsTasksMap.put( taskToAdd.getId(), taskToAdd );
 			}
 
 			for ( WS_Task wsTask : response.getMoreRecentTasks() )
 			{
-				wsTask.update( tasksMap.get( wsTask.getId() ), tasksMap );
-			}
-
-			for ( WS_Task taskToAdd : response.getTasksToAdd() )
-			{
-				tasksMap.get( taskToAdd.getId() ).setParent( tasksMap.get( taskToAdd.getParentId() ) );
+				wsTask.update( wsTasksMap.get( wsTask.getId() ) );
 			}
 
 			// S'il y'a des informations à envoyer…
@@ -461,75 +429,34 @@ public class TreeTaskerControllerDAO
 
 				for ( String needUpdateId : response.getNeedUpdateIds() )
 				{
-					finalRequest.addUpToDateTask( new WS_Task( tasksMap.get( needUpdateId ) ) );
+					finalRequest.addUpToDateTask( wsTasksMap.get( needUpdateId ) );
 				}
 
 				SyncingFinalResponse finalResponse = SYNCING_CLIENT2.post( SyncingFinalResponse.class, finalRequest );
 
 				for ( WS_Task wsTask : finalResponse.getUpToDateTasks() )
 				{
-					wsTask.update( tasksMap.get( wsTask.getId() ), tasksMap );
+					wsTask.update( wsTasksMap.get( wsTask.getId() ) );
 				}
 			}
 
 			// On reconstruit l'arbre…
-			HashMap<String, TT_Task> orderMap = new HashMap<String, TT_Task>();
-			HashMap<String, TT_Task> firstChildrenMap = new HashMap<String, TT_Task>();
-			for ( TT_Task task : tasksMap.values() )
-			{
-				if ( task.getPreviousTask() == null )
-				{
-					firstChildrenMap.put( task.getParent() == null ? null : task.getParent().getID(), task );
-				}
-				else
-				{
-					orderMap.put( task.getPreviousTask().getID(), task );
-				}
-			}
-
-			ArrayList<TT_Task> orderedRootTasks = new ArrayList<TT_Task>();
-			for ( String parentId : firstChildrenMap.keySet() )
-			{
-				if ( parentId == null )
-				{
-					orderedRootTasks.add( firstChildrenMap.get( null ) );
-					TT_Task currentTask = firstChildrenMap.get( null );
-					while ( orderMap.get( currentTask.getID() ) != null )
-					{
-						orderedRootTasks.add( orderMap.get( currentTask.getID() ) );
-						currentTask = orderMap.get( currentTask.getID() );
-					}
-
-				}
-				else
-				{
-					TT_Task parentTask = tasksMap.get( parentId );
-					parentTask.getChildrenTask().clear();
-					parentTask.getChildrenTask().add( firstChildrenMap.get( parentId ) );
-
-					TT_Task currentTask = firstChildrenMap.get( parentId );
-					while ( orderMap.get( currentTask.getID() ) != null )
-					{
-						parentTask.getChildrenTask().add( orderMap.get( currentTask.getID() ) );
-						currentTask = orderMap.get( currentTask.getID() );
-					}
-				}
-			}
+			treeController.reinit( wsTasksMap.values() );
 
 			TreeBuilder<TT_Task> builder = new TreeBuilder<TT_Task>( getTreeManager() );
-			for ( TT_Task task : orderedRootTasks )
+			for ( TT_Task task : treeController.getRootTasksList() )
 			{
-				if ( task.getParent() == null )
-				{
-					addRootTask( task );
-					buildTreeRecursively( task, builder );
-				}
+				builder.sequentiallyAddNextNode( task, 0 );
+				buildTreeRecursively( task, builder );
 			}
 
-			// … sans oublier de redéplier les noeuds déjà dépliés.
-			for ( TT_Task expandedTask : expandedSet )
+			// … sans oublier de replier les noeuds déjà pliés.
+			for ( String collapsedId : collapsedSet )
 			{
-				treeManager.expandDirectChildren( expandedTask );
+				if ( treeManager.isInTree( treeController.getTaskMap().get( collapsedId ) ) )
+				{
+					treeManager.collapseChildren( treeController.getTaskMap().get( collapsedId ) );
+				}
 			}
 		}
 		catch ( ClientProtocolException e )
@@ -543,12 +470,22 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
+	private void buildTreeRecursively(
+		TT_Task parent,
+		TreeBuilder<TT_Task> builder ) {
+		for ( TT_Task child : parent.getChildrenTask() )
+		{
+			builder.addRelation( parent, child );
+			buildTreeRecursively( child, builder );
+		}
+	}
+
 	private void init() {
 		userSession = null;
 		copiedTask = null;
-		rootTasksList = new ArrayList<TT_Task>();
-		rootDeletedTasksList = new ArrayList<TT_Task>();
+		deletedTasksList = new ArrayList<WS_Task>();
 		treeManager = new InMemoryTreeStateManager<TT_Task>();
+		treeController = null;
 	}
 
 	private void loadUserSession(
@@ -576,7 +513,7 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
-	private void saveRecursively(
+	private void saveTaskToDB(
 		TT_Task taskToSave,
 		TaskDB taskDB ) {
 		if ( taskToSave == null )
@@ -591,10 +528,6 @@ public class TreeTaskerControllerDAO
 		else
 		{
 			taskDB.insertTask( taskToSave, false );
-		}
-		for ( TT_Task child : taskToSave.getChildrenTask() )
-		{
-			saveRecursively( child, taskDB );
 		}
 	}
 
@@ -630,28 +563,28 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
-	private Set<TT_Task> unrecursifyTasks(
-		Collection<TT_Task> rootTasksList ) {
-		HashSet<TT_Task> tasksSet = new HashSet<TT_Task>();
-
-		for ( TT_Task rootTask : rootTasksList )
-		{
-			unrecursifyTasksRec( rootTask, tasksSet );
-		}
-
-		return tasksSet;
-	}
-
-	private void unrecursifyTasksRec(
-		TT_Task task,
-		HashSet<TT_Task> tasksSet ) {
-		tasksSet.add( task );
-
-		for ( TT_Task childTask : task.getChildrenTask() )
-		{
-			unrecursifyTasksRec( childTask, tasksSet );
-		}
-	}
+	// private Set<TT_Task> unrecursifyTasks(
+	// Collection<TT_Task> rootTasksList ) {
+	// HashSet<TT_Task> tasksSet = new HashSet<TT_Task>();
+	//
+	// for ( TT_Task rootTask : rootTasksList )
+	// {
+	// unrecursifyTasksRec( rootTask, tasksSet );
+	// }
+	//
+	// return tasksSet;
+	// }
+	//
+	// private void unrecursifyTasksRec(
+	// TT_Task task,
+	// HashSet<TT_Task> tasksSet ) {
+	// tasksSet.add( task );
+	//
+	// for ( TT_Task childTask : task.getChildrenTask() )
+	// {
+	// unrecursifyTasksRec( childTask, tasksSet );
+	// }
+	// }
 
 	private UserSession					userSession;
 
@@ -659,7 +592,7 @@ public class TreeTaskerControllerDAO
 
 	private TT_Task						copiedTask;
 
-	private ArrayList<TT_Task>			rootTasksList;
+	private ArrayList<WS_Task>			deletedTasksList;
 
-	private ArrayList<TT_Task>			rootDeletedTasksList;
+	private OrderedTaskTreeController	treeController;
 }

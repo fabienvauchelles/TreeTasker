@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.vaadin.data.Property;
@@ -28,10 +28,7 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeTargetDetails;
 import com.vaadin.ui.VerticalLayout;
 import com.vaushell.treetasker.application.TreeTaskerWebApplicationController;
-import com.vaushell.treetasker.dao.EH_WS_Task;
-import com.vaushell.treetasker.dao.TT_ServerControllerDAO;
 import com.vaushell.treetasker.model.TT_Task;
-import com.vaushell.treetasker.net.WS_Task;
 
 /**
  * This is the navigation tree that displays the task list.
@@ -90,38 +87,50 @@ public class TTWtree
 			return AcceptAll.get();
 		}
 
+		@SuppressWarnings( "unchecked" )
 		private void moveNode(
 			Object sourceItemId,
 			Object targetItemId,
 			VerticalDropLocation location ) {
 			HierarchicalContainer container = (HierarchicalContainer) tree.getContainerDataSource();
-			Set<TT_Task> tasksToUpdate = new HashSet<TT_Task>();
 
 			// Dans un premier temps, on retire le n�ud
 			TaskNode taskNode = (TaskNode) sourceItemId;
-			if ( taskNode.getTask().getParent() != null )
-			{
-				int taskIndex = taskNode.getTask().getParent().getChildrenTask().indexOf( taskNode.getTask() );
-				if ( taskIndex != taskNode.getTask().getParent().getChildrenTask().size() - 1 )
-				{
-					taskNode.getTask().getParent().getChildrenTask().get( taskIndex + 1 )
-						.setPreviousTask( taskNode.getTask().getPreviousTask() );
-					tasksToUpdate.add( taskNode.getTask().getParent().getChildrenTask().get( taskIndex + 1 ) );
-				}
-			}
-			else
-			{
-				int taskIndex = controller.getUserContainer().getContainer().getRootTasks()
-					.indexOf( taskNode.getTask() );
-				if ( taskIndex != controller.getUserContainer().getContainer().getRootTasks().size() - 1 )
-				{
-					controller.getUserContainer().getContainer().getRootTasks().get( taskIndex + 1 )
-						.setPreviousTask( taskNode.getTask().getPreviousTask() );
-					tasksToUpdate
-						.add( controller.getUserContainer().getContainer().getRootTasks().get( taskIndex + 1 ) );
-				}
-			}
-			taskNode.getTask().setPreviousTask( null );
+			// if ( taskNode.getTask().getParent() != null )
+			// {
+			// int taskIndex =
+			// taskNode.getTask().getParent().getChildrenTask().indexOf(
+			// taskNode.getTask() );
+			// if ( taskIndex !=
+			// taskNode.getTask().getParent().getChildrenTask().size() - 1 )
+			// {
+			// taskNode.getTask().getParent().getChildrenTask().get( taskIndex +
+			// 1 )
+			// .setPreviousTask( taskNode.getTask().getPreviousTask() );
+			// tasksToUpdate.add(
+			// taskNode.getTask().getParent().getChildrenTask().get( taskIndex +
+			// 1 ) );
+			// }
+			// }
+			// else
+			// {
+			// int taskIndex =
+			// controller.getUserContainer().getContainer().getRootTasks()
+			// .indexOf( taskNode.getTask() );
+			// if ( taskIndex !=
+			// controller.getUserContainer().getContainer().getRootTasks().size()
+			// - 1 )
+			// {
+			// controller.getUserContainer().getContainer().getRootTasks().get(
+			// taskIndex + 1 )
+			// .setPreviousTask( taskNode.getTask().getPreviousTask() );
+			// tasksToUpdate
+			// .add(
+			// controller.getUserContainer().getContainer().getRootTasks().get(
+			// taskIndex + 1 ) );
+			// }
+			// }
+			// taskNode.getTask().setPreviousTask( null );
 
 			// Sorting goes as
 			// - If dropped ON a node, we append it as a child
@@ -132,111 +141,155 @@ public class TTWtree
 
 			if ( location == VerticalDropLocation.MIDDLE )
 			{
-				if ( container.setParent( sourceItemId, targetItemId )/*
-																	 * &&
-																	 * container
-																	 * .
-																	 * hasChildren
-																	 * (
-																	 * targetItemId
-																	 * )
-																	 */)
-				{
-					// Mise � jour pr�c�dence
-					TT_Task newParentTask = ( (TaskNode) targetItemId ).getTask();
-					if ( !newParentTask.getChildrenTask().isEmpty() )
-					{
-						newParentTask.getChildrenTask().get( 0 ).setPreviousTask( taskNode.getTask() );
-						tasksToUpdate.add( newParentTask.getChildrenTask().get( 0 ) );
-					}
+				TaskNode parentNode = (TaskNode) targetItemId;
 
-					// move first in the container
-					container.moveAfterSibling( sourceItemId, null );
-					controller.setTaskParent( ( (TaskNode) sourceItemId ).getTask(),
-						( (TaskNode) targetItemId ).getTask() );
-				}
-				tree.expandItem( targetItemId );
+				List<TaskNode> parentList = (List<TaskNode>) container.getChildren( parentNode );
+
+				controller.move( taskNode, parentNode, parentList.get( parentList.size() - 1 ) );
+				// if ( container.setParent( sourceItemId, targetItemId )/*
+				// * &&
+				// * container
+				// * .
+				// * hasChildren
+				// * (
+				// * targetItemId
+				// * )
+				// */)
+				// {
+				// // Mise � jour pr�c�dence
+				// TT_Task newParentTask = ( (TaskNode) targetItemId
+				// ).getTask();
+				// if ( !newParentTask.getChildrenTask().isEmpty() )
+				// {
+				// newParentTask.getChildrenTask().get( 0 ).setPreviousTask(
+				// taskNode.getTask() );
+				// tasksToUpdate.add( newParentTask.getChildrenTask().get( 0 )
+				// );
+				// }
+				//
+				// // move first in the container
+				// container.moveAfterSibling( sourceItemId, null );
+				// controller.setTaskParent( ( (TaskNode) sourceItemId
+				// ).getTask(),
+				// ( (TaskNode) targetItemId ).getTask() );
+				// }
+				// tree.expandItem( targetItemId );
 			}
 			else if ( location == VerticalDropLocation.TOP )
 			{
-				Object parentId = container.getParent( targetItemId );
-				if ( container.setParent( sourceItemId, parentId ) )
-				{
-					TT_Task sourceTask = ( (TaskNode) sourceItemId ).getTask();
-					TT_Task targetTask = ( (TaskNode) targetItemId ).getTask();
-					sourceTask.setPreviousTask( targetTask.getPreviousTask() );
-					targetTask.setPreviousTask( sourceTask );
-					tasksToUpdate.add( targetTask );
+				TaskNode parentNode = (TaskNode) container.getParent( targetItemId );
 
-					// reorder only the two items, moving source above target
-					container.moveAfterSibling( sourceItemId, targetItemId );
-					container.moveAfterSibling( targetItemId, sourceItemId );
-					if ( parentId == null )
-					{
-						controller.setTaskParent( ( (TaskNode) sourceItemId ).getTask(), null );
-					}
-					else
-					{
-						controller.setTaskParent( ( (TaskNode) sourceItemId ).getTask(),
-							( (TaskNode) parentId ).getTask() );
-					}
+				List<TaskNode> parentList = null;
+				if ( parentNode != null )
+				{
+					parentList = (List<TaskNode>) container.getChildren( parentNode );
 				}
+				else
+				{
+					parentList = (List<TaskNode>) container.rootItemIds();
+				}
+
+				int targetNodeIndex = parentList.indexOf( targetItemId );
+				if ( targetNodeIndex == 0 )
+				{
+					controller.move( taskNode, parentNode, null );
+				}
+				else
+				{
+					controller.move( taskNode, parentNode, parentList.get( targetNodeIndex - 1 ) );
+				}
+				// Object parentId = container.getParent( targetItemId );
+				// if ( container.setParent( sourceItemId, parentId ) )
+				// {
+				// TT_Task sourceTask = ( (TaskNode) sourceItemId ).getTask();
+				// TT_Task targetTask = ( (TaskNode) targetItemId ).getTask();
+				// sourceTask.setPreviousTask( targetTask.getPreviousTask() );
+				// targetTask.setPreviousTask( sourceTask );
+				// tasksToUpdate.add( targetTask );
+				//
+				// // reorder only the two items, moving source above target
+				// container.moveAfterSibling( sourceItemId, targetItemId );
+				// container.moveAfterSibling( targetItemId, sourceItemId );
+				// if ( parentId == null )
+				// {
+				// controller.setTaskParent( ( (TaskNode) sourceItemId
+				// ).getTask(), null );
+				// }
+				// else
+				// {
+				// controller.setTaskParent( ( (TaskNode) sourceItemId
+				// ).getTask(),
+				// ( (TaskNode) parentId ).getTask() );
+				// }
+				// }
 			}
 			else if ( location == VerticalDropLocation.BOTTOM )
 			{
-				Object parentId = container.getParent( targetItemId );
-				if ( container.setParent( sourceItemId, parentId ) )
-				{
-					TT_Task sourceTask = ( (TaskNode) sourceItemId ).getTask();
-					TT_Task targetTask = ( (TaskNode) targetItemId ).getTask();
-					if ( parentId == null )
-					{
-						int targetTaskIndex = controller.getUserContainer().getContainer().getRootTasks()
-							.indexOf( targetTask );
-						if ( targetTaskIndex > 0 )
-						{
-							sourceTask.setPreviousTask( targetTask );
-							if ( targetTaskIndex != controller.getUserContainer().getContainer().getRootTasks().size() - 1 )
-							{
-								controller.getUserContainer().getContainer().getRootTasks().get( targetTaskIndex + 1 )
-									.setPreviousTask( sourceTask );
-								tasksToUpdate.add( controller.getUserContainer().getContainer().getRootTasks()
-									.get( targetTaskIndex + 1 ) );
-							}
-						}
-					}
-					else
-					{
-						int targetTaskIndex = targetTask.getParent().getChildrenTask().indexOf( targetTask );
-						if ( targetTaskIndex > 0 )
-						{
-							sourceTask.setPreviousTask( targetTask );
-							if ( targetTaskIndex != targetTask.getParent().getChildrenTask().size() - 1 )
-							{
-								targetTask.getParent().getChildrenTask().get( targetTaskIndex + 1 )
-									.setPreviousTask( sourceTask );
-								tasksToUpdate.add( targetTask.getParent().getChildrenTask().get( targetTaskIndex + 1 ) );
-							}
-						}
-					}
+				TaskNode parentNode = (TaskNode) container.getParent( targetItemId );
+				TaskNode previousNode = (TaskNode) targetItemId;
 
-					container.moveAfterSibling( sourceItemId, targetItemId );
-					if ( parentId == null )
-					{
-						controller.setTaskParent( ( (TaskNode) sourceItemId ).getTask(), null );
-					}
-					else
-					{
-						controller.setTaskParent( ( (TaskNode) sourceItemId ).getTask(),
-							( (TaskNode) parentId ).getTask() );
-					}
-				}
-			}
-
-			for ( TT_Task task : tasksToUpdate )
-			{
-				TT_ServerControllerDAO.getInstance().createOrUpdateTask(
-					new EH_WS_Task( new WS_Task( task ), controller.getUserContainer() ) );
+				controller.move( taskNode, parentNode, previousNode );
+				//
+				// Object parentId = container.getParent( targetItemId );
+				// if ( container.setParent( sourceItemId, parentId ) )
+				// {
+				// TT_Task sourceTask = ( (TaskNode) sourceItemId ).getTask();
+				// TT_Task targetTask = ( (TaskNode) targetItemId ).getTask();
+				// if ( parentId == null )
+				// {
+				// int targetTaskIndex =
+				// controller.getUserContainer().getContainer().getRootTasks()
+				// .indexOf( targetTask );
+				// if ( targetTaskIndex > 0 )
+				// {
+				// sourceTask.setPreviousTask( targetTask );
+				// if ( targetTaskIndex !=
+				// controller.getUserContainer().getContainer().getRootTasks().size()
+				// - 1 )
+				// {
+				// controller.getUserContainer().getContainer().getRootTasks().get(
+				// targetTaskIndex + 1 )
+				// .setPreviousTask( sourceTask );
+				// tasksToUpdate.add(
+				// controller.getUserContainer().getContainer().getRootTasks()
+				// .get( targetTaskIndex + 1 ) );
+				// }
+				// }
+				// }
+				// else
+				// {
+				// int targetTaskIndex =
+				// targetTask.getParent().getChildrenTask().indexOf( targetTask
+				// );
+				// if ( targetTaskIndex > 0 )
+				// {
+				// sourceTask.setPreviousTask( targetTask );
+				// if ( targetTaskIndex !=
+				// targetTask.getParent().getChildrenTask().size() - 1 )
+				// {
+				// targetTask.getParent().getChildrenTask().get( targetTaskIndex
+				// + 1 )
+				// .setPreviousTask( sourceTask );
+				// tasksToUpdate.add(
+				// targetTask.getParent().getChildrenTask().get( targetTaskIndex
+				// + 1 ) );
+				// }
+				// }
+				// }
+				//
+				// container.moveAfterSibling( sourceItemId, targetItemId );
+				// if ( parentId == null )
+				// {
+				// controller.setTaskParent( ( (TaskNode) sourceItemId
+				// ).getTask(), null );
+				// }
+				// else
+				// {
+				// controller.setTaskParent( ( (TaskNode) sourceItemId
+				// ).getTask(),
+				// ( (TaskNode) parentId ).getTask() );
+				// }
+				// }
 			}
 		}
 
@@ -355,8 +408,13 @@ public class TTWtree
 	 */
 	public void moveAfterSiblingNode(
 		A_NavigationNode node,
+		A_NavigationNode parentNode,
 		A_NavigationNode siblingNode ) {
-		( (HierarchicalContainer) navigationTree.getContainerDataSource() ).moveAfterSibling( node, siblingNode );
+		HierarchicalContainer container = (HierarchicalContainer) navigationTree.getContainerDataSource();
+		if ( container.setParent( node, parentNode ) )
+		{
+			container.moveAfterSibling( node, siblingNode );
+		}
 	}
 
 	/**

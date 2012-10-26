@@ -9,8 +9,7 @@ package com.vaushell.treetasker.application.storage;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -18,6 +17,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.vaushell.treetasker.model.TT_Task;
+import com.vaushell.treetasker.net.WS_Task;
 
 public class TaskDB
 {
@@ -40,16 +40,16 @@ public class TaskDB
 		return db;
 	}
 
-	public HashMap<TT_Task, Boolean> getExpandedMap() {
-		return expandedMap;
+	public ArrayList<WS_Task> getDeletedTasks() {
+		return deletedTasksList;
 	}
 
-	public ArrayList<TT_Task> getRootDeletedTasks() {
-		return rootDeletedTasksList;
+	public HashSet<String> getExpandedSet() {
+		return expandedSet;
 	}
 
-	public ArrayList<TT_Task> getRootTasks() {
-		return rootTasksList;
+	public ArrayList<WS_Task> getTasks() {
+		return tasksList;
 	}
 
 	public long insertTask(
@@ -57,20 +57,20 @@ public class TaskDB
 		boolean isExpanded ) {
 		ContentValues values = new ContentValues();
 
-		values.put( TaskOpenHelper.COL_ID, task.getID() );
 		if ( task.getParent() != null )
 		{
 			values.put( TaskOpenHelper.COL_PARENT_ID, task.getParent().getID() );
 		}
+		if ( task.getPreviousTask() != null )
+		{
+			values.put( TaskOpenHelper.COL_PREVIOUS_ID, task.getPreviousTask().getID() );
+		}
+		values.put( TaskOpenHelper.COL_ID, task.getID() );
 		values.put( TaskOpenHelper.COL_TITLE, task.getTitle() );
 		values.put( TaskOpenHelper.COL_DESCRIPTION, task.getDescription() );
 		values.put( TaskOpenHelper.COL_STATUS, task.getStatus() );
 		values.put( TaskOpenHelper.COL_EXPANDED, isExpanded );
 		values.put( TaskOpenHelper.COL_MODIF_DATE, String.valueOf( task.getLastModificationDate().getTime() ) );
-		if ( task.getPreviousTask() != null )
-		{
-			values.put( TaskOpenHelper.COL_PREVIOUS_ID, task.getPreviousTask().getID() );
-		}
 
 		return db.insert( TaskOpenHelper.TASK_TABLE_NAME, null, values );
 	}
@@ -80,65 +80,44 @@ public class TaskDB
 	}
 
 	public void readTasksInfo() {
-		rootTasksList.clear();
-		rootDeletedTasksList.clear();
-		expandedMap.clear();
-		Cursor cursor = db.query( TaskOpenHelper.TASK_TABLE_NAME, null, null, null, null, null, null );
+		tasksList.clear();
+		deletedTasksList.clear();
+		expandedSet.clear();
 
+		Cursor cursor = db.query( TaskOpenHelper.TASK_TABLE_NAME, null, null, null, null, null, null );
 		cursor.moveToFirst();
 
-		// Instanciation des TT_Task et metadonnées
-		HashMap<String, TT_Task> idToTaskMap = new HashMap<String, TT_Task>();
-		LinkedHashMap<TT_Task, String> childrenToParentIdMap = new LinkedHashMap<TT_Task, String>();
-		HashMap<String, String> precedenceMap = new HashMap<String, String>();
+		// Instanciation des WS_Task et metadonnées
 		while ( !cursor.isAfterLast() )
 		{
-			TT_Task taskToLoad = new TT_Task();
-			taskToLoad.setID( cursor.getString( TaskOpenHelper.NUM_COL_ID ) );
+			WS_Task taskToLoad = new WS_Task();
+
+			taskToLoad.setPreviousId( cursor.getString( TaskOpenHelper.NUM_COL_PREVIOUS_ID ) );
+			taskToLoad.setParentId( cursor.getString( TaskOpenHelper.NUM_COL_PARENT_ID ) );
+			taskToLoad.setId( cursor.getString( TaskOpenHelper.NUM_COL_ID ) );
 			taskToLoad.setLastModificationDate( new Date( cursor.getLong( TaskOpenHelper.NUM_COL_MODIF_DATE ) ) );
 			taskToLoad.setStatus( cursor.getInt( TaskOpenHelper.NUM_COL_STATUS ) );
-
 			taskToLoad.setTitle( cursor.getString( TaskOpenHelper.NUM_COL_TITLE ) );
 			taskToLoad.setDescription( cursor.getString( TaskOpenHelper.NUM_COL_DESCRIPTION ) );
-			expandedMap.put( taskToLoad, cursor.getInt( TaskOpenHelper.NUM_COL_EXPANDED ) > 0 );
-			idToTaskMap.put( taskToLoad.getID(), taskToLoad );
 
-			String previousId = cursor.getString( TaskOpenHelper.NUM_COL_PREVIOUS_ID );
-			if ( previousId != null )
+			if ( taskToLoad.getStatus() == TT_Task.DELETED )
 			{
-				precedenceMap.put( taskToLoad.getID(), previousId );
-			}
-
-			String parentId = cursor.getString( TaskOpenHelper.NUM_COL_PARENT_ID );
-			if ( parentId != null )
-			{
-				childrenToParentIdMap.put( taskToLoad, parentId );
-			}
-			else if ( taskToLoad.getStatus() == TT_Task.DELETED )
-
-			{
-				rootDeletedTasksList.add( taskToLoad );
+				deletedTasksList.add( taskToLoad );
 			}
 			else
 			{
-				rootTasksList.add( taskToLoad );
+				tasksList.add( taskToLoad );
 			}
+
+			if ( cursor.getInt( TaskOpenHelper.NUM_COL_EXPANDED ) > 0 )
+			{
+				expandedSet.add( taskToLoad.getId() );
+			}
+
 			cursor.moveToNext();
 		}
 
 		cursor.close();
-
-		// Affectation des précédences
-		for ( String taskId : precedenceMap.keySet() )
-		{
-			idToTaskMap.get( taskId ).setPreviousTask( idToTaskMap.get( precedenceMap.get( taskId ) ) );
-		}
-
-		// Affectation des parents
-		for ( TT_Task childTask : childrenToParentIdMap.keySet() )
-		{
-			childTask.setParent( idToTaskMap.get( childrenToParentIdMap.get( childTask ) ) );
-		}
 	}
 
 	public void resetTable() {
@@ -146,15 +125,15 @@ public class TaskDB
 	}
 
 	private void init() {
-		rootTasksList = new ArrayList<TT_Task>();
-		rootDeletedTasksList = new ArrayList<TT_Task>();
-		expandedMap = new HashMap<TT_Task, Boolean>();
+		tasksList = new ArrayList<WS_Task>();
+		deletedTasksList = new ArrayList<WS_Task>();
+		expandedSet = new HashSet<String>();
 	}
 
-	private SQLiteDatabase				db;
-	private final TaskOpenHelper		dbHelper;
-	private ArrayList<TT_Task>			rootTasksList;
-	private ArrayList<TT_Task>			rootDeletedTasksList;
+	private SQLiteDatabase			db;
+	private final TaskOpenHelper	dbHelper;
+	private ArrayList<WS_Task>		tasksList;
+	private ArrayList<WS_Task>		deletedTasksList;
 
-	private HashMap<TT_Task, Boolean>	expandedMap;
+	private HashSet<String>			expandedSet;
 }

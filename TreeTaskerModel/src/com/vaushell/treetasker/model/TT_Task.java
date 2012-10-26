@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -50,17 +51,107 @@ public class TT_Task
 			return;
 		}
 
-		if ( !getChildrenTask().contains( childTask ) )
+		getChildrenTask().add( childTask );
+	}
+
+	@Override
+	public boolean equals(
+		Object obj ) {
+		if ( this == obj )
 		{
-			if ( childTask != this /*
-									 * && !getAllAncestors().contains( childTask
-									 * )
-									 */)
+			return true;
+		}
+		if ( obj == null )
+		{
+			return false;
+		}
+		if ( getClass() != obj.getClass() )
+		{
+			return false;
+		}
+		TT_Task other = (TT_Task) obj;
+		if ( ID == null )
+		{
+			if ( other.ID != null )
 			{
-				childrenTask.add( childTask );
-				childTask.setParent( this );
+				return false;
 			}
 		}
+		else if ( !ID.equals( other.ID ) )
+		{
+			return false;
+		}
+		if ( childrenTask == null )
+		{
+			if ( other.childrenTask != null )
+			{
+				return false;
+			}
+		}
+		else if ( !childrenTask.equals( other.childrenTask ) )
+		{
+			return false;
+		}
+		if ( description == null )
+		{
+			if ( other.description != null )
+			{
+				return false;
+			}
+		}
+		else if ( !description.equals( other.description ) )
+		{
+			return false;
+		}
+		if ( lastModificationDate == null )
+		{
+			if ( other.lastModificationDate != null )
+			{
+				return false;
+			}
+		}
+		else if ( !lastModificationDate.equals( other.lastModificationDate ) )
+		{
+			return false;
+		}
+		if ( parentTask == null )
+		{
+			if ( other.parentTask != null )
+			{
+				return false;
+			}
+		}
+		else if ( !parentTask.equals( other.parentTask ) )
+		{
+			return false;
+		}
+		if ( previousTask == null )
+		{
+			if ( other.previousTask != null )
+			{
+				return false;
+			}
+		}
+		else if ( !previousTask.equals( other.previousTask ) )
+		{
+			return false;
+		}
+		if ( status != other.status )
+		{
+			return false;
+		}
+		if ( title == null )
+		{
+			if ( other.title != null )
+			{
+				return false;
+			}
+		}
+		else if ( !title.equals( other.title ) )
+		{
+			return false;
+		}
+		return true;
 	}
 
 	public Set<TT_Task> getAllAncestors() {
@@ -77,15 +168,27 @@ public class TT_Task
 	}
 
 	public List<TT_Task> getChildrenTask() {
+		if ( childrenTask == null )
+		{
+			childrenTask = new LinkedList<TT_Task>();
+		}
 		return childrenTask;
 	}
 
 	public TT_Task getCopy() {
 		TT_Task copy = new TT_Task( UUID.randomUUID().toString(), title, description, new Date(), status );
-		for ( TT_Task childTask : childrenTask )
+
+		TT_Task previousTask = null;
+		for ( TT_Task childTask : getChildrenTask() )
 		{
-			childTask.getCopy().setParent( copy );
+			TT_Task childTaskCopy = childTask.getCopy();
+			childTaskCopy.setPreviousTask( previousTask );
+			childTaskCopy.setParent( copy );
+			copy.addChildTask( childTaskCopy );
+
+			previousTask = childTaskCopy;
 		}
+
 		return copy;
 	}
 
@@ -117,15 +220,46 @@ public class TT_Task
 		return title;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ( ID == null ? 0 : ID.hashCode() );
+		result = prime * result + ( childrenTask == null ? 0 : childrenTask.hashCode() );
+		result = prime * result + ( description == null ? 0 : description.hashCode() );
+		result = prime * result + ( lastModificationDate == null ? 0 : lastModificationDate.hashCode() );
+		result = prime * result + ( parentTask == null ? 0 : parentTask.hashCode() );
+		result = prime * result + ( previousTask == null ? 0 : previousTask.hashCode() );
+		result = prime * result + status;
+		result = prime * result + ( title == null ? 0 : title.hashCode() );
+		return result;
+	}
+
 	public boolean removeChildTask(
 		TT_Task childTask ) {
 		boolean res = false;
-		if ( childrenTask.contains( childTask ) )
+		if ( getChildrenTask().contains( childTask ) )
 		{
-			res = childrenTask.remove( childTask );
+			res = getChildrenTask().remove( childTask );
 			childTask.setParent( null );
 		}
 		return res;
+	}
+
+	/**
+	 * Heavy to use.
+	 * 
+	 * @return A list of all descendants
+	 */
+	public List<TT_Task> retrieveAllDescendants() {
+		ArrayList<TT_Task> descendants = new ArrayList<TT_Task>();
+
+		for ( TT_Task childTask : getChildrenTask() )
+		{
+			retrieveDescendantsRec( childTask, descendants );
+		}
+
+		return descendants;
 	}
 
 	public void setDescription(
@@ -146,33 +280,20 @@ public class TT_Task
 	public void setLastModificationDateRecursively(
 		Date lastModificationDate ) {
 		this.lastModificationDate = lastModificationDate;
-		for ( TT_Task childTask : childrenTask )
+		for ( TT_Task childTask : getChildrenTask() )
 		{
 			childTask.setLastModificationDateRecursively( lastModificationDate );
 		}
 	}
 
 	public void setParent(
-		TT_Task parent ) {
-		if ( parent == getParent() )
+		TT_Task parentTask ) {
+		if ( parentTask == getParent() )
 		{
 			return;
 		}
 
-		if ( parent == null )
-		{
-			parentTask.removeChildTask( this );
-			parentTask = parent;
-		}
-		else if ( parent != this && !parent.getAllAncestors().contains( this ) )
-		{
-			if ( getParent() != null )
-			{
-				getParent().removeChildTask( this );
-			}
-			parentTask = parent;
-			parent.addChildTask( this );
-		}
+		this.parentTask = parentTask;
 	}
 
 	public void setPreviousTask(
@@ -188,7 +309,7 @@ public class TT_Task
 	public void setStatusRecursively(
 		int status ) {
 		this.status = status;
-		for ( TT_Task childTask : childrenTask )
+		for ( TT_Task childTask : getChildrenTask() )
 		{
 			childTask.setStatusRecursively( status );
 		}
@@ -202,7 +323,18 @@ public class TT_Task
 	private void init() {
 		parentTask = null;
 		previousTask = null;
-		childrenTask = new ArrayList<TT_Task>();
+		childrenTask = null;
+	}
+
+	private void retrieveDescendantsRec(
+		TT_Task task,
+		List<TT_Task> descendants ) {
+		descendants.add( task );
+
+		for ( TT_Task childTask : task.getChildrenTask() )
+		{
+			retrieveDescendantsRec( childTask, descendants );
+		}
 	}
 
 	private String			ID;

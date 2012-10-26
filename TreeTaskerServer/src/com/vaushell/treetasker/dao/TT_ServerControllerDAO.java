@@ -252,10 +252,12 @@ public class TT_ServerControllerDAO
 
 	public EH_WS_Task getNextTask(
 		EH_TT_UserTaskContainer container,
+		String parentId,
 		String taskId ) {
 		Query nextTaskQuery = new Query( EH_WS_Task.KIND, container.getEntity().getKey() );
-		nextTaskQuery.setFilter( new Query.FilterPredicate( EH_WS_Task.PROPERTY_PREVIOUS_ID, FilterOperator.EQUAL,
-			taskId ) );
+		nextTaskQuery.setFilter( Query.CompositeFilterOperator.and( new Query.FilterPredicate(
+			EH_WS_Task.PROPERTY_PREVIOUS_ID, FilterOperator.EQUAL, taskId ), new Query.FilterPredicate(
+			EH_WS_Task.PROPERTY_PARENT_ID, FilterOperator.EQUAL, parentId ) ) );
 		Entity nextTaskEntity = DATASTORE.prepare( nextTaskQuery ).asSingleEntity();
 
 		if ( nextTaskEntity == null )
