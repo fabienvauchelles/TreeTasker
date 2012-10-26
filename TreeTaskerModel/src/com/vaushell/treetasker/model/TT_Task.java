@@ -81,17 +81,6 @@ public class TT_Task
 		{
 			return false;
 		}
-		if ( childrenTask == null )
-		{
-			if ( other.childrenTask != null )
-			{
-				return false;
-			}
-		}
-		else if ( !childrenTask.equals( other.childrenTask ) )
-		{
-			return false;
-		}
 		if ( description == null )
 		{
 			if ( other.description != null )
@@ -121,7 +110,7 @@ public class TT_Task
 				return false;
 			}
 		}
-		else if ( !parentTask.equals( other.parentTask ) )
+		else if ( !parentTask.getID().equals( other.parentTask.getID() ) )
 		{
 			return false;
 		}
@@ -132,7 +121,7 @@ public class TT_Task
 				return false;
 			}
 		}
-		else if ( !previousTask.equals( other.previousTask ) )
+		else if ( !previousTask.getID().equals( other.previousTask.getID() ) )
 		{
 			return false;
 		}
@@ -225,14 +214,23 @@ public class TT_Task
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ( ID == null ? 0 : ID.hashCode() );
-		result = prime * result + ( childrenTask == null ? 0 : childrenTask.hashCode() );
 		result = prime * result + ( description == null ? 0 : description.hashCode() );
 		result = prime * result + ( lastModificationDate == null ? 0 : lastModificationDate.hashCode() );
-		result = prime * result + ( parentTask == null ? 0 : parentTask.hashCode() );
-		result = prime * result + ( previousTask == null ? 0 : previousTask.hashCode() );
+		result = prime * result + ( parentTask == null ? 0 : parentTask.getID().hashCode() );
+		result = prime * result + ( previousTask == null ? 0 : previousTask.getID().hashCode() );
 		result = prime * result + status;
 		result = prime * result + ( title == null ? 0 : title.hashCode() );
 		return result;
+	}
+
+	public boolean isADescendantOf(
+		TT_Task otherTask ) {
+		return otherTask == null || otherTask.isAnAncestorOf( this );
+	}
+
+	public boolean isAnAncestorOf(
+		TT_Task otherTask ) {
+		return otherTask != null && ( this == otherTask.getParent() || isAnAncestorOf( otherTask.getParent() ) );
 	}
 
 	public boolean removeChildTask(

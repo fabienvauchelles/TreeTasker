@@ -299,6 +299,7 @@ public class OrderedTaskTreeController
 						nextTask.setPreviousTask( currentTask );
 					}
 					currentTask.setParent( parentTask );
+					parentTask.addChildTask( currentTask );
 					currentTask = nextTask;
 				}
 			}
@@ -309,9 +310,9 @@ public class OrderedTaskTreeController
 		String taskId ) {
 		checkTaskExistence( taskId );
 
-		TT_Task task = tasksMap.get( taskId );
-		TT_Task parentTask = task.getParent();
-		TT_Task previousTask = task.getPreviousTask();
+		TT_Task taskToRemove = tasksMap.get( taskId );
+		TT_Task parentTask = taskToRemove.getParent();
+		TT_Task previousTask = taskToRemove.getPreviousTask();
 		Date modificationDate = new Date();
 
 		List<TT_Task> parentList = null;
@@ -325,7 +326,7 @@ public class OrderedTaskTreeController
 			parentList = parentTask.getChildrenTask();
 		}
 
-		int taskIndex = parentList.indexOf( task );
+		int taskIndex = parentList.indexOf( taskToRemove );
 
 		if ( taskIndex != parentList.size() - 1 )
 		{
@@ -337,7 +338,7 @@ public class OrderedTaskTreeController
 		parentList.remove( taskIndex );
 
 		ArrayList<TT_Task> removedTasksList = new ArrayList<TT_Task>();
-		removeRecursively( task, removedTasksList );
+		removeRecursively( taskToRemove, removedTasksList );
 
 		return removedTasksList;
 	}
@@ -406,15 +407,18 @@ public class OrderedTaskTreeController
 		TT_Task taskToRemove,
 		List<TT_Task> removedTasksList ) {
 		taskToRemove.setStatus( TT_Task.DELETED );
-		taskToRemove.setParent( null );
 		taskToRemove.setPreviousTask( null );
 		taskToRemove.setLastModificationDate( new Date() );
 
+		removedTasksList.add( taskToRemove );
+		tasksMap.remove( taskToRemove.getID() );
+
 		for ( TT_Task childTask : taskToRemove.getChildrenTask() )
 		{
-			removedTasksList.add( tasksMap.remove( childTask.getID() ) );
 			removeRecursively( childTask, removedTasksList );
 		}
+
+		taskToRemove.getChildrenTask().clear();
 	}
 
 	private boolean taskExistsWarn(

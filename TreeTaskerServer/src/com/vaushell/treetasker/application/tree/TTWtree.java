@@ -15,7 +15,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import com.vaadin.data.Property;
@@ -80,6 +79,11 @@ public class TTWtree
 
 			Object sourceItemId = ( (DataBoundTransferable) t ).getItemId();
 			Object targetItemId = dropData.getItemIdOver();
+
+			if ( targetItemId == sourceItemId )
+			{
+				return;
+			}
 
 			// Location describes on which part of the node the drop took
 			// place
@@ -150,9 +154,16 @@ public class TTWtree
 			{
 				TaskNode parentNode = (TaskNode) targetItemId;
 
-				List<TaskNode> parentList = (List<TaskNode>) container.getChildren( parentNode );
-
-				controller.move( taskNode, parentNode, parentList.get( parentList.size() - 1 ) );
+				if ( container.getChildren( parentNode ) == null )
+				{
+					controller.move( taskNode, parentNode, null );
+				}
+				else
+				{
+					ArrayList<TaskNode> parentList = new ArrayList<TaskNode>(
+						(Collection<TaskNode>) container.getChildren( parentNode ) );
+					controller.move( taskNode, parentNode, parentList.get( parentList.size() - 1 ) );
+				}
 				// if ( container.setParent( sourceItemId, targetItemId )/*
 				// * &&
 				// * container
@@ -186,14 +197,14 @@ public class TTWtree
 			{
 				TaskNode parentNode = (TaskNode) container.getParent( targetItemId );
 
-				List<TaskNode> parentList = null;
+				ArrayList<TaskNode> parentList = new ArrayList<TaskNode>();
 				if ( parentNode != null )
 				{
-					parentList = (List<TaskNode>) container.getChildren( parentNode );
+					parentList.addAll( (Collection<TaskNode>) container.getChildren( parentNode ) );
 				}
 				else
 				{
-					parentList = (List<TaskNode>) container.rootItemIds();
+					parentList.addAll( (Collection<TaskNode>) container.rootItemIds() );
 				}
 
 				int targetNodeIndex = parentList.indexOf( targetItemId );

@@ -211,7 +211,11 @@ public class TreeTaskerWebApplicationController
 		{
 			tasksToUpdate.remove( taskToDelete );
 			// Must update the next node for precedence modification
-			tasksToUpdate.add( treeController.getNextTask( taskToDelete.getID() ) );
+			TT_Task nextTask = treeController.getNextTask( taskToDelete.getID() );
+			if ( nextTask != null )
+			{
+				tasksToUpdate.add( nextTask );
+			}
 
 			// Removing all subtasks
 			tasksToDelete.addAll( treeController.removeTask( taskToDelete.getID() ) );
@@ -379,6 +383,12 @@ public class TreeTaskerWebApplicationController
 		TaskNode nodeToMove,
 		TaskNode parentNode,
 		TaskNode previousNode ) {
+		if ( nodeToMove == parentNode || parentNode != null
+			&& nodeToMove.getTask().isAnAncestorOf( parentNode.getTask() ) )
+		{
+			return;
+		}
+
 		HashSet<TT_Task> tasksToUpdate = new HashSet<TT_Task>();
 
 		TT_Task taskToMove = nodeToMove.getTask();
