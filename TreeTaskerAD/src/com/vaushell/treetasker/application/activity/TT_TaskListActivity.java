@@ -100,8 +100,10 @@ public class TT_TaskListActivity
 							DialogInterface dialog,
 							int which ) {
 							TT_Task taskToRemove = view2taskMap.get( currentView );
+
 							TreeTaskerControllerDAO.getInstance().deleteTask( taskToRemove );
 							view2taskMap.remove( currentView );
+							currentView = null;
 						}
 					} ).setNegativeButton( R.string.cancel, new DialogInterface.OnClickListener()
 					{
@@ -158,71 +160,13 @@ public class TT_TaskListActivity
 		Bundle savedInstanceState ) {
 		super.onCreate( savedInstanceState );
 
-		view2taskMap = new HashMap<View, TT_Task>();
-		dialogBuilder = new AlertDialog.Builder( this );
-		TreeTaskerControllerDAO.getInstance().reset();
-		TreeStateManager<TT_Task> treeManager = TreeTaskerControllerDAO.getInstance().getTreeManager();
-
-		TreeTaskerControllerDAO.getInstance().load( getApplicationContext() );
-
-		AbstractTreeViewAdapter<TT_Task> adapter = new AbstractTreeViewAdapter<TT_Task>( this, treeManager, 20 )
-		{
-			@Override
-			public long getItemId(
-				int position ) {
-				return getTreeId( position ).getID().hashCode();
-			}
-
-			@Override
-			public View getNewChildView(
-				final TreeNodeInfo<TT_Task> treeNodeInfo ) {
-				View taskView = getLayoutInflater().inflate( R.layout.task_view, null );
-				updateView( taskView, treeNodeInfo );
-
-				return taskView;
-			}
-
-			@Override
-			public View updateView(
-				View view,
-				final TreeNodeInfo<TT_Task> treeNodeInfo ) {
-				( (TextView) view.findViewById( R.id.aLBLtaskNameValue ) ).setText( treeNodeInfo.getId().getTitle() );
-				final CheckBox cbView = (CheckBox) view.findViewById( R.id.aCBtaskDoneValue );
-				cbView.setOnCheckedChangeListener( null );
-				cbView.setChecked( treeNodeInfo.getId().getStatus() == TT_Task.DONE );
-				cbView.setOnCheckedChangeListener( new CheckBox.OnCheckedChangeListener()
-				{
-					@Override
-					public void onCheckedChanged(
-						CompoundButton buttonView,
-						boolean isChecked ) {
-						if ( isChecked )
-						{
-							TreeTaskerControllerDAO.getInstance().setStatus( treeNodeInfo.getId(), TT_Task.DONE );
-						}
-						else
-						{
-							TreeTaskerControllerDAO.getInstance().setStatus( treeNodeInfo.getId(), TT_Task.TODO );
-						}
-					}
-				} );
-				view2taskMap.put( view, treeNodeInfo.getId() );
-				return view;
-			}
-		};
-
-		setContentView( R.layout.tree_task_view );
-		TreeViewList treeView = (TreeViewList) findViewById( R.id.treeView );
-		registerForContextMenu( treeView );
-		registerForContextMenu( findViewById( R.id.treeTaskView ) );
-		treeView.setAdapter( adapter );
-
 		// Si l'utilisateur est déjà authentifié
 		if ( savedInstanceState != null && savedInstanceState.containsKey( USERNAME )
 			&& savedInstanceState.containsKey( SESSIONID ) )
 		{
 			TreeTaskerControllerDAO.getInstance().setUserSession(
 				new UserSession( savedInstanceState.getString( USERNAME ), savedInstanceState.getString( SESSIONID ) ) );
+			loadActivity();
 		}
 		else
 		// Sinon on donne la main à l'activité de connexion
@@ -305,6 +249,7 @@ public class TT_TaskListActivity
 				{
 					TreeTaskerControllerDAO.getInstance().setUserSession(
 						new UserSession( data.getStringExtra( USERNAME ), data.getStringExtra( SESSIONID ) ) );
+					loadActivity();
 				}
 				else
 				{
@@ -359,6 +304,67 @@ public class TT_TaskListActivity
 
 	private TT_Task getCurrentTask() {
 		return view2taskMap.get( currentView );
+	}
+
+	private void loadActivity() {
+		view2taskMap = new HashMap<View, TT_Task>();
+		dialogBuilder = new AlertDialog.Builder( this );
+		TreeTaskerControllerDAO.getInstance().reset();
+		TreeStateManager<TT_Task> treeManager = TreeTaskerControllerDAO.getInstance().getTreeManager();
+
+		AbstractTreeViewAdapter<TT_Task> adapter = new AbstractTreeViewAdapter<TT_Task>( this, treeManager, 20 )
+		{
+			@Override
+			public long getItemId(
+				int position ) {
+				return getTreeId( position ).getID().hashCode();
+			}
+
+			@Override
+			public View getNewChildView(
+				final TreeNodeInfo<TT_Task> treeNodeInfo ) {
+				View taskView = getLayoutInflater().inflate( R.layout.task_view, null );
+				updateView( taskView, treeNodeInfo );
+
+				return taskView;
+			}
+
+			@Override
+			public View updateView(
+				View view,
+				final TreeNodeInfo<TT_Task> treeNodeInfo ) {
+				( (TextView) view.findViewById( R.id.aLBLtaskNameValue ) ).setText( treeNodeInfo.getId().getTitle() );
+				final CheckBox cbView = (CheckBox) view.findViewById( R.id.aCBtaskDoneValue );
+				cbView.setOnCheckedChangeListener( null );
+				cbView.setChecked( treeNodeInfo.getId().getStatus() == TT_Task.DONE );
+				cbView.setOnCheckedChangeListener( new CheckBox.OnCheckedChangeListener()
+				{
+					@Override
+					public void onCheckedChanged(
+						CompoundButton buttonView,
+						boolean isChecked ) {
+						if ( isChecked )
+						{
+							TreeTaskerControllerDAO.getInstance().setStatus( treeNodeInfo.getId(), TT_Task.DONE );
+						}
+						else
+						{
+							TreeTaskerControllerDAO.getInstance().setStatus( treeNodeInfo.getId(), TT_Task.TODO );
+						}
+					}
+				} );
+				view2taskMap.put( view, treeNodeInfo.getId() );
+				return view;
+			}
+		};
+
+		setContentView( R.layout.tree_task_view );
+		TreeViewList treeView = (TreeViewList) findViewById( R.id.treeView );
+		registerForContextMenu( treeView );
+		registerForContextMenu( findViewById( R.id.treeTaskView ) );
+		treeView.setAdapter( adapter );
+
+		TreeTaskerControllerDAO.getInstance().load( getApplicationContext() );
 	}
 
 	private void requestAuthentication() // Afficher l'activity de connexion

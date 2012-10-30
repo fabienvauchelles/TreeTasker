@@ -407,6 +407,7 @@ public class OrderedTaskTreeController
 		TT_Task taskToRemove,
 		List<TT_Task> removedTasksList ) {
 		taskToRemove.setStatus( TT_Task.DELETED );
+		taskToRemove.setParent( null );
 		taskToRemove.setPreviousTask( null );
 		taskToRemove.setLastModificationDate( new Date() );
 

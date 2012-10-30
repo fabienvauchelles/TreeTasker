@@ -81,65 +81,6 @@ public class TT_Task
 		{
 			return false;
 		}
-		if ( description == null )
-		{
-			if ( other.description != null )
-			{
-				return false;
-			}
-		}
-		else if ( !description.equals( other.description ) )
-		{
-			return false;
-		}
-		if ( lastModificationDate == null )
-		{
-			if ( other.lastModificationDate != null )
-			{
-				return false;
-			}
-		}
-		else if ( !lastModificationDate.equals( other.lastModificationDate ) )
-		{
-			return false;
-		}
-		if ( parentTask == null )
-		{
-			if ( other.parentTask != null )
-			{
-				return false;
-			}
-		}
-		else if ( !parentTask.getID().equals( other.parentTask.getID() ) )
-		{
-			return false;
-		}
-		if ( previousTask == null )
-		{
-			if ( other.previousTask != null )
-			{
-				return false;
-			}
-		}
-		else if ( !previousTask.getID().equals( other.previousTask.getID() ) )
-		{
-			return false;
-		}
-		if ( status != other.status )
-		{
-			return false;
-		}
-		if ( title == null )
-		{
-			if ( other.title != null )
-			{
-				return false;
-			}
-		}
-		else if ( !title.equals( other.title ) )
-		{
-			return false;
-		}
 		return true;
 	}
 
@@ -214,12 +155,6 @@ public class TT_Task
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ( ID == null ? 0 : ID.hashCode() );
-		result = prime * result + ( description == null ? 0 : description.hashCode() );
-		result = prime * result + ( lastModificationDate == null ? 0 : lastModificationDate.hashCode() );
-		result = prime * result + ( parentTask == null ? 0 : parentTask.getID().hashCode() );
-		result = prime * result + ( previousTask == null ? 0 : previousTask.getID().hashCode() );
-		result = prime * result + status;
-		result = prime * result + ( title == null ? 0 : title.hashCode() );
 		return result;
 	}
 

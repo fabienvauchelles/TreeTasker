@@ -34,14 +34,29 @@ public class SyncingStartResource
 		SyncingStartRequest request ) {
 		EH_TT_UserTaskContainer userContainer = DAO.getUserContainer( request.getUserSession().getUserName() );
 
+		SyncingStartResponse response = new SyncingStartResponse();
+
+		// Liste des ids des noeuds supprimés sur le téléphone
+		for ( String taskId : request.getRemovedIdList() )
+		{
+			if ( taskId != null && !taskId.trim().isEmpty() )
+			{
+				EH_WS_Task datastoreTask = DAO.getTask( userContainer, taskId );
+
+				if ( datastoreTask != null )
+				{
+					DAO.deleteTask( datastoreTask );
+				}
+				response.addDeletedId( taskId );
+			}
+		}
+
 		HashMap<String, EH_WS_Task> datastoreTasksMap = new HashMap<String, EH_WS_Task>();
 
 		for ( EH_WS_Task task : DAO.getAllTasks( userContainer ) )
 		{
 			datastoreTasksMap.put( task.getTask().getId(), task );
 		}
-
-		SyncingStartResponse response = new SyncingStartResponse();
 
 		// Liste des ids des noeuds présents sur le téléphone
 		for ( TaskStamp taskStamp : request.getIdList() )
@@ -84,21 +99,6 @@ public class SyncingStartResource
 		for ( EH_WS_Task ttTask : datastoreTasksMap.values() )
 		{
 			response.addTaskToAdd( ttTask.getTask() );
-		}
-
-		// Liste des ids des noeuds supprimés sur le téléphone
-		for ( String taskId : request.getRemovedIdList() )
-		{
-			if ( taskId != null && !taskId.trim().isEmpty() )
-			{
-				EH_WS_Task datastoreTask = DAO.getTask( userContainer, taskId );
-
-				if ( datastoreTask != null )
-				{
-					DAO.deleteTask( datastoreTask );
-				}
-				response.addDeletedId( taskId );
-			}
 		}
 
 		return response;

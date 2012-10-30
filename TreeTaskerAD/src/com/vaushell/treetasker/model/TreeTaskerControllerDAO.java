@@ -46,7 +46,7 @@ public class TreeTaskerControllerDAO
 	}
 
 	// PUBLIC
-	public static final String				TEST_RESOURCE	= "http://10.0.2.2:8888/";
+	public static final String				TEST_RESOURCE	= "http://lc-psamx-android:8888/";
 	public static final String				WEB_RESOURCE	= "https://vsh2-test.appspot.com/";
 
 	public static final String				RESOURCE		= TEST_RESOURCE;
@@ -67,87 +67,6 @@ public class TreeTaskerControllerDAO
 	public static TreeTaskerControllerDAO getInstance() {
 		return TreeTaskerControllerDAOHolder.INSTANCE;
 	}
-
-	//
-	// public static List<TT_Task> getMockTaskList1() {
-	// List<TT_Task> mockList = new ArrayList<TT_Task>();
-	//
-	// TT_Task construireMaison = new TT_Task( UUID.randomUUID().toString(),
-	// "Construire la maison", "", new Date(),
-	// TT_Task.TODO );
-	//
-	// construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-	// "Acheter terrain", "", new Date(),
-	// TT_Task.DONE ) );
-	//
-	// TT_Task acheterMatos = new TT_Task( UUID.randomUUID().toString(),
-	// "Acheter mat�riel", "", new Date(),
-	// TT_Task.TODO );
-	// acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-	// "Acheter brique", "", new Date(),
-	// TT_Task.TODO ) );
-	// acheterMatos.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-	// "Acheter brouette", "", new Date(),
-	// TT_Task.TODO ) );
-	// construireMaison.addChildTask( acheterMatos );
-	//
-	// construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-	// "Construire les murs", "",
-	// new Date(), TT_Task.TODO ) );
-	// construireMaison.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-	// "Construire le toit", "", new Date(),
-	// TT_Task.TODO ) );
-	//
-	// TT_Task passerPermis = new TT_Task( UUID.randomUUID().toString(),
-	// "Passer le permis", "", new Date(),
-	// TT_Task.TODO );
-	// passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-	// "S'inscrire � l'auto-�cole", "",
-	// new Date(), TT_Task.DONE ) );
-	// passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-	// "Obtenir le code", "", new Date(),
-	// TT_Task.TODO ) );
-	// passerPermis.addChildTask( new TT_Task( UUID.randomUUID().toString(),
-	// "Faire 20h de conduite", "", new Date(),
-	// TT_Task.TODO ) );
-	//
-	// TT_Task accederAuLevelDesPoneys = new TT_Task(
-	// UUID.randomUUID().toString(), "Acc�der au niveau cach�", "",
-	// new Date(), TT_Task.TODO );
-	//
-	// TT_Task rassemblerIngredients = new TT_Task(
-	// UUID.randomUUID().toString(), "Trouver les ingr�dients", "",
-	// new Date(), TT_Task.TODO );
-	// rassemblerIngredients.addChildTask( new TT_Task(
-	// UUID.randomUUID().toString(), "Trouver champignon noir", "",
-	// new Date(), TT_Task.TODO ) );
-	// rassemblerIngredients.addChildTask( new TT_Task(
-	// UUID.randomUUID().toString(), "Trouver tibia de l�oric", "",
-	// new Date(), TT_Task.TODO ) );
-	// rassemblerIngredients.addChildTask( new TT_Task(
-	// UUID.randomUUID().toString(), "Trouver arc-en-ciel liquide",
-	// "", new Date(), TT_Task.TODO ) );
-	// rassemblerIngredients.addChildTask( new TT_Task(
-	// UUID.randomUUID().toString(), "Trouver pierre baragouinante",
-	// "", new Date(), TT_Task.TODO ) );
-	// rassemblerIngredients.addChildTask( new TT_Task(
-	// UUID.randomUUID().toString(), "Acheter cloche de Wirt", "",
-	// new Date(), TT_Task.TODO ) );
-	// accederAuLevelDesPoneys.addChildTask( rassemblerIngredients );
-	//
-	// accederAuLevelDesPoneys.addChildTask( new TT_Task(
-	// UUID.randomUUID().toString(),
-	// "Construire le baton de bouvier", "", new Date(), TT_Task.DONE ) );
-	// accederAuLevelDesPoneys.addChildTask( new TT_Task(
-	// UUID.randomUUID().toString(), "Ouvrir le portail", "",
-	// new Date(), TT_Task.TODO ) );
-	//
-	// mockList.add( construireMaison );
-	// mockList.add( passerPermis );
-	// mockList.add( accederAuLevelDesPoneys );
-	//
-	// return mockList;
-	// }
 
 	private TreeTaskerControllerDAO()
 	{
@@ -215,8 +134,7 @@ public class TreeTaskerControllerDAO
 
 	public void load(
 		Context applicationContext ) {
-		loadUserSession( applicationContext );
-		treeController = new OrderedTaskTreeController( new TT_UserTaskContainer() );
+		treeController = new OrderedTaskTreeController( userSession.getUserName() );
 
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
 		TaskDB taskDB = new TaskDB( applicationContext );
@@ -238,7 +156,7 @@ public class TreeTaskerControllerDAO
 		{
 			if ( treeManager.isInTree( task ) )
 			{
-				if ( !taskDB.getExpandedSet().contains( task ) )
+				if ( !taskDB.getExpandedSet().contains( task.getID() ) )
 				{
 					treeManager.collapseChildren( task );
 				}
@@ -295,6 +213,11 @@ public class TreeTaskerControllerDAO
 		Context applicationContext ) {
 		saveUserSession( applicationContext );
 
+		if ( treeController == null )
+		{
+			return;
+		}
+
 		TaskDB taskDB = new TaskDB( applicationContext );
 		taskDB.open();
 		taskDB.resetTable();
@@ -310,39 +233,6 @@ public class TreeTaskerControllerDAO
 		}
 
 		taskDB.close();
-	}
-
-	public void saveUserSession(
-		Context appContext,
-		UserSession userSession ) {
-		File cacheFile = new File( appContext.getCacheDir(), CACHE_FILENAME );
-
-		if ( userSession == null )
-		{
-			if ( cacheFile.exists() )
-			{
-				cacheFile.delete();
-			}
-		}
-		else
-		{
-			try
-			{
-				FileOutputStream fos = new FileOutputStream( cacheFile );
-				String userSessionJson = GSON_SERIALIZER.toJson( userSession );
-
-				fos.write( userSessionJson.getBytes() );
-				fos.close();
-			}
-			catch ( FileNotFoundException e )
-			{
-				e.printStackTrace();
-			}
-			catch ( IOException e )
-			{
-				e.printStackTrace();
-			}
-		}
 	}
 
 	public void setDeletedTasksList(
@@ -481,36 +371,10 @@ public class TreeTaskerControllerDAO
 	}
 
 	private void init() {
-		userSession = null;
 		copiedTask = null;
 		deletedTasksList = new ArrayList<WS_Task>();
 		treeManager = new InMemoryTreeStateManager<TT_Task>();
 		treeController = null;
-	}
-
-	private void loadUserSession(
-		Context appContext ) {
-		File cacheFile = new File( appContext.getCacheDir(), CACHE_FILENAME );
-
-		if ( cacheFile.exists() )
-		{
-			try
-			{
-				InputStreamReader isr = new InputStreamReader( new FileInputStream( cacheFile ) );
-				userSession = GSON_SERIALIZER.fromJson( isr, UserSession.class );
-				isr.close();
-			}
-			catch ( FileNotFoundException e )
-			{
-				userSession = null;
-				e.printStackTrace();
-			}
-			catch ( IOException e )
-			{
-				userSession = null;
-				e.printStackTrace();
-			}
-		}
 	}
 
 	private void saveTaskToDB(
@@ -535,14 +399,7 @@ public class TreeTaskerControllerDAO
 		Context appContext ) {
 		File cacheFile = new File( appContext.getCacheDir(), CACHE_FILENAME );
 
-		if ( userSession == null )
-		{
-			if ( cacheFile.exists() )
-			{
-				cacheFile.delete();
-			}
-		}
-		else
+		if ( userSession != null )
 		{
 			try
 			{
