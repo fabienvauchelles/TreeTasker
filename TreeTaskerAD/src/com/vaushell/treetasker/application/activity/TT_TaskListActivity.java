@@ -53,6 +53,16 @@ public class TT_TaskListActivity
 	private final static int	EDITION_REQUEST				= 2;
 
 	@Override
+	public void onAttachedToWindow() {
+		super.onAttachedToWindow();
+		// Ouvre le menu si pas de tâches
+		if ( TreeTaskerControllerDAO.getInstance().getRootTasksList().isEmpty() )
+		{
+			openOptionsMenu();
+		}
+	}
+
+	@Override
 	public boolean onContextItemSelected(
 		MenuItem item ) {
 		switch ( item.getItemId() )
@@ -211,7 +221,6 @@ public class TT_TaskListActivity
 		if ( savedInstanceState != null && savedInstanceState.containsKey( USERNAME )
 			&& savedInstanceState.containsKey( SESSIONID ) )
 		{
-
 			TreeTaskerControllerDAO.getInstance().setUserSession(
 				new UserSession( savedInstanceState.getString( USERNAME ), savedInstanceState.getString( SESSIONID ) ) );
 		}
