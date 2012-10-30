@@ -216,7 +216,7 @@ public class TreeTaskerControllerDAO
 	public void load(
 		Context applicationContext ) {
 		loadUserSession( applicationContext );
-		treeController = new OrderedTaskTreeController( userSession.getUserName() );
+		treeController = new OrderedTaskTreeController( new TT_UserTaskContainer() );
 
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
 		TaskDB taskDB = new TaskDB( applicationContext );
