@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/tree-tasker-model.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/vaadin-6.8.3.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/vaadin-confirmdialog-1.2.1.jar"/>
@@ -10,8 +9,8 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-json-1.12.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-server-1.12.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-servlet-1.12.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/XmlDirtyParser"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/commons-lang-2.6.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/xml-dirty-parser.jar"/>
+	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>
