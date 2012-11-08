@@ -19,7 +19,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -51,6 +53,7 @@ public class TT_TaskListActivity
 	private final static int	ROOT_TASK_CREATION_REQUEST	= 1;
 
 	private final static int	EDITION_REQUEST				= 2;
+	private final static int	PREFERENCE_EDITION			= 5;
 
 	@Override
 	public void onAttachedToWindow() {
@@ -76,6 +79,18 @@ public class TT_TaskListActivity
 				createBundle.putSerializable( "task", newTask );
 				createIntent.putExtras( createBundle );
 				startActivityForResult( createIntent, ROOT_TASK_CREATION_REQUEST );
+				return true;
+			}
+
+			case R.id.synchronizeTasks:
+			{
+				TreeTaskerControllerDAO.getInstance().synchronizeWithDatastore(
+					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+				return true;
+			}
+			case R.id.preferences:
+			{
+				startActivityForResult( new Intent( this, TT_PreferenceActivity.class ), PREFERENCE_EDITION );
 				return true;
 			}
 
@@ -160,19 +175,24 @@ public class TT_TaskListActivity
 		Bundle savedInstanceState ) {
 		super.onCreate( savedInstanceState );
 
-		// Si l'utilisateur est déjà authentifié
-		if ( savedInstanceState != null && savedInstanceState.containsKey( USERNAME )
-			&& savedInstanceState.containsKey( SESSIONID ) )
+		prefs = PreferenceManager.getDefaultSharedPreferences( this );
 		{
-			TreeTaskerControllerDAO.getInstance().setUserSession(
-				new UserSession( savedInstanceState.getString( USERNAME ), savedInstanceState.getString( SESSIONID ) ) );
-			loadActivity();
+			if ( savedInstanceState != null && savedInstanceState.containsKey( USERNAME )
+				&& savedInstanceState.containsKey( SESSIONID ) )
+			{
+				TreeTaskerControllerDAO.getInstance()
+					.setUserSession(
+						new UserSession( savedInstanceState.getString( USERNAME ), savedInstanceState
+							.getString( SESSIONID ) ) );			loadActivity();
+
+			}
+			else
+			// Sinon on donne la main à l'activité de connexion
+			{
+				requestAuthentication();
+			}
 		}
-		else
-		// Sinon on donne la main à l'activité de connexion
-		{
-			requestAuthentication();
-		}
+
 	}
 
 	@Override
@@ -228,7 +248,13 @@ public class TT_TaskListActivity
 			}
 			case R.id.synchronizeTasks:
 			{
-				TreeTaskerControllerDAO.getInstance().synchronizeWithDatastore();
+				TreeTaskerControllerDAO.getInstance().synchronizeWithDatastore(
+					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+				return true;
+			}
+			case R.id.preferences:
+			{
+				startActivityForResult( new Intent( this, TT_PreferenceActivity.class ), PREFERENCE_EDITION );
 				return true;
 			}
 
@@ -288,7 +314,6 @@ public class TT_TaskListActivity
 	@Override
 	protected void onPause() {
 		super.onPause();
-
 		TreeTaskerControllerDAO.getInstance().save( getApplicationContext() );
 	}
 
@@ -378,4 +403,7 @@ public class TT_TaskListActivity
 	private View					currentView;
 
 	private AlertDialog.Builder		dialogBuilder;
+
+	private SharedPreferences		prefs;
+
 }

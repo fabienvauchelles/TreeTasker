@@ -46,23 +46,12 @@ public class TreeTaskerControllerDAO
 	}
 
 	// PUBLIC
-	public static final String				TEST_RESOURCE	= "http://lc-psamx-android:8888/";
-	public static final String				WEB_RESOURCE	= "https://vsh2-test.appspot.com/";
-
-	public static final String				RESOURCE		= TEST_RESOURCE;
+	public static final String	DEFAULT_WEB_RESOURCE	= "https://vsh2-test.appspot.com/";
 
 	// PRIVATE
-	private static final Gson				GSON_SERIALIZER	= new Gson();
+	private static final Gson	GSON_SERIALIZER	= new Gson();
 
-	private static final String				CACHE_FILENAME	= "user_cache.json";
-
-	private static final SimpleJsonClient	SYNCING_CLIENT1	= new SimpleJsonClient().resource(
-																TreeTaskerControllerDAO.RESOURCE ).path(
-																"resources/syncing1" );
-
-	private static final SimpleJsonClient	SYNCING_CLIENT2	= new SimpleJsonClient().resource(
-																TreeTaskerControllerDAO.RESOURCE ).path(
-																"resources/syncing2" );
+	private static final String	CACHE_FILENAME	= "user_cache.json";
 
 	public static TreeTaskerControllerDAO getInstance() {
 		return TreeTaskerControllerDAOHolder.INSTANCE;
@@ -116,12 +105,39 @@ public class TreeTaskerControllerDAO
 		task.setLastModificationDate( new Date() );
 	}
 
+	public SimpleJsonClient getCheckClient(
+		String endpointValue ) {
+
+		return new SimpleJsonClient().resource( endpointValue ).path( "resources/check" );
+	}
+
+	public SimpleJsonClient getConnectionClient(
+		String endpointValue ) {
+
+		return new SimpleJsonClient().resource( endpointValue ).path( "resources/login" );
+	}
+
 	public ArrayList<WS_Task> getDeletedTasksList() {
 		return deletedTasksList;
 	}
 
+	public SimpleJsonClient getRegisterClient(
+		String endpointValue ) {
+		return new SimpleJsonClient().resource( endpointValue ).path( "resources/register" );
+	}
+
 	public List<TT_Task> getRootTasksList() {
 		return treeController.getRootTasksList();
+	}
+
+	public SimpleJsonClient getSync1Client(
+		String endpointValue ) {
+		return new SimpleJsonClient().resource( endpointValue ).path( "resources/syncing1" );
+	}
+
+	public SimpleJsonClient getSync2Client(
+		String endpointValue ) {
+		return new SimpleJsonClient().resource( endpointValue ).path( "resources/syncing2" );
 	}
 
 	public TreeStateManager<TT_Task> getTreeManager() {
@@ -262,7 +278,8 @@ public class TreeTaskerControllerDAO
 		this.userSession = userSession;
 	}
 
-	public void synchronizeWithDatastore() {
+	public void synchronizeWithDatastore(
+		String endPointValue ) {
 		SyncingStartRequest request = new SyncingStartRequest( userSession, TT_UserTaskContainer.DEFAULT_NAME );
 
 		HashMap<String, WS_Task> wsTasksMap = new HashMap<String, WS_Task>();
@@ -285,7 +302,7 @@ public class TreeTaskerControllerDAO
 
 		try
 		{
-			SyncingStartResponse response = SYNCING_CLIENT1.post( SyncingStartResponse.class, request );
+			SyncingStartResponse response = getSync1Client( endPointValue ).post( SyncingStartResponse.class, request );
 
 			// On vide l'arbre
 			treeManager.clear();
@@ -322,7 +339,8 @@ public class TreeTaskerControllerDAO
 					finalRequest.addUpToDateTask( wsTasksMap.get( needUpdateId ) );
 				}
 
-				SyncingFinalResponse finalResponse = SYNCING_CLIENT2.post( SyncingFinalResponse.class, finalRequest );
+				SyncingFinalResponse finalResponse = getSync2Client( endPointValue ).post( SyncingFinalResponse.class,
+					finalRequest );
 
 				for ( WS_Task wsTask : finalResponse.getUpToDateTasks() )
 				{
@@ -420,36 +438,10 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
-	// private Set<TT_Task> unrecursifyTasks(
-	// Collection<TT_Task> rootTasksList ) {
-	// HashSet<TT_Task> tasksSet = new HashSet<TT_Task>();
-	//
-	// for ( TT_Task rootTask : rootTasksList )
-	// {
-	// unrecursifyTasksRec( rootTask, tasksSet );
-	// }
-	//
-	// return tasksSet;
-	// }
-	//
-	// private void unrecursifyTasksRec(
-	// TT_Task task,
-	// HashSet<TT_Task> tasksSet ) {
-	// tasksSet.add( task );
-	//
-	// for ( TT_Task childTask : task.getChildrenTask() )
-	// {
-	// unrecursifyTasksRec( childTask, tasksSet );
-	// }
-	// }
-
 	private UserSession					userSession;
-
 	private TreeStateManager<TT_Task>	treeManager;
-
 	private TT_Task						copiedTask;
-
 	private ArrayList<WS_Task>			deletedTasksList;
-
 	private OrderedTaskTreeController	treeController;
+
 }

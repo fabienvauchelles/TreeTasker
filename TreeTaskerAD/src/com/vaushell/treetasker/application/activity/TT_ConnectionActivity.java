@@ -15,8 +15,11 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.text.InputType;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
@@ -24,7 +27,6 @@ import android.widget.TextView;
 
 import com.vaushell.treetasker.R;
 import com.vaushell.treetasker.client.E_BadResponseStatus;
-import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
 import com.vaushell.treetasker.net.UserAuthenticationRequest;
 import com.vaushell.treetasker.net.UserSession;
@@ -46,9 +48,12 @@ public class TT_ConnectionActivity
 			UserSession session = new UserSession();
 			try
 			{
-				session = CHECK_CLIENT
-					.post( UserSession.class, new UserSessionCheckRequest( paramSession[ 0 ].getUserSessionID(),
-						paramSession[ 0 ].getUserName() ) );
+				session = DAO.getCheckClient(
+					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) )
+					.post(
+						UserSession.class,
+						new UserSessionCheckRequest( paramSession[ 0 ].getUserSessionID(), paramSession[ 0 ]
+							.getUserName() ) );
 			}
 			catch ( ClientProtocolException e )
 			{
@@ -92,7 +97,9 @@ public class TT_ConnectionActivity
 			UserSession session = new UserSession();
 			try
 			{
-				session = CONNECTION_CLIENT.post( UserSession.class, paramRequest[ 0 ] );
+				session = DAO.getConnectionClient(
+					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) )
+					.post( UserSession.class, paramRequest[ 0 ] );
 			}
 			catch ( ClientProtocolException e )
 			{
@@ -128,13 +135,6 @@ public class TT_ConnectionActivity
 
 	// PRIVATE
 	private static final int						SERVER_KO_DIALOG	= 100;
-	private static final SimpleJsonClient			CONNECTION_CLIENT	= new SimpleJsonClient().resource(
-																			TreeTaskerControllerDAO.RESOURCE ).path(
-																			"resources/login" );
-	private static final SimpleJsonClient			CHECK_CLIENT		= new SimpleJsonClient().resource(
-																			TreeTaskerControllerDAO.RESOURCE ).path(
-																			"resources/check" );
-
 	private static final TreeTaskerControllerDAO	DAO					= TreeTaskerControllerDAO.getInstance();
 
 	/** Called when the activity is first created. */
@@ -143,6 +143,40 @@ public class TT_ConnectionActivity
 		Bundle savedInstanceState ) {
 		super.onCreate( savedInstanceState );
 		setResult( RESULT_CANCELED );
+
+		final SharedPreferences appPrefs = getPreferences( MODE_PRIVATE );
+		prefs = PreferenceManager.getDefaultSharedPreferences( this );
+
+		// Si premier lancement
+		if ( appPrefs.getBoolean( "firstrun", true ) )
+		{
+			// Ouverture de dialog pour renseignement de l'adresse du serveur
+			AlertDialog.Builder webServerAlert = new AlertDialog.Builder( this );
+			webServerAlert.setTitle( R.string.endpoint_caption );
+			webServerAlert.setMessage( getString( R.string.endpoint_summary ) );
+
+			// Input view
+			final EditText input = new EditText( this );
+			input.setInputType( InputType.TYPE_TEXT_VARIATION_URI );
+			input.setText( prefs.getString( getString( R.string.endpoint ),
+				TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+			webServerAlert.setView( input );
+
+			webServerAlert.setPositiveButton( R.string.ok, new DialogInterface.OnClickListener()
+			{
+
+				@Override
+				public void onClick(
+					DialogInterface dialog,
+					int which ) {
+					prefs.edit().putString( getString( R.string.endpoint ), input.getText().toString() ).commit();
+					appPrefs.edit().putBoolean( "firstrun", false ).commit();
+				}
+			} );
+
+			AlertDialog alert = webServerAlert.create();
+			alert.show();
+		}
 
 		checkCurrentSessionFromServer( DAO.loadUserSessionFromCache( getApplicationContext() ) );
 	}
@@ -319,4 +353,6 @@ public class TT_ConnectionActivity
 			connect( username, password );
 		}
 	}
+
+	private SharedPreferences	prefs;
 }

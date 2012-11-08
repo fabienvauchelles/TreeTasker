@@ -33,6 +33,8 @@
         </activity>
         <activity android:name=".application.activity.TT_EditTaskActivity" >
         </activity>
+        <activity android:name=".application.activity.TT_PreferenceActivity" >
+        </activity>
     </application>
 
 </manifest>

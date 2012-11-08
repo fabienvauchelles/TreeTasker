@@ -40,5 +40,12 @@
     <string name="wait_session_check">Vérification de session…</string>
     <string name="wait_connection">Connexion…</string>
     <string name="wait_synchronization">Synchronisation…</string>
+    <string name="endpoint">tt_endpoint</string>
+    <string name="endpoint_caption">Adresse du serveur</string>
+    <string name="endpoint_summary">Entrez le endpoint du webservice</string>
+    <string name="synctime">sync_time</string>
+    <string name="synctime_caption">Intervalle de synchronisation</string>
+    <string name="synctime_summary">Délai de synchronisation automatique de la liste des tâches en minutes</string>
+    <string name="preferences">Préférences</string>
 
 </resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <EditTextPreference android:summary="@string/endpoint_summary" android:key="@string/endpoint" android:title="@string/endpoint_caption" android:inputType="textUri" android:defaultValue="https://vsh2-test.appspot.com/"/>
+    <EditTextPreference android:summary="@string/synctime_summary" android:key="@string/synctime" android:title="@string/synctime_caption" android:defaultValue="10" android:inputType="number"/>
+</PreferenceScreen>
