@@ -7,7 +7,7 @@
  ******************************************************************************/
 package com.vaushell.treetasker.application.activity;
 
-import org.apache.http.client.ClientProtocolException;
+import java.io.IOException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -129,7 +129,7 @@ public class TT_RegisterActivity
 				showDialog( REGISTER_KO_DIALOG );
 			}
 		}
-		catch ( ClientProtocolException e )
+		catch ( IOException e )
 		{
 			showDialog( SERVER_KO_DIALOG );
 		}

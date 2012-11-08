@@ -19,6 +19,8 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -29,6 +31,12 @@ import com.vaushell.treetasker.tools.TT_Tools;
 
 public class SimpleJsonClient
 {
+	// PROTECTED
+	// PRIVATE
+	private static final int	TIMEOUT_CONNECTION	= 10000;	// en ms
+
+	private static final int	TIMEOUT_SOCKET		= 10000;	// en ms
+
 	// PUBLIC
 	public SimpleJsonClient()
 	{
@@ -37,14 +45,14 @@ public class SimpleJsonClient
 
 	public SimpleJsonClient path(
 		String path ) {
-		this.path = path;
+		this.path = '/' + path;
 		return this;
 	}
 
 	public <T> T post(
 		Class<T> responseClass,
 		Object objectToSend )
-		throws ClientProtocolException, E_BadResponseStatus {
+		throws IOException, E_BadResponseStatus {
 		HttpPost request = new HttpPost( cleanURI( TT_Tools.convertNullStringToEmpty( resource )
 			+ TT_Tools.convertNullStringToEmpty( path ) ) );
 
@@ -71,11 +79,11 @@ public class SimpleJsonClient
 		}
 		catch ( ClientProtocolException e )
 		{
-			throw e;
+			throw new RuntimeException( e );
 		}
 		catch ( IOException e )
 		{
-			throw new RuntimeException( e );
+			throw e;
 		}
 
 		StatusLine statusLine = response.getStatusLine();
@@ -152,10 +160,13 @@ public class SimpleJsonClient
 	private void init() {
 		resource = null;
 		path = null;
+
+		HttpParams httpParameters = client.getParams();
+		HttpConnectionParams.setConnectionTimeout( httpParameters, TIMEOUT_CONNECTION );
+		HttpConnectionParams.setSoTimeout( httpParameters, TIMEOUT_SOCKET );
+		client.setParams( httpParameters );
 	}
 
-	// PROTECTED
-	// PRIVATE
 	private final Gson				gson	= new GsonBuilder().registerTypeHierarchyAdapter( Date.class,
 												new GsonDateAdapter() ).create();
 	private final DefaultHttpClient	client	= new DefaultHttpClient();

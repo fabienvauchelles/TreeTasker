@@ -19,8 +19,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.http.client.ClientProtocolException;
-
 import pl.polidea.treeview.InMemoryTreeStateManager;
 import pl.polidea.treeview.TreeBuilder;
 import pl.polidea.treeview.TreeStateManager;
@@ -367,7 +365,7 @@ public class TreeTaskerControllerDAO
 				}
 			}
 		}
-		catch ( ClientProtocolException e )
+		catch ( IOException e )
 		{
 			return;
 		}

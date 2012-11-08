@@ -7,7 +7,7 @@
  ******************************************************************************/
 package com.vaushell.treetasker.application.activity;
 
-import org.apache.http.client.ClientProtocolException;
+import java.io.IOException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -55,7 +55,7 @@ public class TT_ConnectionActivity
 						new UserSessionCheckRequest( paramSession[ 0 ].getUserSessionID(), paramSession[ 0 ]
 							.getUserName() ) );
 			}
-			catch ( ClientProtocolException e )
+			catch ( IOException e )
 			{
 				e.printStackTrace();
 			}
@@ -101,7 +101,7 @@ public class TT_ConnectionActivity
 					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) )
 					.post( UserSession.class, paramRequest[ 0 ] );
 			}
-			catch ( ClientProtocolException e )
+			catch ( IOException e )
 			{
 				e.printStackTrace();
 			}

@@ -10,6 +10,7 @@ package com.vaushell.treetasker.application.actionbar;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -414,7 +415,14 @@ public class TTWActionBar
 			@Override
 			public void uploadSucceeded(
 				SucceededEvent event ) {
-				controller.importFromTaskCoach( new ByteArrayInputStream( os.toByteArray() ) );
+				try
+				{
+					controller.importFromTaskCoach( new ByteArrayInputStream( os.toString( "utf-8" ).getBytes() ) );
+				}
+				catch ( UnsupportedEncodingException e )
+				{
+					e.printStackTrace();
+				}
 			}
 		} );
 	}
