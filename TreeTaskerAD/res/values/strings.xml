@@ -47,5 +47,6 @@
     <string name="synctime_caption">Intervalle de synchronisation</string>
     <string name="synctime_summary">Délai de synchronisation automatique de la liste des tâches en minutes</string>
     <string name="preferences">Préférences</string>
+    <string name="toast_connected">Connecté !</string>
 
 </resources>

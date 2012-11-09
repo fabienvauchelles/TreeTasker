@@ -321,8 +321,8 @@ public class TTWActionBar
 				ClickEvent event ) {
 				// Popup confirmation
 				ConfirmDialog.show( controller.getApplication().getMainWindow(), "Confirmation",
-					"Êtes-vous sûr de vouloir définitivement les tâches sélectionnés ?", "Supprimer", "Annuler",
-					new ConfirmDialog.Listener()
+					"Êtes-vous sûr de vouloir supprimer définitivement les tâches sélectionnés ?", "Supprimer",
+					"Annuler", new ConfirmDialog.Listener()
 					{
 
 						/**

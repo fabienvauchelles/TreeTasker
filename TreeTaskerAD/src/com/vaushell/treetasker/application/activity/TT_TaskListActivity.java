@@ -32,6 +32,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.vaushell.treetasker.R;
 import com.vaushell.treetasker.model.TT_Task;
@@ -84,8 +85,20 @@ public class TT_TaskListActivity
 
 			case R.id.synchronizeTasks:
 			{
-				TreeTaskerControllerDAO.getInstance().synchronizeWithDatastore(
-					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+				if ( TreeTaskerControllerDAO.getInstance().getUserSession() != null
+					&& TreeTaskerControllerDAO.getInstance().getUserSession().isValid() )
+				{
+					TreeTaskerControllerDAO.getInstance()
+						.synchronizeWithDatastore(
+							prefs.getString( getString( R.string.endpoint ),
+								TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+				}
+				else
+				// Sinon on donne la main à l'activité de connexion
+				{
+					requestAuthentication();
+				}
+
 				return true;
 			}
 			case R.id.preferences:
@@ -176,23 +189,8 @@ public class TT_TaskListActivity
 		super.onCreate( savedInstanceState );
 
 		prefs = PreferenceManager.getDefaultSharedPreferences( this );
-		{
-			if ( savedInstanceState != null && savedInstanceState.containsKey( USERNAME )
-				&& savedInstanceState.containsKey( SESSIONID ) )
-			{
-				TreeTaskerControllerDAO.getInstance()
-					.setUserSession(
-						new UserSession( savedInstanceState.getString( USERNAME ), savedInstanceState
-							.getString( SESSIONID ) ) );			loadActivity();
 
-			}
-			else
-			// Sinon on donne la main à l'activité de connexion
-			{
-				requestAuthentication();
-			}
-		}
-
+		loadActivity();
 	}
 
 	@Override
@@ -248,8 +246,20 @@ public class TT_TaskListActivity
 			}
 			case R.id.synchronizeTasks:
 			{
-				TreeTaskerControllerDAO.getInstance().synchronizeWithDatastore(
-					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+				if ( TreeTaskerControllerDAO.getInstance().getUserSession() != null
+					&& TreeTaskerControllerDAO.getInstance().getUserSession().isValid() )
+				{
+					TreeTaskerControllerDAO.getInstance()
+						.synchronizeWithDatastore(
+							prefs.getString( getString( R.string.endpoint ),
+								TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+				}
+				else
+				// Sinon on donne la main à l'activité de connexion
+				{
+					requestAuthentication();
+				}
+
 				return true;
 			}
 			case R.id.preferences:
@@ -273,13 +283,15 @@ public class TT_TaskListActivity
 			case CONNECTION_REQUEST:
 				if ( resultCode == Activity.RESULT_OK )
 				{
+					Toast.makeText( getApplicationContext(), R.string.toast_connected, Toast.LENGTH_SHORT ).show();
+
 					TreeTaskerControllerDAO.getInstance().setUserSession(
 						new UserSession( data.getStringExtra( USERNAME ), data.getStringExtra( SESSIONID ) ) );
-					loadActivity();
-				}
-				else
-				{
-					finish();
+
+					TreeTaskerControllerDAO.getInstance()
+						.synchronizeWithDatastore(
+							prefs.getString( getString( R.string.endpoint ),
+								TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
 				}
 				break;
 			case EDITION_REQUEST:

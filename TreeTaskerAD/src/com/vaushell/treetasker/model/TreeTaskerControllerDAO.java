@@ -47,9 +47,9 @@ public class TreeTaskerControllerDAO
 	public static final String	DEFAULT_WEB_RESOURCE	= "https://vsh2-test.appspot.com/";
 
 	// PRIVATE
-	private static final Gson	GSON_SERIALIZER	= new Gson();
+	private static final Gson	GSON_SERIALIZER			= new Gson();
 
-	private static final String	CACHE_FILENAME	= "user_cache.json";
+	private static final String	CACHE_FILENAME			= "user_cache.json";
 
 	public static TreeTaskerControllerDAO getInstance() {
 		return TreeTaskerControllerDAOHolder.INSTANCE;
@@ -148,7 +148,7 @@ public class TreeTaskerControllerDAO
 
 	public void load(
 		Context applicationContext ) {
-		treeController = new OrderedTaskTreeController( userSession.getUserName() );
+		treeController = new OrderedTaskTreeController( new TT_UserTaskContainer() );
 
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
 		TaskDB taskDB = new TaskDB( applicationContext );

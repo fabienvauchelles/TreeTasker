@@ -95,6 +95,7 @@ public class TT_ConnectionActivity
 		protected UserSession doInBackground(
 			UserAuthenticationRequest... paramRequest ) {
 			UserSession session = new UserSession();
+
 			try
 			{
 				session = DAO.getConnectionClient(
@@ -104,11 +105,14 @@ public class TT_ConnectionActivity
 			catch ( IOException e )
 			{
 				e.printStackTrace();
+				session.setSessionMessage( UserSession.MESSAGE_UNREACHABLE_SERVER );
 			}
 			catch ( E_BadResponseStatus e )
 			{
 				e.printStackTrace();
+				session.setSessionMessage( UserSession.MESSAGE_UNREACHABLE_SERVER );
 			}
+
 			return session;
 		}
 
@@ -134,8 +138,7 @@ public class TT_ConnectionActivity
 	}
 
 	// PRIVATE
-	private static final int						SERVER_KO_DIALOG	= 100;
-	private static final TreeTaskerControllerDAO	DAO					= TreeTaskerControllerDAO.getInstance();
+	private static final TreeTaskerControllerDAO	DAO	= TreeTaskerControllerDAO.getInstance();
 
 	/** Called when the activity is first created. */
 	@Override
@@ -226,7 +229,7 @@ public class TT_ConnectionActivity
 						}
 					} );
 				break;
-			case SERVER_KO_DIALOG:
+			case UserSession.MESSAGE_UNREACHABLE_SERVER:
 				dialogBuilder.setTitle( R.string.error ).setMessage( R.string.server_not_reachable )
 					.setNeutralButton( R.string.ok, new DialogInterface.OnClickListener()
 					{
@@ -301,7 +304,7 @@ public class TT_ConnectionActivity
 		UserSession userSession ) {
 		if ( userSession != null )
 		{
-			if ( userSession.getSessionState() == UserSession.SESSION_OK )
+			if ( userSession.isValid() )
 			{
 				Intent okIntent = new Intent();
 				okIntent.putExtra( TT_TaskListActivity.USERNAME, userSession.getUserName() );
