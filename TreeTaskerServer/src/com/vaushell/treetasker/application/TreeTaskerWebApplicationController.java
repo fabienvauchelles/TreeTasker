@@ -336,7 +336,9 @@ public class TreeTaskerWebApplicationController
 		parser.addAction( parseAction );
 		try
 		{
-			parser.parse( new InputSource( is ) );
+			InputSource src = new InputSource( is );
+			src.setEncoding( "utf-8" );
+			parser.parse( src );
 		}
 		catch ( FileNotFoundException e )
 		{
