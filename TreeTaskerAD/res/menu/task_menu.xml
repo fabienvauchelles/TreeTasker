@@ -11,6 +11,7 @@
     <item android:id="@+id/edit" android:title="@string/edit_task" android:titleCondensed="@string/edit" android:enabled="true" android:visible="true"></item>
     <item android:id="@+id/copy" android:title="@string/copy" android:titleCondensed="@string/copy" android:enabled="true" android:visible="true"></item>
     <item android:id="@+id/paste" android:title="@string/paste" android:titleCondensed="@string/paste" android:enabled="true" android:visible="true"></item>
-    <item android:id="@+id/delete" android:title="@string/delete" android:titleCondensed="@string/delete" android:enabled="true" android:visible="true"></item>
+    <item android:id="@+id/paste_rename" android:titleCondensed="@string/paste_rename" android:title="@string/paste_rename" android:visible="true" android:enabled="true"></item><item android:id="@+id/delete" android:title="@string/delete" android:titleCondensed="@string/delete" android:enabled="true" android:visible="true"></item>
+    
 
 </menu>

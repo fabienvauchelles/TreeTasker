@@ -48,5 +48,6 @@
     <string name="synctime_summary">Délai de synchronisation automatique de la liste des tâches en minutes</string>
     <string name="preferences">Préférences</string>
     <string name="toast_connected">Connecté !</string>
+    <string name="paste_rename">Coller et renommer</string>
 
 </resources>

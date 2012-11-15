@@ -211,7 +211,13 @@ public class TreeTaskerControllerDAO
 		return null;
 	}
 
-	public void pasteTask(
+	/**
+	 * 
+	 * @param destParentTask
+	 *            the copied task will be a subtask of destParentTask
+	 * @return the copied task
+	 */
+	public TT_Task pasteTask(
 		TT_Task destParentTask ) {
 		TT_Task childTask = copiedTask.getCopy();
 
@@ -220,6 +226,7 @@ public class TreeTaskerControllerDAO
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
 		treeBuilder.addRelation( destParentTask, childTask );
 		buildTreeRecursively( childTask, treeBuilder );
+		return childTask;
 	}
 
 	public void reset() {

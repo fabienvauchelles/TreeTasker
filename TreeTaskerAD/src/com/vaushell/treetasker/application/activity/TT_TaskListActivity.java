@@ -174,6 +174,19 @@ public class TT_TaskListActivity
 				}
 				return true;
 			}
+			case R.id.paste_rename:
+			{
+				if ( TreeTaskerControllerDAO.getInstance().canPaste() )
+				{
+					currentTask = TreeTaskerControllerDAO.getInstance().pasteTask( getCurrentTask() );
+					Intent editIntent = new Intent( this, TT_EditTaskActivity.class );
+					Bundle editBundle = new Bundle();
+					editBundle.putSerializable( "task", currentTask );
+					editIntent.putExtras( editBundle );
+					startActivityForResult( editIntent, EDITION_REQUEST );
+				}
+				return true;
+			}
 
 			default:
 			{
@@ -215,6 +228,7 @@ public class TT_TaskListActivity
 				if ( !TreeTaskerControllerDAO.getInstance().canPaste() )
 				{
 					menu.findItem( R.id.paste ).setEnabled( false );
+					menu.findItem( R.id.paste_rename ).setEnabled( false );
 				}
 			}
 		}
@@ -301,6 +315,7 @@ public class TT_TaskListActivity
 					TT_Task task = (TT_Task) data.getExtras().getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance().edit( getCurrentTask(), task.getTitle(),
 						task.getDescription() );
+					currentTask = null;
 				}
 				break;
 
@@ -335,11 +350,15 @@ public class TT_TaskListActivity
 		super.onResume();
 		if ( currentView != null )
 		{
-			( (TextView) currentView.findViewById( R.id.aLBLtaskNameValue ) ).setText( getCurrentTask().getTitle() );
+			TreeTaskerControllerDAO.getInstance().getTreeManager().refresh();
 		}
 	}
 
 	private TT_Task getCurrentTask() {
+		if ( currentTask != null )
+		{
+			return currentTask;
+		}
 		return view2taskMap.get( currentView );
 	}
 
@@ -413,6 +432,8 @@ public class TT_TaskListActivity
 	private HashMap<View, TT_Task>	view2taskMap;
 
 	private View					currentView;
+
+	private TT_Task					currentTask;
 
 	private AlertDialog.Builder		dialogBuilder;
 
