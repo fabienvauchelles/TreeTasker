@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Set;
 
 import com.vaadin.data.Property;
@@ -335,10 +336,12 @@ public class TTWtree
 	 * @param node
 	 */
 	public void addNode(
-		A_NavigationNode node ) {
+		TaskNode node ) {
 		navigationTree.addItem( node );
 		refreshNodeCaption( node );
-		refreshNodeIcon( (TaskNode) node );
+		refreshNodeIcon( node );
+
+		taskToNodeMap.put( node.getTask(), node );
 	}
 
 	/**
@@ -349,8 +352,8 @@ public class TTWtree
 	 * @param parentNode
 	 */
 	public void addNode(
-		A_NavigationNode childNode,
-		A_NavigationNode parentNode ) {
+		TaskNode childNode,
+		TaskNode parentNode ) {
 		addNode( childNode );
 		navigationTree.setParent( childNode, parentNode );
 	}
@@ -361,7 +364,7 @@ public class TTWtree
 	 * @param node
 	 */
 	public void expandNode(
-		A_NavigationNode node ) {
+		TaskNode node ) {
 		navigationTree.expandItem( node );
 	}
 
@@ -371,7 +374,7 @@ public class TTWtree
 	 * @param node
 	 */
 	public void expandNodeRecursively(
-		A_NavigationNode node ) {
+		TaskNode node ) {
 		navigationTree.expandItemsRecursively( node );
 	}
 
@@ -383,7 +386,7 @@ public class TTWtree
 	 */
 	@SuppressWarnings( "unchecked" )
 	public Collection<A_NavigationNode> getChildren(
-		A_NavigationNode node ) {
+		TaskNode node ) {
 		if ( node == null )
 		{
 			return (Collection<A_NavigationNode>) navigationTree.rootItemIds();
@@ -395,8 +398,19 @@ public class TTWtree
 	 * 
 	 * @return the node that is currently displaying its content.
 	 */
-	public A_NavigationNode getCurrentNode() {
+	public TaskNode getCurrentNode() {
 		return currentNode;
+	}
+
+	/**
+	 * 
+	 * @param task
+	 *            the task that you want the node for
+	 * @return the node corresponding to the task
+	 */
+	public TaskNode getNode(
+		TT_Task task ) {
+		return taskToNodeMap.get( task );
 	}
 
 	/**
@@ -405,16 +419,17 @@ public class TTWtree
 	 * @return the parent node of the specified node
 	 */
 	public A_NavigationNode getParent(
-		A_NavigationNode node ) {
-		return (A_NavigationNode) navigationTree.getParent( node );
+		TaskNode node ) {
+		return (TaskNode) navigationTree.getParent( node );
 	}
 
 	/**
 	 * 
 	 * @return a set of the selected nodes
 	 */
-	public Set<?> getValue() {
-		return (Set<?>) navigationTree.getValue();
+	@SuppressWarnings( "unchecked" )
+	public Set<TaskNode> getValue() {
+		return (Set<TaskNode>) navigationTree.getValue();
 	}
 
 	/**
@@ -425,9 +440,9 @@ public class TTWtree
 	 * @param siblingNode
 	 */
 	public void moveAfterSiblingNode(
-		A_NavigationNode node,
-		A_NavigationNode parentNode,
-		A_NavigationNode siblingNode ) {
+		TaskNode node,
+		TaskNode parentNode,
+		TaskNode siblingNode ) {
 		HierarchicalContainer container = (HierarchicalContainer) navigationTree.getContainerDataSource();
 		if ( container.setParent( node, parentNode ) )
 		{
@@ -441,7 +456,7 @@ public class TTWtree
 	 * @param node
 	 */
 	public void refreshNodeCaption(
-		A_NavigationNode node ) {
+		TaskNode node ) {
 		if ( navigationTree.containsId( node ) )
 		{
 			navigationTree.setItemCaption( node, node.getCaption() );
@@ -474,6 +489,7 @@ public class TTWtree
 	public void removeAllNodes() {
 		navigationTree.removeAllItems();
 		currentNode = null;
+		taskToNodeMap.clear();
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -482,14 +498,14 @@ public class TTWtree
 	 * @param node
 	 */
 	public void removeNodeRecursively(
-		A_NavigationNode node ) {
+		TaskNode node ) {
 		if ( node != null )
 		{
 			if ( navigationTree.hasChildren( node ) )
 			{
-				Collection<A_NavigationNode> childNodes = new ArrayList<A_NavigationNode>(
-					(Collection<A_NavigationNode>) navigationTree.getChildren( node ) );
-				for ( A_NavigationNode childNode : childNodes )
+				Collection<TaskNode> childNodes = new ArrayList<TaskNode>(
+					(Collection<TaskNode>) navigationTree.getChildren( node ) );
+				for ( TaskNode childNode : childNodes )
 				{
 					removeNodeRecursively( childNode );
 				}
@@ -504,7 +520,7 @@ public class TTWtree
 	 * @param node
 	 */
 	public void select(
-		A_NavigationNode node ) {
+		TaskNode node ) {
 		select( node, true );
 	}
 
@@ -516,7 +532,7 @@ public class TTWtree
 	 *            whether the selection triggers listeners or not.
 	 */
 	public void select(
-		A_NavigationNode node,
+		TaskNode node,
 		boolean triggerListeners ) {
 		if ( triggerListeners )
 		{
@@ -572,11 +588,11 @@ public class TTWtree
 			@Override
 			public void valueChange(
 				ValueChangeEvent event ) {
-				Set<A_NavigationNode> values = (Set<A_NavigationNode>) event.getProperty().getValue();
+				Set<TaskNode> values = (Set<TaskNode>) event.getProperty().getValue();
 
 				if ( values.size() == 1 )
 				{
-					A_NavigationNode node = values.iterator().next();
+					TaskNode node = values.iterator().next();
 
 					if ( node != currentNode )
 					{
@@ -609,7 +625,7 @@ public class TTWtree
 				ItemClickEvent event ) {
 				if ( event.getButton() == ClickEvent.BUTTON_RIGHT )
 				{
-					controller.validTask( (A_NavigationNode) event.getItemId() );
+					controller.validTask( (TaskNode) event.getItemId() );
 				}
 			}
 		} );
@@ -626,6 +642,8 @@ public class TTWtree
 		navigationTree.setMultiSelect( true );
 		currentNode = null;
 
+		taskToNodeMap = new HashMap<TT_Task, TaskNode>();
+
 		setSizeUndefined();
 		addComponent( navigationTree );
 
@@ -639,10 +657,11 @@ public class TTWtree
 	 * @param node
 	 */
 	private void removeNode(
-		A_NavigationNode node ) {
+		TaskNode node ) {
 		if ( navigationTree.containsId( node ) )
 		{
 			navigationTree.removeItem( node );
+			taskToNodeMap.remove( node.getTask() );
 		}
 	}
 
@@ -655,5 +674,7 @@ public class TTWtree
 	// PRIVATE
 	private Property.ValueChangeListener			changeListener;
 
-	private A_NavigationNode						currentNode;
+	private TaskNode								currentNode;
+
+	private HashMap<TT_Task, TaskNode>				taskToNodeMap;
 }

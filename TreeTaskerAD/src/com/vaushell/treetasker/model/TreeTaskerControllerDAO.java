@@ -86,12 +86,15 @@ public class TreeTaskerControllerDAO
 
 	public void deleteTask(
 		TT_Task task ) {
-		for ( TT_Task deletedTask : treeController.removeTask( task.getID() ) )
+		HashSet<TT_Task> modifiedTasks = new HashSet<TT_Task>();
+
+		for ( TT_Task deletedTask : treeController.removeTask( task.getID(), modifiedTasks ) )
 		{
 			deletedTasksList.add( new WS_Task( deletedTask ) );
 		}
 
 		treeManager.removeNodeRecursively( task );
+		// treeManager.refresh();
 	}
 
 	public void edit(
@@ -262,8 +265,18 @@ public class TreeTaskerControllerDAO
 	public void setStatus(
 		TT_Task task,
 		int status ) {
-		task.setStatus( status );
-		task.setLastModificationDate( new Date() );
+		if ( status == TT_Task.TODO )
+		{
+			treeController.unvalidateTask( task.getID() );
+		}
+		else
+		{
+			treeController.validateTask( task.getID() );
+		}
+
+		treeManager.refresh();
+		// task.setStatus( status );
+		// task.setLastModificationDate( new Date() );
 	}
 
 	public void setTreeManager(

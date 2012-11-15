@@ -35,7 +35,6 @@ import com.vaushell.treetasker.application.actionbar.TaskerCoachParserAction;
 import com.vaushell.treetasker.application.content.TTWcontent;
 import com.vaushell.treetasker.application.content.layout.LoginLayout;
 import com.vaushell.treetasker.application.header.TTWHeader;
-import com.vaushell.treetasker.application.tree.A_NavigationNode;
 import com.vaushell.treetasker.application.tree.TTWtree;
 import com.vaushell.treetasker.application.tree.TaskNode;
 import com.vaushell.treetasker.application.window.RegistrationWindow;
@@ -74,17 +73,23 @@ public class TreeTaskerWebApplicationController
 	 * Adds a subtask to the currentNode.
 	 */
 	public void addNewSubTask() {
-		TaskNode parentNode = (TaskNode) getTree().getCurrentNode();
+		TaskNode parentNode = getTree().getCurrentNode();
 		TT_Task newTask = new TT_Task( UUID.randomUUID().toString(), "Nouvelle tâche", null, new Date(), TT_Task.TODO );
 
 		if ( parentNode != null )
 		{
-			treeController.addTask( newTask, parentNode.getTask().getID() );
+			Set<TT_Task> modifiedTasks = treeController.addTask( newTask, parentNode.getTask().getID() );
+			sendTasks( modifiedTasks );
 
 			TaskNode newNode = new TaskNode( newTask, this );
 
 			getTree().addNode( newNode, parentNode );
 			getTree().expandNode( parentNode );
+
+			for ( TT_Task modifiedTask : modifiedTasks )
+			{
+				getTree().refreshNodeIcon( getTree().getNode( modifiedTask ) );
+			}
 		}
 		else
 		{
@@ -100,7 +105,7 @@ public class TreeTaskerWebApplicationController
 	 * selection.
 	 */
 	public void addNewTask() {
-		TaskNode siblingNode = (TaskNode) getTree().getCurrentNode();
+		TaskNode siblingNode = getTree().getCurrentNode();
 		TaskNode parentNode = null;
 
 		if ( siblingNode != null )
@@ -116,7 +121,15 @@ public class TreeTaskerWebApplicationController
 			getTree().addNode( newNode, parentNode );
 			getTree().moveAfterSiblingNode( newNode, parentNode, siblingNode );
 
-			treeController.addTask( newNode.getTask(), parentNode.getTask().getID(), siblingNode.getTask().getID() );
+			Set<TT_Task> modifiedTasks = treeController.addTask( newNode.getTask(), parentNode.getTask().getID(),
+				siblingNode.getTask().getID() );
+			sendTasks( modifiedTasks );
+
+			// Refreshing nodes visually
+			for ( TT_Task modifiedTask : modifiedTasks )
+			{
+				getTree().refreshNodeIcon( getTree().getNode( modifiedTask ) );
+			}
 
 			TT_Task nextTask = treeController.getNextTask( newNode.getTask().getID() );
 			if ( nextTask != null )
@@ -167,13 +180,12 @@ public class TreeTaskerWebApplicationController
 		}
 	}
 
-	@SuppressWarnings( "unchecked" )
 	/**
 	 * Copies all the selected tasks to the clipboard.
 	 */
 	public void copyTask() {
 		copiedTasks.clear();
-		for ( TaskNode taskNode : (Set<TaskNode>) getTree().getValue() )
+		for ( TaskNode taskNode : getTree().getValue() )
 		{
 			copiedTasks.add( taskNode.getTask().getCopy() );
 		}
@@ -185,7 +197,6 @@ public class TreeTaskerWebApplicationController
 		treeController.reinit( Collections.<WS_Task> emptyList() );
 	}
 
-	@SuppressWarnings( "unchecked" )
 	/**
 	 * Deletes all the selected tasks.
 	 */
@@ -194,14 +205,14 @@ public class TreeTaskerWebApplicationController
 		Set<TT_Task> tasksToDelete = new HashSet<TT_Task>();
 
 		HashSet<TT_Task> selectedTasks = new HashSet<TT_Task>();
-		for ( TaskNode taskNode : (Set<TaskNode>) getTree().getValue() )
+		for ( TaskNode taskNode : getTree().getValue() )
 		{
 			selectedTasks.add( taskNode.getTask() );
 		}
 
 		// Removing descendant node from selection
 		// And removing nodes from visual tree
-		for ( TaskNode taskNode : (Set<TaskNode>) getTree().getValue() )
+		for ( TaskNode taskNode : getTree().getValue() )
 		{
 			selectedTasks.removeAll( taskNode.getTask().retrieveAllDescendants() );
 			getTree().removeNodeRecursively( taskNode );
@@ -218,7 +229,7 @@ public class TreeTaskerWebApplicationController
 			}
 
 			// Removing all subtasks
-			tasksToDelete.addAll( treeController.removeTask( taskToDelete.getID() ) );
+			tasksToDelete.addAll( treeController.removeTask( taskToDelete.getID(), tasksToUpdate ) );
 		}
 
 		for ( TT_Task deletedTask : tasksToDelete )
@@ -228,6 +239,11 @@ public class TreeTaskerWebApplicationController
 		}
 
 		sendTasks( tasksToUpdate );
+
+		for ( TT_Task modifiedTask : tasksToUpdate )
+		{
+			getTree().refreshNodeIcon( getTree().getNode( modifiedTask ) );
+		}
 
 		getContent().setView( null );
 	}
@@ -412,7 +428,7 @@ public class TreeTaskerWebApplicationController
 			tasksToUpdate.add( currentNextTask );
 		}
 
-		treeController.moveTask( taskToMove.getID(), parentTaskId, previousTaskId );
+		tasksToUpdate.addAll( treeController.moveTask( taskToMove.getID(), parentTaskId, previousTaskId ) );
 
 		currentNextTask = treeController.getNextTask( taskToMove.getID() );
 		if ( currentNextTask != null )
@@ -423,6 +439,11 @@ public class TreeTaskerWebApplicationController
 		getTree().moveAfterSiblingNode( nodeToMove, parentNode, previousNode );
 
 		sendTasks( tasksToUpdate );
+
+		for ( TT_Task modifiedTask : tasksToUpdate )
+		{
+			getTree().refreshNodeIcon( getTree().getNode( modifiedTask ) );
+		}
 	}
 
 	/**
@@ -431,15 +452,21 @@ public class TreeTaskerWebApplicationController
 	 */
 	public void pasteTask() {
 		HashSet<TT_Task> tasksToSend = new HashSet<TT_Task>();
-		TaskNode parentNode = (TaskNode) getTree().getCurrentNode();
+		TaskNode parentNode = getTree().getCurrentNode();
 
 		if ( parentNode != null )
 		{
 			for ( TT_Task copiedTask : copiedTasks )
 			{
-				treeController.addTask( copiedTask, parentNode.getTask().getID() );
+				Set<TT_Task> modifiedTasks = treeController.addTask( copiedTask, parentNode.getTask().getID() );
+				tasksToSend.addAll( modifiedTasks );
 				tasksToSend.add( copiedTask );
 				tasksToSend.addAll( copiedTask.retrieveAllDescendants() );
+
+				for ( TT_Task modifiedTask : modifiedTasks )
+				{
+					getTree().refreshNodeIcon( getTree().getNode( modifiedTask ) );
+				}
 			}
 		}
 		else
@@ -577,22 +604,25 @@ public class TreeTaskerWebApplicationController
 		sendTask( task );
 	}
 
-	@SuppressWarnings( "unchecked" )
 	/**
-	 * Valid all the selected tasks if at most one is not validated. Unvalid all the selected tasks otherwise.
-	 * @param selectedNode the last node selected.
+	 * Valid all the selected tasks if at most one is not validated. Unvalid all
+	 * the selected tasks otherwise.
+	 * 
+	 * @param selectedNode
+	 *            the last node selected.
 	 */
 	public void validTask(
-		A_NavigationNode selectedNode ) {
+		TaskNode selectedNode ) {
 		if ( !getTree().getValue().contains( selectedNode ) )
 		{
 			getTree().unselectAll();
 			getTree().select( selectedNode );
 		}
-		int newStatus = TT_Task.TODO;
-		List<EH_WS_Task> tasksToUpdate = new ArrayList<EH_WS_Task>();
 
-		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
+		int newStatus = TT_Task.TODO;
+		Set<EH_WS_Task> tasksToUpdate = new HashSet<EH_WS_Task>();
+
+		for ( TaskNode node : getTree().getValue() )
 		{
 			TT_Task selectedTask = node.getTask();
 			if ( selectedTask.getStatus() == TT_Task.TODO )
@@ -600,18 +630,39 @@ public class TreeTaskerWebApplicationController
 				newStatus = TT_Task.DONE;
 			}
 		}
-		for ( TaskNode node : (Set<TaskNode>) getTree().getValue() )
+
+		if ( newStatus == TT_Task.TODO )
 		{
-			TT_Task selectedTask = node.getTask();
-			selectedTask.setLastModificationDate( new Date() );
-			selectedTask.setStatus( newStatus );
-			tasksToUpdate.add( new EH_WS_Task( new WS_Task( selectedTask ), getUserContainer() ) );
-			getTree().refreshNodeIcon( node );
+			for ( TaskNode node : getTree().getValue() )
+			{
+				for ( TT_Task modifiedTask : treeController.unvalidateTask( node.getTask().getID() ) )
+				{
+					tasksToUpdate.add( new EH_WS_Task( new WS_Task( modifiedTask ), getUserContainer() ) );
+					getTree().refreshNodeIcon( getTree().getNode( modifiedTask ) );
+				}
+
+				getTree().refreshNodeIcon( node );
+			}
 		}
+		else
+		{
+			for ( TaskNode node : getTree().getValue() )
+			{
+				for ( TT_Task modifiedTask : treeController.validateTask( node.getTask().getID() ) )
+				{
+					tasksToUpdate.add( new EH_WS_Task( new WS_Task( modifiedTask ), getUserContainer() ) );
+					getTree().refreshNodeIcon( getTree().getNode( modifiedTask ) );
+				}
+
+				getTree().refreshNodeIcon( node );
+			}
+		}
+
 		if ( getContent().getView() != null )
 		{
 			getContent().getView().refreshStyle();
 		}
+
 		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( tasksToUpdate );
 	}
 

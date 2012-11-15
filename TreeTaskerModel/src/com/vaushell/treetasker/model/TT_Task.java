@@ -150,6 +150,10 @@ public class TT_Task
 		return title;
 	}
 
+	public boolean hasChildren() {
+		return !childrenTask.isEmpty();
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -237,15 +241,6 @@ public class TT_Task
 	public void setStatus(
 		int status ) {
 		this.status = status;
-	}
-
-	public void setStatusRecursively(
-		int status ) {
-		this.status = status;
-		for ( TT_Task childTask : getChildrenTask() )
-		{
-			childTask.setStatusRecursively( status );
-		}
 	}
 
 	public void setTitle(

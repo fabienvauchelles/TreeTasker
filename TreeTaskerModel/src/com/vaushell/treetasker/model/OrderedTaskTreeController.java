@@ -6,7 +6,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.vaushell.treetasker.net.WS_Task;
@@ -49,21 +51,20 @@ public class OrderedTaskTreeController
 		addTask( task, null, previousId );
 	}
 
-	public void addTask(
+	public Set<TT_Task> addTask(
 		TT_Task task,
 		String parentId ) {
-		addTask( task, parentId, getSafeTaskId( getLastChildTask( parentId ) ) );
+		return addTask( task, parentId, getSafeTaskId( getLastChildTask( parentId ) ) );
 	}
 
-	public void addTask(
+	public Set<TT_Task> addTask(
 		TT_Task task,
 		String parentId,
 		String previousId ) {
 		// If task already exists in the tree, calling move
 		if ( taskExistsWarn( task.getID() ) )
 		{
-			moveTask( task.getID(), parentId, previousId );
-			return;
+			return moveTask( task.getID(), parentId, previousId );
 		}
 
 		// Checking whether parent task or previous task exist in tree.
@@ -123,6 +124,17 @@ public class OrderedTaskTreeController
 		task.setLastModificationDate( new Date( modificationDate.getTime() ) );
 
 		registerSubTree( task );
+
+		if ( task.getStatus() == TT_Task.TODO && parentTask != null )
+		{
+			HashSet<TT_Task> modifiedTasks = new HashSet<TT_Task>();
+			changeStatusAscendantly( parentTask, TT_Task.TODO, modificationDate, modifiedTasks );
+			return modifiedTasks;
+		}
+		else
+		{
+			return Collections.emptySet();
+		}
 	}
 
 	public TT_Task getNextTask(
@@ -165,7 +177,7 @@ public class OrderedTaskTreeController
 		return tasksMap;
 	}
 
-	public void moveTask(
+	public Set<TT_Task> moveTask(
 		String taskId,
 		String parentId,
 		String previousId ) {
@@ -199,6 +211,9 @@ public class OrderedTaskTreeController
 		}
 
 		oldParentList.remove( taskIndex );
+
+		HashSet<TT_Task> modifiedTasks = new HashSet<TT_Task>();
+		raiseStatusAscendantly( oldParentTask, modificationDate, modifiedTasks );
 
 		// ADDS
 		TT_Task newParentTask = tasksMap.get( parentId );
@@ -243,6 +258,13 @@ public class OrderedTaskTreeController
 		task.setParent( newParentTask );
 		task.setPreviousTask( newPreviousTask );
 		task.setLastModificationDate( new Date( modificationDate.getTime() ) );
+
+		if ( task.getStatus() == TT_Task.TODO && newParentTask != null )
+		{
+			changeStatusAscendantly( newParentTask, TT_Task.TODO, modificationDate, modifiedTasks );
+		}
+
+		return modifiedTasks;
 	}
 
 	public void reinit(
@@ -307,7 +329,8 @@ public class OrderedTaskTreeController
 	}
 
 	public List<TT_Task> removeTask(
-		String taskId ) {
+		String taskId,
+		Set<TT_Task> modifiedTasksSet ) {
 		checkTaskExistence( taskId );
 
 		TT_Task taskToRemove = tasksMap.get( taskId );
@@ -337,8 +360,15 @@ public class OrderedTaskTreeController
 
 		parentList.remove( taskIndex );
 
+		int oldStatus = taskToRemove.getStatus();
+
 		ArrayList<TT_Task> removedTasksList = new ArrayList<TT_Task>();
 		removeRecursively( taskToRemove, removedTasksList );
+
+		if ( oldStatus == TT_Task.TODO && parentTask != null )
+		{
+			raiseStatusAscendantly( parentTask, modificationDate, modifiedTasksSet );
+		}
 
 		return removedTasksList;
 	}
@@ -346,6 +376,71 @@ public class OrderedTaskTreeController
 	public void setRootContainer(
 		TT_UserTaskContainer rootContainer ) {
 		this.rootContainer = rootContainer;
+	}
+
+	public Set<TT_Task> unvalidateTask(
+		String taskId ) {
+		checkTaskExistence( taskId );
+
+		TT_Task task = tasksMap.get( taskId );
+
+		HashSet<TT_Task> modifiedTasks = new HashSet<TT_Task>();
+		Date modificationDate = new Date();
+
+		changeStatusAscendantly( task, TT_Task.TODO, modificationDate, modifiedTasks );
+
+		return modifiedTasks;
+	}
+
+	public Set<TT_Task> validateTask(
+		String taskId ) {
+		checkTaskExistence( taskId );
+
+		TT_Task task = tasksMap.get( taskId );
+
+		HashSet<TT_Task> modifiedTasks = new HashSet<TT_Task>();
+		Date modificationDate = new Date();
+
+		changeStatusRecursively( task, TT_Task.DONE, modificationDate, modifiedTasks );
+		raiseStatusAscendantly( task.getParent(), modificationDate, modifiedTasks );
+
+		return modifiedTasks;
+	}
+
+	private void changeStatusAscendantly(
+		TT_Task task,
+		int status,
+		Date modificationDate,
+		Set<TT_Task> modifiedTasksSet ) {
+		if ( task != null )
+		{
+			if ( status != task.getStatus() )
+			{
+				task.setStatus( status );
+				task.setLastModificationDate( new Date( modificationDate.getTime() ) );
+				modifiedTasksSet.add( task );
+			}
+
+			changeStatusAscendantly( task.getParent(), status, modificationDate, modifiedTasksSet );
+		}
+	}
+
+	private void changeStatusRecursively(
+		TT_Task task,
+		int status,
+		Date modificationDate,
+		Set<TT_Task> modifiedTasksSet ) {
+		if ( task.getStatus() != status )
+		{
+			task.setStatus( status );
+			task.setLastModificationDate( new Date( modificationDate.getTime() ) );
+			modifiedTasksSet.add( task );
+		}
+
+		for ( TT_Task childTask : task.getChildrenTask() )
+		{
+			changeStatusRecursively( childTask, status, modificationDate, modifiedTasksSet );
+		}
 	}
 
 	private void checkTaskExistence(
@@ -391,6 +486,34 @@ public class OrderedTaskTreeController
 
 	private void init() {
 		tasksMap = new HashMap<String, TT_Task>();
+	}
+
+	private void raiseStatusAscendantly(
+		TT_Task task,
+		Date modificationDate,
+		Set<TT_Task> modifiedTasksSet ) {
+		if ( task != null && task.hasChildren() && task.getStatus() != TT_Task.DONE )
+		{
+			int newStatus = TT_Task.DONE;
+
+			for ( TT_Task childTask : task.getChildrenTask() )
+			{
+				if ( childTask.getStatus() == TT_Task.TODO )
+				{
+					newStatus = TT_Task.TODO;
+					return;
+				}
+			}
+
+			if ( task.getStatus() != newStatus )
+			{
+				task.setStatus( newStatus );
+				task.setLastModificationDate( new Date( modificationDate.getTime() ) );
+				modifiedTasksSet.add( task );
+			}
+
+			raiseStatusAscendantly( task.getParent(), modificationDate, modifiedTasksSet );
+		}
 	}
 
 	private void registerSubTree(
