@@ -108,10 +108,10 @@ public class TTWActionBar
 
 		// vBTnewTask
 		vBTnewTask = new Button();
-		vBTnewTask.setCaption( "Nouvelle tâche" );
+		vBTnewTask.setCaption( "Insérer une tâche" );
 		vBTnewTask.setIcon( new ThemeResource( "icons/newTask.png" ) );
 		vBTnewTask.setImmediate( true );
-		vBTnewTask.setDescription( "Ajouter une tâche" );
+		vBTnewTask.setDescription( "Insérer une tâche" );
 		vBTnewTask.setWidth( "-1px" );
 		vBTnewTask.setHeight( "-1px" );
 		buttonsLayout.addComponent( vBTnewTask );
@@ -119,7 +119,7 @@ public class TTWActionBar
 
 		// vBTaddSubtask
 		vBTaddSubtask = new Button();
-		vBTaddSubtask.setCaption( "Nouvelle sous-tâche" );
+		vBTaddSubtask.setCaption( "Ajouter une sous-tâche" );
 		vBTaddSubtask.setIcon( new ThemeResource( "icons/newSubtask.png" ) );
 		vBTaddSubtask.setImmediate( true );
 		vBTaddSubtask.setDescription( "Ajouter une sous-tâche" );

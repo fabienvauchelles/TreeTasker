@@ -594,6 +594,7 @@ public class TTWtree
 					{
 						currentNode.onExit();
 					}
+					controller.getContent().setView( null );
 					currentNode = null;
 				}
 			}
