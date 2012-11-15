@@ -132,6 +132,8 @@ public class TT_TaskListActivity
 							TreeTaskerControllerDAO.getInstance().deleteTask( taskToRemove );
 							view2taskMap.remove( currentView );
 							currentView = null;
+
+							warn( R.string.toast_deleted );
 						}
 					} ).setNegativeButton( R.string.cancel, new DialogInterface.OnClickListener()
 					{
@@ -163,6 +165,9 @@ public class TT_TaskListActivity
 			case R.id.copy:
 			{
 				TreeTaskerControllerDAO.getInstance().copyTask( getCurrentTask() );
+
+				warn( R.string.toast_copied );
+
 				return true;
 			}
 
@@ -171,6 +176,8 @@ public class TT_TaskListActivity
 				if ( TreeTaskerControllerDAO.getInstance().canPaste() )
 				{
 					TreeTaskerControllerDAO.getInstance().pasteTask( getCurrentTask() );
+
+					warn( R.string.toast_pasted );
 				}
 				return true;
 			}
@@ -297,8 +304,6 @@ public class TT_TaskListActivity
 			case CONNECTION_REQUEST:
 				if ( resultCode == Activity.RESULT_OK )
 				{
-					Toast.makeText( getApplicationContext(), R.string.toast_connected, Toast.LENGTH_SHORT ).show();
-
 					TreeTaskerControllerDAO.getInstance().setUserSession(
 						new UserSession( data.getStringExtra( USERNAME ), data.getStringExtra( SESSIONID ) ) );
 
@@ -306,6 +311,8 @@ public class TT_TaskListActivity
 						.synchronizeWithDatastore(
 							prefs.getString( getString( R.string.endpoint ),
 								TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+
+					warn( R.string.toast_connected );
 				}
 				break;
 			case EDITION_REQUEST:
@@ -316,6 +323,8 @@ public class TT_TaskListActivity
 					TreeTaskerControllerDAO.getInstance().edit( getCurrentTask(), task.getTitle(),
 						task.getDescription() );
 					currentTask = null;
+
+					warn( R.string.toast_edited );
 				}
 				break;
 
@@ -324,6 +333,8 @@ public class TT_TaskListActivity
 				{
 					TT_Task newSubTask = (TT_Task) data.getExtras().getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance().addSubTask( getCurrentTask(), newSubTask );
+
+					warn( R.string.toast_added );
 				}
 				break;
 
@@ -332,8 +343,15 @@ public class TT_TaskListActivity
 				{
 					TT_Task newRootTask = (TT_Task) data.getExtras().getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance().addRootTask( newRootTask );
+
+					warn( R.string.toast_added );
 				}
 				break;
+			case PREFERENCE_EDITION:
+				if ( resultCode == Activity.RESULT_OK )
+				{
+					warn( R.string.toast_saved );
+				}
 			default:
 		}
 	}
@@ -427,6 +445,11 @@ public class TT_TaskListActivity
 	{
 		Intent intent = new Intent( this, TT_ConnectionActivity.class );
 		startActivityForResult( intent, CONNECTION_REQUEST );
+	}
+
+	private void warn(
+		int stringId ) {
+		Toast.makeText( getApplicationContext(), stringId, Toast.LENGTH_SHORT ).show();
 	}
 
 	private HashMap<View, TT_Task>	view2taskMap;
