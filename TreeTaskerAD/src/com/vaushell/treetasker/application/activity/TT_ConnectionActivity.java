@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.vaushell.treetasker.R;
 import com.vaushell.treetasker.client.E_BadResponseStatus;
@@ -314,7 +315,7 @@ public class TT_ConnectionActivity
 			}
 			else
 			{
-				showDialog( userSession.getSessionMessage() );
+				warn( R.string.not_authenticated );
 			}
 		}
 	}
@@ -349,12 +350,17 @@ public class TT_ConnectionActivity
 
 		if ( username.length() == 0 || password.length() == 0 )
 		{
-			showDialog( UserSession.MESSAGE_BAD_AUTHENTICATION );
+			warn( R.string.not_authenticated );
 		}
 		else
 		{
 			connect( username, password );
 		}
+	}
+
+	private void warn(
+		int stringId ) {
+		Toast.makeText( getApplicationContext(), stringId, Toast.LENGTH_SHORT ).show();
 	}
 
 	private SharedPreferences	prefs;
