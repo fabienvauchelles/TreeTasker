@@ -175,8 +175,9 @@ public class TT_TaskListActivity
 			{
 				if ( TreeTaskerControllerDAO.getInstance().canPaste() )
 				{
-					TreeTaskerControllerDAO.getInstance().pasteTask( getCurrentTask() );
+					TT_Task pastedTask = TreeTaskerControllerDAO.getInstance().pasteTask( getCurrentTask() );
 
+					scrollTo( pastedTask );
 					warn( R.string.toast_pasted );
 				}
 				return true;
@@ -322,7 +323,6 @@ public class TT_TaskListActivity
 					TT_Task task = (TT_Task) data.getExtras().getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance().edit( getCurrentTask(), task.getTitle(),
 						task.getDescription() );
-					currentTask = null;
 
 					warn( R.string.toast_edited );
 				}
@@ -333,7 +333,7 @@ public class TT_TaskListActivity
 				{
 					TT_Task newSubTask = (TT_Task) data.getExtras().getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance().addSubTask( getCurrentTask(), newSubTask );
-
+					currentTask = newSubTask;
 					warn( R.string.toast_added );
 				}
 				break;
@@ -343,7 +343,7 @@ public class TT_TaskListActivity
 				{
 					TT_Task newRootTask = (TT_Task) data.getExtras().getSerializable( "task" );
 					TreeTaskerControllerDAO.getInstance().addRootTask( newRootTask );
-
+					currentTask = newRootTask;
 					warn( R.string.toast_added );
 				}
 				break;
@@ -366,9 +366,11 @@ public class TT_TaskListActivity
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if ( currentView != null )
+		if ( getCurrentTask() != null )
 		{
 			TreeTaskerControllerDAO.getInstance().getTreeManager().refresh();
+			scrollTo( getCurrentTask() );
+			currentTask = null;
 		}
 	}
 
@@ -377,7 +379,11 @@ public class TT_TaskListActivity
 		{
 			return currentTask;
 		}
-		return view2taskMap.get( currentView );
+		else if ( currentView != null )
+		{
+			return view2taskMap.get( currentView );
+		}
+		return null;
 	}
 
 	private void loadActivity() {
@@ -450,6 +456,34 @@ public class TT_TaskListActivity
 	private void warn(
 		int stringId ) {
 		Toast.makeText( getApplicationContext(), stringId, Toast.LENGTH_SHORT ).show();
+		}
+		
+	@SuppressWarnings( "unchecked" )
+	private void scrollTo(
+		TT_Task task ) {
+		if ( TreeTaskerControllerDAO.getInstance().getTreeManager().isInTree( task ) )
+		{
+			final TreeViewList treeView = (TreeViewList) findViewById( R.id.treeView );
+			AbstractTreeViewAdapter<TT_Task> adapter = (AbstractTreeViewAdapter<TT_Task>) treeView.getAdapter();
+			// Get task position
+			int position = 0;
+			while ( position < adapter.getCount() && !adapter.getTreeId( position ).equals( task ) )
+			{
+				position++;
+			}
+			final int pos = position;
+			// Dirty, but highlight does not seem to work without delay..
+			treeView.post( new Runnable()
+			{
+				@Override
+				public void run() {
+					treeView.requestFocusFromTouch();
+					treeView.setSelection( pos );
+
+				}
+			} );
+		}
+
 	}
 
 	private HashMap<View, TT_Task>	view2taskMap;
