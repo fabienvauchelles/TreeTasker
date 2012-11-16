@@ -49,6 +49,8 @@
     <string name="preferences">Préférences</string>
     <string name="toast_connected">Connecté !</string>
     <string name="paste_rename">Coller et renommer</string>
+    <color name="doneTextColor">#009A00</color>
+    <color name="todoTextColor">#000000</color>
     <string name="toast_edited">Édition : ok !</string>
     <string name="toast_pasted">Collage : ok !</string>
     <string name="toast_synchronized">Synchronisation : ok !</string>

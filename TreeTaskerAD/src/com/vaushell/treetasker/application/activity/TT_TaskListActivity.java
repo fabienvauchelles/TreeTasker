@@ -413,10 +413,22 @@ public class TT_TaskListActivity
 			public View updateView(
 				View view,
 				final TreeNodeInfo<TT_Task> treeNodeInfo ) {
-				( (TextView) view.findViewById( R.id.aLBLtaskNameValue ) ).setText( treeNodeInfo.getId().getTitle() );
+				TextView tv = (TextView) view.findViewById( R.id.aLBLtaskNameValue );
+				tv.setText( treeNodeInfo.getId().getTitle() );
 				final CheckBox cbView = (CheckBox) view.findViewById( R.id.aCBtaskDoneValue );
 				cbView.setOnCheckedChangeListener( null );
 				cbView.setChecked( treeNodeInfo.getId().getStatus() == TT_Task.DONE );
+
+				if ( cbView.isChecked() )
+				{
+					// Texte vert
+					tv.setTextColor( getResources().getColor( R.color.doneTextColor ) );
+				}
+				else
+				{
+					tv.setTextColor( getResources().getColor( R.color.todoTextColor ) );
+				}
+
 				cbView.setOnCheckedChangeListener( new CheckBox.OnCheckedChangeListener()
 				{
 					@Override
@@ -453,11 +465,6 @@ public class TT_TaskListActivity
 		startActivityForResult( intent, CONNECTION_REQUEST );
 	}
 
-	private void warn(
-		int stringId ) {
-		Toast.makeText( getApplicationContext(), stringId, Toast.LENGTH_SHORT ).show();
-		}
-		
 	@SuppressWarnings( "unchecked" )
 	private void scrollTo(
 		TT_Task task ) {
@@ -472,7 +479,7 @@ public class TT_TaskListActivity
 				position++;
 			}
 			final int pos = position;
-			// Dirty, but highlight does not seem to work without delay..
+
 			treeView.post( new Runnable()
 			{
 				@Override
@@ -484,6 +491,11 @@ public class TT_TaskListActivity
 			} );
 		}
 
+	}
+
+	private void warn(
+		int stringId ) {
+		Toast.makeText( getApplicationContext(), stringId, Toast.LENGTH_SHORT ).show();
 	}
 
 	private HashMap<View, TT_Task>	view2taskMap;
