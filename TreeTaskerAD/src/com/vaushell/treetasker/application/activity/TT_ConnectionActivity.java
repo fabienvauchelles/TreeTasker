@@ -20,10 +20,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.InputType;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
 import com.vaushell.treetasker.R;
@@ -285,6 +288,11 @@ public class TT_ConnectionActivity
 		initListeners();
 	}
 
+	private void eraseAll() {
+		( (TextView) findViewById( R.id.aTXTloginValue ) ).setText( "" );
+		( (TextView) findViewById( R.id.aTXTpasswordValue ) ).setText( "" );
+	}
+
 	private void finishCheck(
 		UserSession userSession ) {
 		if ( userSession != null && userSession.getSessionState() == UserSession.SESSION_OK )
@@ -315,18 +323,51 @@ public class TT_ConnectionActivity
 			}
 			else
 			{
-				warn( R.string.not_authenticated );
+				if ( userSession.getSessionMessage() == UserSession.MESSAGE_BAD_AUTHENTICATION )
+				{
+					warn( R.string.not_authenticated );
+				}
+				else
+				{
+					showDialog( userSession.getSessionMessage() );
+				}
 			}
 		}
 	}
 
 	private void initListeners() {
+		( (TextView) findViewById( R.id.aTXTpasswordValue ) ).setOnEditorActionListener( new OnEditorActionListener()
+		{
+			@Override
+			public boolean onEditorAction(
+				TextView v,
+				int actionId,
+				KeyEvent event ) {
+				if ( actionId != EditorInfo.IME_ACTION_DONE && actionId != EditorInfo.IME_ACTION_NEXT )
+				{
+					return false;
+				}
+
+				login();
+				return true;
+			}
+		} );
+
 		findViewById( R.id.aBTconnect ).setOnClickListener( new OnClickListener()
 		{
 			@Override
 			public void onClick(
 				View v ) {
 				login();
+			}
+		} );
+		findViewById( R.id.aBTerase ).setOnClickListener( new OnClickListener()
+		{
+			@Override
+			public void onClick(
+				View v ) {
+				eraseAll();
+				findViewById( R.id.aTXTloginValue ).requestFocus();
 			}
 		} );
 		findViewById( R.id.aBTregister ).setOnClickListener( new OnClickListener()

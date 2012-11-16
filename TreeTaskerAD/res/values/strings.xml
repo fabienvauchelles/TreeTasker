@@ -59,5 +59,11 @@
     <string name="toast_saved">Sauvegarde : ok !</string>
     <string name="toast_added">Ajout : ok !</string>
     <string name="toast_moved">Déplacement : ok !</string>
+    <string name="erase">Effacer</string>
+    <string name="image_desc_connect">Connection button.</string>
+    <string name="image_desc_erase">Erase all fields.</string>
+    <string name="image_desc_register">Register account.</string>
+    <string name="confirm_password">Confirmation</string>
+    <string name="password_not_confirmed_properly">Le mot de passe a été mal saisi.</string>
 
 </resources>

@@ -17,9 +17,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
+import android.widget.Toast;
 
 import com.vaushell.treetasker.R;
 import com.vaushell.treetasker.client.E_BadResponseStatus;
@@ -140,7 +144,42 @@ public class TT_RegisterActivity
 		}
 	}
 
+	private void eraseAll() {
+		( (TextView) findViewById( R.id.aTXTregisterMailValue ) ).setText( "" );
+		( (TextView) findViewById( R.id.aTXTregisterPasswordValue ) ).setText( "" );
+		( (TextView) findViewById( R.id.aTXTconfirmPasswordValue ) ).setText( "" );
+	}
+
 	private void initListeners() {
+		findViewById( R.id.aBTeraseAll ).setOnClickListener( new OnClickListener()
+		{
+			@Override
+			public void onClick(
+				View v ) {
+				eraseAll();
+				findViewById( R.id.aTXTregisterMailValue ).requestFocus();
+			}
+		} );
+
+		( (TextView) findViewById( R.id.aTXTconfirmPasswordValue ) )
+			.setOnEditorActionListener( new OnEditorActionListener()
+			{
+
+				@Override
+				public boolean onEditorAction(
+					TextView v,
+					int actionId,
+					KeyEvent event ) {
+					if ( actionId != EditorInfo.IME_ACTION_DONE && actionId != EditorInfo.IME_ACTION_NEXT )
+					{
+						return false;
+					}
+
+					register();
+					return true;
+				}
+			} );
+
 		findViewById( R.id.aBTregisterUser ).setOnClickListener( new OnClickListener()
 		{
 			@Override
@@ -154,15 +193,30 @@ public class TT_RegisterActivity
 	private void register() {
 		String mail = ( (TextView) findViewById( R.id.aTXTregisterMailValue ) ).getText().toString().trim();
 		String password = ( (TextView) findViewById( R.id.aTXTregisterPasswordValue ) ).getText().toString().trim();
+		String confirmPassword = ( (TextView) findViewById( R.id.aTXTconfirmPasswordValue ) ).getText().toString()
+			.trim();
 
 		if ( mail.length() == 0 || password.length() == 0 )
 		{
-			showDialog( REGISTER_KO_DIALOG );
+			warn( R.string.not_authenticated );
+		}
+		else if ( !password.equals( confirmPassword ) )
+		{
+			warn( R.string.password_not_confirmed_properly );
+
+			( (TextView) findViewById( R.id.aTXTconfirmPasswordValue ) ).setText( "" );
+			( (TextView) findViewById( R.id.aTXTregisterPasswordValue ) ).setText( "" );
+			findViewById( R.id.aTXTregisterPasswordValue ).requestFocus();
 		}
 		else
 		{
 			checkForUserRegister( mail, password );
 		}
+	}
+
+	private void warn(
+		int stringId ) {
+		Toast.makeText( getApplicationContext(), getString( stringId ), Toast.LENGTH_SHORT ).show();
 	}
 
 	private SharedPreferences	prefs;
