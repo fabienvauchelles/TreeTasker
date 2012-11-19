@@ -65,5 +65,6 @@
     <string name="image_desc_register">Register account.</string>
     <string name="confirm_password">Confirmation</string>
     <string name="password_not_confirmed_properly">Le mot de passe a été mal saisi.</string>
+    <string name="task_validated">Terminé</string>
 
 </resources>

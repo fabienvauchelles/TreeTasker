@@ -52,6 +52,12 @@
                 android:gravity="top"
                 android:inputType="textMultiLine"
                 android:minLines="5" />
+
+            <CheckBox
+                android:id="@+id/aCBvalidatedValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/task_validated" />
 
         </LinearLayout>
     </ScrollView>
