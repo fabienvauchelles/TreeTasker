@@ -39,3 +39,4 @@ database/
 licence.txt
 */gen/*
 *generated*
+.metadata
