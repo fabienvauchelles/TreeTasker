@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
@@ -36,6 +37,12 @@ public class TT_EditTaskActivity
 		( (EditText) findViewById( R.id.aTFtitleValue ) ).setText( task.getTitle() );
 		( (EditText) findViewById( R.id.aTFdescriptionValue ) ).setText( task.getDescription() );
 		( (CheckBox) findViewById( R.id.aCBvalidatedValue ) ).setChecked( task.getStatus() == TT_Task.DONE );
+
+		if ( getIntent() != null && getIntent().getExtras().containsKey( "isNew" )
+			&& getIntent().getExtras().getBoolean( "isNew" ) )
+		{
+			( (Button) findViewById( R.id.aBTsave ) ).setText( R.string.add );
+		}
 	}
 
 	public void onSave(

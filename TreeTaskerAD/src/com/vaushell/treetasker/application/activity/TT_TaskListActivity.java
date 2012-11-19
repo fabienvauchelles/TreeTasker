@@ -78,6 +78,7 @@ public class TT_TaskListActivity
 				Intent createIntent = new Intent( this, TT_EditTaskActivity.class );
 				Bundle createBundle = new Bundle();
 				createBundle.putSerializable( "task", newTask );
+				createBundle.putBoolean( "isNew", true );
 				createIntent.putExtras( createBundle );
 				startActivityForResult( createIntent, ROOT_TASK_CREATION_REQUEST );
 				return true;
@@ -157,6 +158,7 @@ public class TT_TaskListActivity
 				Intent createIntent = new Intent( this, TT_EditTaskActivity.class );
 				Bundle createBundle = new Bundle();
 				createBundle.putSerializable( "task", newTask );
+				createBundle.putBoolean( "isNew", true );
 				createIntent.putExtras( createBundle );
 				startActivityForResult( createIntent, SUB_TASK_CREATION_REQUEST );
 				return true;
@@ -262,6 +264,7 @@ public class TT_TaskListActivity
 				Intent createIntent = new Intent( this, TT_EditTaskActivity.class );
 				Bundle createBundle = new Bundle();
 				createBundle.putSerializable( "task", newTask );
+				createBundle.putBoolean( "isNew", true );
 				createIntent.putExtras( createBundle );
 				startActivityForResult( createIntent, ROOT_TASK_CREATION_REQUEST );
 				return true;
