@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
+import com.google.android.gcm.GCMRegistrar;
 import com.vaushell.treetasker.R;
 import com.vaushell.treetasker.client.E_BadResponseStatus;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
@@ -117,6 +118,16 @@ public class TT_ConnectionActivity
 				session.setSessionMessage( UserSession.MESSAGE_UNREACHABLE_SERVER );
 			}
 
+			if ( GCMRegistrar.isRegistered( TT_ConnectionActivity.this ) )
+			{
+				DAO.registerDeviceOnServer( GCMRegistrar.getRegistrationId( TT_ConnectionActivity.this ),
+					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+			}
+			else
+			{
+				DAO.registerDeviceOnGCM( TT_ConnectionActivity.this,
+					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+			}
 			return session;
 		}
 
@@ -185,7 +196,7 @@ public class TT_ConnectionActivity
 			alert.show();
 		}
 
-		checkCurrentSessionFromServer( DAO.loadUserSessionFromCache( getApplicationContext() ) );
+		checkCurrentSessionFromServer( DAO.getUserSession() );
 	}
 
 	// PROTECTED

@@ -82,7 +82,6 @@ public class LoginLayout
 		vTFuserNameValue.setWidth( "80.0%" );
 		vTFuserNameValue.setHeight( "-1px" );
 		vTFuserNameValue.setInputPrompt( "E-mail" );
-		vTFuserNameValue.setSecret( false );
 		vFormLayout.addComponent( vTFuserNameValue, 1, 0 );
 		vFormLayout.setComponentAlignment( vTFuserNameValue, new Alignment( 33 ) );
 

@@ -45,7 +45,7 @@ public class SyncingStartResource
 
 				if ( datastoreTask != null )
 				{
-					DAO.deleteTask( datastoreTask );
+					DAO.deleteTask( datastoreTask, request.getUserSession().getUserName() );
 				}
 				response.addDeletedId( taskId );
 			}

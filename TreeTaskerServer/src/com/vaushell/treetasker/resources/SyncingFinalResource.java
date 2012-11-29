@@ -58,7 +58,7 @@ public class SyncingFinalResource
 				tasks.add( new EH_WS_Task( task, datastoreContainer ) );
 			}
 
-			DAO.createOrUpdateTasks( tasks );
+			DAO.createOrUpdateTasks( tasks, finalisation.getUserSession().getUserName() );
 		}
 		else
 		{

@@ -7,12 +7,14 @@
  ******************************************************************************/
 package com.vaushell.treetasker.dao;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -22,6 +24,10 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.google.android.gcm.server.Constants;
+import com.google.android.gcm.server.MulticastResult;
+import com.google.android.gcm.server.Result;
+import com.google.android.gcm.server.Sender;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -32,12 +38,15 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Transaction;
 import com.vaushell.treetasker.model.TT_UserTaskContainer;
+import com.vaushell.treetasker.net.GcmRegistrationResponse;
+import com.vaushell.treetasker.net.GcmUnregistrationResponse;
 import com.vaushell.treetasker.net.UserSession;
 
 public class TT_ServerControllerDAO
 {
 	// PROTECTED
 	// PRIVATE
+	private static final String					API_KEY		= "AIzaSyDS5t3uo3gRnInv3GipPmfUaVJ_8zjoQuw";
 	private static final TT_ServerControllerDAO	INSTANCE	= new TT_ServerControllerDAO();
 
 	private static final DatastoreService		DATASTORE	= DatastoreServiceFactory.getDatastoreService();
@@ -132,15 +141,18 @@ public class TT_ServerControllerDAO
 	}
 
 	public void createOrUpdateTask(
-		EH_WS_Task task ) {
+		EH_WS_Task task,
+		String userId ) {
 		synchronized ( DATASTORE )
 		{
 			DATASTORE.put( task.getEntity() );
 		}
+		sendPushNotification( userId );
 	}
 
 	public void createOrUpdateTasks(
-		Collection<EH_WS_Task> tasks ) {
+		Collection<EH_WS_Task> tasks,
+		String userId ) {
 		if ( tasks == null || tasks.isEmpty() )
 		{
 			return;
@@ -165,6 +177,7 @@ public class TT_ServerControllerDAO
 		}
 
 		tx.commit();
+		sendPushNotification( userId );
 	}
 
 	/**
@@ -175,7 +188,8 @@ public class TT_ServerControllerDAO
 	 *            Tâche à supprimer
 	 */
 	public void deleteTask(
-		EH_WS_Task task ) {
+		EH_WS_Task task,
+		String userId ) {
 		Transaction tx = DATASTORE.beginTransaction();
 		try
 		{
@@ -190,6 +204,7 @@ public class TT_ServerControllerDAO
 			}
 
 			tx.commit();
+			sendPushNotification( userId );
 		}
 		catch ( EntityNotFoundException e )
 		{
@@ -198,7 +213,8 @@ public class TT_ServerControllerDAO
 	}
 
 	public void deleteTasks(
-		Collection<EH_WS_Task> tasks ) {
+		Collection<EH_WS_Task> tasks,
+		String userId ) {
 		for ( EH_WS_Task task : tasks )
 		{
 			Transaction tx = DATASTORE.beginTransaction();
@@ -215,6 +231,7 @@ public class TT_ServerControllerDAO
 				}
 
 				tx.commit();
+				sendPushNotification( userId );
 			}
 			catch ( EntityNotFoundException e )
 			{
@@ -411,7 +428,165 @@ public class TT_ServerControllerDAO
 		}
 	}
 
+	public GcmRegistrationResponse registreGcmId(
+		String userName,
+		String gcmId ) {
+		// si userName existe
+		GcmRegistrationResponse response = new GcmRegistrationResponse( "Registration OK" );
+		try
+		{
+			DATASTORE.get( KeyFactory.createKey( EH_User.KIND, userName ) ); // Test
+																				// l'existence
+																				// de
+																				// l'utilisateur.
+
+			// Mise à jour de l'entité
+			Logger logger = Logger.getLogger( TT_ServerControllerDAO.class.getName() );
+			logger.info( "Registering " + gcmId );
+			Transaction txn = DATASTORE.beginTransaction();
+			try
+			{
+				EH_GcmId entity = new EH_GcmId( gcmId, userName );
+				DATASTORE.put( entity.getEntity() );
+				txn.commit();
+			}
+			finally
+			{
+				if ( txn.isActive() )
+				{
+					txn.rollback();
+				}
+			}
+		}
+		catch ( EntityNotFoundException e )
+		{
+			response.setResponseText( "Registration failed." );
+		}
+		return response;
+	}
+
+	public GcmUnregistrationResponse unregistreGcmId(
+		String gcmId ) {
+
+		GcmUnregistrationResponse response = new GcmUnregistrationResponse( "OK" );
+
+		Logger logger = Logger.getLogger( TT_ServerControllerDAO.class.getName() );
+		try
+		{
+			DATASTORE.delete( KeyFactory.createKey( EH_GcmId.KIND, gcmId ) );
+			logger.info( gcmId + " unregistered." );
+		}
+		catch ( IllegalArgumentException e )
+		{
+			response.setResponseText( "Unregistration failed." );
+			logger.info( gcmId + " not registered." );
+		}
+		return response;
+	}
+
+	private void handlePushResult(
+		MulticastResult results,
+		List<String> devices ) {
+
+		// devices et results.getResults gardent le même ordre que lors de
+		// l'envoi du push.
+		for ( Result result : results.getResults() )
+		{
+			if ( result.getMessageId() != null )
+			{
+				String canonicalRegId = result.getCanonicalRegistrationId();
+				if ( canonicalRegId != null )
+				{
+					String obsoleteRegId = devices.get( results.getResults().indexOf( result ) );
+					updateGcmId( obsoleteRegId, canonicalRegId );
+				}
+				else
+				{
+					String error = result.getErrorCodeName();
+					if ( error != null && error.equals( Constants.ERROR_NOT_REGISTERED ) )
+					{
+						unregistreGcmId( devices.get( results.getResults().indexOf( result ) ) );
+					}
+				}
+			}
+		}
+	}
+
 	private void init() {
+
+	}
+
+	private void sendPushNotification(
+		String userId ) {
+		// Récupération des ids des appareils à notifier
+		Query gcmIdsQuery = new Query( EH_GcmId.KIND );
+		gcmIdsQuery.setFilter( new Query.FilterPredicate( "userName", Query.FilterOperator.EQUAL, userId ) );
+
+		List<Entity> entityDevicesId = null;
+		List<String> devices = new ArrayList<String>();
+		synchronized ( DATASTORE )
+		{
+			entityDevicesId = DATASTORE.prepare( gcmIdsQuery ).asList( FetchOptions.Builder.withDefaults() );
+		}
+
+		for ( Entity gcmIdEntity : entityDevicesId )
+		{
+			devices.add( gcmIdEntity.getKey().getName() );
+		}
+
+		// Envoi du push si nécessaire.
+		if ( !devices.isEmpty() )
+		{
+			try
+			{
+				Sender sender = new Sender( API_KEY );
+				com.google.android.gcm.server.Message message = new com.google.android.gcm.server.Message.Builder()
+					.collapseKey( "Updates available" ).build();
+
+				handlePushResult( sender.send( message, devices, 3 ), devices );
+			}
+			catch ( IOException e )
+			{
+				// Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	private void updateGcmId(
+		String obsoleteRegId,
+		String canonicalRegId ) {
+
+		EH_GcmId obsoleteId;
+		try
+		{
+			obsoleteId = new EH_GcmId( DATASTORE.get( KeyFactory.createKey( EH_GcmId.KIND, obsoleteRegId ) ) );
+
+			// Mise à jour de l'entité
+			Logger logger = Logger.getLogger( TT_ServerControllerDAO.class.getName() );
+			logger.info( "Updating " + obsoleteRegId );
+			Transaction txn = DATASTORE.beginTransaction();
+			try
+			{
+				EH_GcmId entity = new EH_GcmId( canonicalRegId, obsoleteId.getUserName() );
+				DATASTORE.put( entity.getEntity() );
+				DATASTORE.delete( KeyFactory.createKey( EH_GcmId.KIND, obsoleteRegId ) );
+				txn.commit();
+			}
+			finally
+			{
+				if ( txn.isActive() )
+				{
+					txn.rollback();
+				}
+			}
+		}
+		catch ( EntityNotFoundException e )
+		{
+			// Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 }

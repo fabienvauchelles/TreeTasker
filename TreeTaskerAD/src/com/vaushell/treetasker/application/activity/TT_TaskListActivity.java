@@ -212,7 +212,9 @@ public class TT_TaskListActivity
 		super.onCreate( savedInstanceState );
 
 		prefs = PreferenceManager.getDefaultSharedPreferences( this );
-
+		TreeTaskerControllerDAO.getInstance().loadUserSessionFromCache( getApplicationContext() );
+		TreeTaskerControllerDAO.getInstance().registerDeviceOnGCM( this,
+			prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
 		loadActivity();
 	}
 

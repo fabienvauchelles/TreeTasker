@@ -196,7 +196,6 @@ public class RegistrationLayout
 		vTFmailValue.setImmediate( true );
 		vTFmailValue.setWidth( "100.0%" );
 		vTFmailValue.setHeight( "-1px" );
-		vTFmailValue.setSecret( false );
 		mainLayout.addComponent( vTFmailValue, 1, 1 );
 
 		// vLBLpassword

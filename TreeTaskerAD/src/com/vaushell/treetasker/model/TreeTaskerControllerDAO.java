@@ -24,10 +24,16 @@ import pl.polidea.treeview.TreeBuilder;
 import pl.polidea.treeview.TreeStateManager;
 import android.content.Context;
 
+import com.google.android.gcm.GCMRegistrar;
 import com.google.gson.Gson;
+import com.vaushell.treetasker.GCMIntentService;
 import com.vaushell.treetasker.application.storage.TaskDB;
 import com.vaushell.treetasker.client.E_BadResponseStatus;
 import com.vaushell.treetasker.client.SimpleJsonClient;
+import com.vaushell.treetasker.net.GcmRegistrationRequest;
+import com.vaushell.treetasker.net.GcmRegistrationResponse;
+import com.vaushell.treetasker.net.GcmUnregistrationRequest;
+import com.vaushell.treetasker.net.GcmUnregistrationResponse;
 import com.vaushell.treetasker.net.SyncingFinalRequest;
 import com.vaushell.treetasker.net.SyncingFinalResponse;
 import com.vaushell.treetasker.net.SyncingStartRequest;
@@ -122,6 +128,18 @@ public class TreeTaskerControllerDAO
 		return deletedTasksList;
 	}
 
+	public SimpleJsonClient getGcmRegistrationClient(
+		String endpointValue ) {
+
+		return new SimpleJsonClient().resource( endpointValue ).path( "resources/gcm-register" );
+	}
+
+	public SimpleJsonClient getGcmUnregistrationClient(
+		String endpointValue ) {
+
+		return new SimpleJsonClient().resource( endpointValue ).path( "resources/gcm-unregister" );
+	}
+
 	public SimpleJsonClient getRegisterClient(
 		String endpointValue ) {
 		return new SimpleJsonClient().resource( endpointValue ).path( "resources/register" );
@@ -194,7 +212,7 @@ public class TreeTaskerControllerDAO
 			try
 			{
 				InputStreamReader isr = new InputStreamReader( new FileInputStream( cacheFile ) );
-				UserSession userSession = GSON_SERIALIZER.fromJson( isr, UserSession.class );
+				userSession = GSON_SERIALIZER.fromJson( isr, UserSession.class );
 				isr.close();
 				return userSession;
 			}
@@ -227,6 +245,50 @@ public class TreeTaskerControllerDAO
 		treeBuilder.addRelation( destParentTask, childTask );
 		buildTreeRecursively( childTask, treeBuilder );
 		return childTask;
+	}
+
+	public void registerDeviceOnGCM(
+		Context context,
+		String endpoint ) {
+		// Tentative d'enregistrement pour le PUSH
+		// Make sure the device has the proper dependencies.
+		GCMRegistrar.checkDevice( context );
+		// Make sure the manifest was properly set - comment out this line
+		// while developing the app, then uncomment it when it's ready.
+		GCMRegistrar.checkManifest( context );
+		final String regId = GCMRegistrar.getRegistrationId( context );
+		if ( regId.equals( "" ) )
+		{
+			// Automatically registers application on startup.
+			GCMRegistrar.register( context, GCMIntentService.SENDER_ID );
+		}
+		else
+		{
+			registerDeviceOnServer( regId, endpoint );
+		}
+	}
+
+	public void registerDeviceOnServer(
+		String regId,
+		String endpoint ) {
+		// Register on app server
+		if ( !regId.equals( "" ) && userSession != null )
+		{
+			String userName = userSession.getUserName();
+			try
+			{
+				getGcmRegistrationClient( endpoint ).post( GcmRegistrationResponse.class,
+					new GcmRegistrationRequest( userName, regId ) );
+			}
+			catch ( E_BadResponseStatus e )
+			{
+				e.printStackTrace();
+			}
+			catch ( IOException e )
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void reset() {
@@ -396,6 +458,28 @@ public class TreeTaskerControllerDAO
 		}
 	}
 
+	public void unregisterDeviceFromServer(
+		String regId,
+		String endpoint ) {
+		// Register on app server
+		if ( !regId.equals( "" ) )
+		{
+			try
+			{
+				getGcmUnregistrationClient( endpoint ).post( GcmUnregistrationResponse.class,
+					new GcmUnregistrationRequest( regId ) );
+			}
+			catch ( E_BadResponseStatus e )
+			{
+				e.printStackTrace();
+			}
+			catch ( IOException e )
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+
 	private void buildTreeRecursively(
 		TT_Task parent,
 		TreeBuilder<TT_Task> builder ) {
@@ -460,6 +544,7 @@ public class TreeTaskerControllerDAO
 	private TreeStateManager<TT_Task>	treeManager;
 	private TT_Task						copiedTask;
 	private ArrayList<WS_Task>			deletedTasksList;
+
 	private OrderedTaskTreeController	treeController;
 
 }

@@ -235,7 +235,7 @@ public class TreeTaskerWebApplicationController
 		for ( TT_Task deletedTask : tasksToDelete )
 		{
 			TT_ServerControllerDAO.getInstance().deleteTask(
-				new EH_WS_Task( new WS_Task( deletedTask ), getUserContainer() ) );
+				new EH_WS_Task( new WS_Task( deletedTask ), getUserContainer() ), userSession.getUserName() );
 		}
 
 		sendTasks( tasksToUpdate );
@@ -521,21 +521,6 @@ public class TreeTaskerWebApplicationController
 	}
 
 	/**
-	 * Set <code>parent</code> as <code>child</code>'s parent.
-	 * 
-	 * @param child
-	 * @param parent
-	 */
-	public void setTaskParent(
-		TT_Task child,
-		TT_Task parent ) {
-		child.setParent( parent );
-		child.setLastModificationDate( new Date() );
-		WS_Task wsTask = new WS_Task( child );
-		TT_ServerControllerDAO.getInstance().createOrUpdateTask( new EH_WS_Task( wsTask, getUserContainer() ) );
-	}
-
-	/**
 	 * Displays the login layout.
 	 */
 	public void showLoginWindow() {
@@ -599,9 +584,9 @@ public class TreeTaskerWebApplicationController
 		if ( isModified )
 		{
 			task.setLastModificationDate( new Date() );
+			sendTask( task );
 		}
 
-		sendTask( task );
 	}
 
 	/**
@@ -663,7 +648,7 @@ public class TreeTaskerWebApplicationController
 			getContent().getView().refreshStyle();
 		}
 
-		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( tasksToUpdate );
+		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( tasksToUpdate, userSession.getUserName() );
 	}
 
 	private void addChildrenTaskNodesRecursively(
@@ -714,13 +699,13 @@ public class TreeTaskerWebApplicationController
 			ehTasksToDelete.add( new EH_WS_Task( new WS_Task( taskToDelete ), getUserContainer() ) );
 		}
 
-		TT_ServerControllerDAO.getInstance().deleteTasks( ehTasksToDelete );
+		TT_ServerControllerDAO.getInstance().deleteTasks( ehTasksToDelete, userSession.getUserName() );
 	}
 
 	private void sendTask(
 		TT_Task taskToSend ) {
 		TT_ServerControllerDAO.getInstance().createOrUpdateTask(
-			new EH_WS_Task( new WS_Task( taskToSend ), getUserContainer() ) );
+			new EH_WS_Task( new WS_Task( taskToSend ), getUserContainer() ), userSession.getUserName() );
 	}
 
 	private void sendTasks(
@@ -732,7 +717,7 @@ public class TreeTaskerWebApplicationController
 			ehTasksToSend.add( new EH_WS_Task( new WS_Task( taskToSend ), getUserContainer() ) );
 		}
 
-		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( ehTasksToSend );
+		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( ehTasksToSend, userSession.getUserName() );
 	}
 
 	private void sendTasks(
@@ -744,7 +729,7 @@ public class TreeTaskerWebApplicationController
 			ehTasksToSend.add( new EH_WS_Task( new WS_Task( taskToSend ), getUserContainer() ) );
 		}
 
-		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( ehTasksToSend );
+		TT_ServerControllerDAO.getInstance().createOrUpdateTasks( ehTasksToSend, userSession.getUserName() );
 	}
 
 	private List<TT_Task>						copiedTasks;
