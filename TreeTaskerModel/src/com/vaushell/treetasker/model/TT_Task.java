@@ -151,7 +151,7 @@ public class TT_Task
 	}
 
 	public boolean hasChildren() {
-		return !childrenTask.isEmpty();
+		return !getChildrenTask().isEmpty();
 	}
 
 	@Override

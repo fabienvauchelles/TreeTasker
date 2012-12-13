@@ -9,6 +9,7 @@ package com.vaushell.treetasker.application.activity;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.UUID;
 
 import pl.polidea.treeview.AbstractTreeViewAdapter;
@@ -17,11 +18,16 @@ import pl.polidea.treeview.TreeStateManager;
 import pl.polidea.treeview.TreeViewList;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -35,16 +41,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.vaushell.treetasker.R;
+import com.vaushell.treetasker.application.service.DataAccessService;
+import com.vaushell.treetasker.application.service.DataAccessService.DataAccessBinder;
+import com.vaushell.treetasker.application.service.DataAccessService.DataAccessServiceListener;
 import com.vaushell.treetasker.model.TT_Task;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
 import com.vaushell.treetasker.net.UserSession;
+import com.vaushell.treetasker.net.WS_Task;
 
 public class TT_TaskListActivity
 	extends Activity
+	implements DataAccessServiceListener
 {
 	// PUBLIC
 	public static final String	USERNAME					= "USERNAME";
 	public static final String	SESSIONID					= "SESSIONID";
+	public static final String	TAG_MAIN_ACTIVITY			= "MainActivity";
 
 	// PRIVATE
 	private final static int	CONNECTION_REQUEST			= 4;
@@ -57,10 +69,32 @@ public class TT_TaskListActivity
 	private final static int	PREFERENCE_EDITION			= 5;
 
 	@Override
+	public void allTasksRetrieved(
+		final Set<WS_Task> tasks,
+		final Set<String> expandedSet ) {
+		runOnUiThread( new Runnable()
+		{
+			@Override
+			public void run() {
+				if ( tasks.isEmpty() )
+				{
+					mustOpenMenu = true;
+				}
+				else
+				{
+					mustOpenMenu = false;
+				}
+				TreeTaskerControllerDAO.getInstance().allTasksRetrieved( tasks, expandedSet );
+			}
+		} );
+	}
+
+	@Override
 	public void onAttachedToWindow() {
+		// TODO Auto-generated method stub
 		super.onAttachedToWindow();
-		// Ouvre le menu si pas de tâches
-		if ( TreeTaskerControllerDAO.getInstance().getRootTasksList().isEmpty() )
+
+		if ( mustOpenMenu )
 		{
 			openOptionsMenu();
 		}
@@ -83,25 +117,28 @@ public class TT_TaskListActivity
 				startActivityForResult( createIntent, ROOT_TASK_CREATION_REQUEST );
 				return true;
 			}
-
-			case R.id.synchronizeTasks:
-			{
-				if ( TreeTaskerControllerDAO.getInstance().getUserSession() != null
-					&& TreeTaskerControllerDAO.getInstance().getUserSession().isValid() )
-				{
-					TreeTaskerControllerDAO.getInstance()
-						.synchronizeWithDatastore(
-							prefs.getString( getString( R.string.endpoint ),
-								TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
-				}
-				else
-				// Sinon on donne la main à l'activité de connexion
-				{
-					requestAuthentication();
-				}
-
-				return true;
-			}
+			//
+			// case R.id.synchronizeTasks:
+			// {
+			// if ( TreeTaskerControllerDAO.getInstance().getUserSession() !=
+			// null
+			// &&
+			// TreeTaskerControllerDAO.getInstance().getUserSession().isValid()
+			// )
+			// {
+			// TreeTaskerControllerDAO.getInstance()
+			// .synchronizeWithDatastore(
+			// prefs.getString( getString( R.string.endpoint ),
+			// TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+			// }
+			// else
+			// // Sinon on donne la main à l'activité de connexion
+			// {
+			// requestAuthentication();
+			// }
+			//
+			// return true;
+			// }
 			case R.id.preferences:
 			{
 				startActivityForResult( new Intent( this, TT_PreferenceActivity.class ), PREFERENCE_EDITION );
@@ -211,10 +248,6 @@ public class TT_TaskListActivity
 		Bundle savedInstanceState ) {
 		super.onCreate( savedInstanceState );
 
-		prefs = PreferenceManager.getDefaultSharedPreferences( this );
-		TreeTaskerControllerDAO.getInstance().loadUserSessionFromCache( getApplicationContext() );
-		TreeTaskerControllerDAO.getInstance().registerDeviceOnGCM( this,
-			prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
 		loadActivity();
 	}
 
@@ -271,24 +304,27 @@ public class TT_TaskListActivity
 				startActivityForResult( createIntent, ROOT_TASK_CREATION_REQUEST );
 				return true;
 			}
-			case R.id.synchronizeTasks:
-			{
-				if ( TreeTaskerControllerDAO.getInstance().getUserSession() != null
-					&& TreeTaskerControllerDAO.getInstance().getUserSession().isValid() )
-				{
-					TreeTaskerControllerDAO.getInstance()
-						.synchronizeWithDatastore(
-							prefs.getString( getString( R.string.endpoint ),
-								TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
-				}
-				else
-				// Sinon on donne la main à l'activité de connexion
-				{
-					requestAuthentication();
-				}
-
-				return true;
-			}
+			// case R.id.synchronizeTasks:
+			// {
+			// if ( TreeTaskerControllerDAO.getInstance().getUserSession() !=
+			// null
+			// &&
+			// TreeTaskerControllerDAO.getInstance().getUserSession().isValid()
+			// )
+			// {
+			// TreeTaskerControllerDAO.getInstance()
+			// .synchronizeWithDatastore(
+			// prefs.getString( getString( R.string.endpoint ),
+			// TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+			// }
+			// else
+			// // Sinon on donne la main à l'activité de connexion
+			// {
+			// requestAuthentication();
+			// }
+			//
+			// return true;
+			// }
 			case R.id.preferences:
 			{
 				startActivityForResult( new Intent( this, TT_PreferenceActivity.class ), PREFERENCE_EDITION );
@@ -301,6 +337,30 @@ public class TT_TaskListActivity
 	}
 
 	@Override
+	public void syncFinalized() {
+		// TODO Supprimer le chenillard avec runOnUIThread
+		runOnUiThread( new Runnable()
+		{
+			@Override
+			public void run() {
+				warn( R.string.toast_synchronized );
+			}
+		} );
+	}
+
+	@Override
+	public void syncStarted() {
+		// TODO Afficher un chenillard avec runOnUIThread
+		runOnUiThread( new Runnable()
+		{
+			@Override
+			public void run() {
+				warn( R.string.toast_synchronizing );
+			}
+		} );
+	}
+
+	@Override
 	protected void onActivityResult(
 		int requestCode,
 		int resultCode,
@@ -310,16 +370,21 @@ public class TT_TaskListActivity
 			case CONNECTION_REQUEST:
 				if ( resultCode == Activity.RESULT_OK )
 				{
-					TreeTaskerControllerDAO.getInstance().setUserSession(
-						new UserSession( data.getStringExtra( USERNAME ), data.getStringExtra( SESSIONID ) ) );
+					UserSession userSession = new UserSession( data.getStringExtra( USERNAME ),
+						data.getStringExtra( SESSIONID ) );
 
-					TreeTaskerControllerDAO.getInstance()
-						.synchronizeWithDatastore(
-							prefs.getString( getString( R.string.endpoint ),
-								TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+					TreeTaskerControllerDAO.getInstance().getDaoService().setUserSession( userSession );
 
 					warn( R.string.toast_connected );
+
 				}
+				TreeTaskerControllerDAO.getInstance().getDaoService().requestAllTasks();
+
+				prefs = PreferenceManager.getDefaultSharedPreferences( this );
+				TreeTaskerControllerDAO.getInstance().loadUserSessionFromCache( getApplicationContext() );
+				TreeTaskerControllerDAO.getInstance().registerDeviceOnGCM( this,
+					prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
+
 				break;
 			case EDITION_REQUEST:
 				// TODO controllerDAO qui copie
@@ -362,9 +427,30 @@ public class TT_TaskListActivity
 	}
 
 	@Override
+	protected void onDestroy() {
+		Log.i( TAG_MAIN_ACTIVITY, "Destroying Activity…" );
+		super.onDestroy();
+
+		Log.i( TAG_MAIN_ACTIVITY, "Unbinding from service…" );
+		serviceBindConnection.onServiceDisconnected( getComponentName() );
+		unbindService( serviceBindConnection );
+		Log.i( TAG_MAIN_ACTIVITY, "Unbound from service." );
+		Log.i( TAG_MAIN_ACTIVITY, "Activity destroyed." );
+	}
+
+	@Override
 	protected void onPause() {
+		Log.i( TAG_MAIN_ACTIVITY, "Activity pausing…" );
 		super.onPause();
-		TreeTaskerControllerDAO.getInstance().save( getApplicationContext() );
+
+		// TreeTaskerControllerDAO.getInstance().save( getApplicationContext()
+		// );
+		if ( TreeTaskerControllerDAO.getInstance().getDaoService() != null )
+		{
+			TreeTaskerControllerDAO.getInstance().saveUserSessionToCache( this,
+				TreeTaskerControllerDAO.getInstance().getDaoService().getUserSession() );
+		}
+		Log.i( TAG_MAIN_ACTIVITY, "Activity paused." );
 	}
 
 	// PROTECTED
@@ -461,7 +547,39 @@ public class TT_TaskListActivity
 		registerForContextMenu( findViewById( R.id.treeTaskView ) );
 		treeView.setAdapter( adapter );
 
-		TreeTaskerControllerDAO.getInstance().load( getApplicationContext() );
+		// TreeTaskerControllerDAO.getInstance().load( getApplicationContext()
+		// );
+
+		Intent daoServiceStartIntent = new Intent( this, DataAccessService.class );
+		startService( daoServiceStartIntent );
+
+		serviceBindConnection = new ServiceConnection()
+		{
+			@Override
+			public void onServiceConnected(
+				ComponentName name,
+				IBinder binder ) {
+				DataAccessService daoService = (DataAccessService) ( (DataAccessBinder) binder ).getService();
+				TreeTaskerControllerDAO.getInstance().setDaoService( daoService );
+				daoService.registerListener( TT_TaskListActivity.this );
+
+				Log.i( TAG_MAIN_ACTIVITY, "Connected to service." );
+			}
+
+			@Override
+			public void onServiceDisconnected(
+				ComponentName name ) {
+				TreeTaskerControllerDAO.getInstance().getDaoService().unregisterListener( TT_TaskListActivity.this );
+				TreeTaskerControllerDAO.getInstance().setDaoService( null );
+
+				Log.i( TAG_MAIN_ACTIVITY, "Disconnected from service." );
+			}
+		};
+
+		Intent daoServiceBindIntent = new Intent( this, DataAccessService.class );
+		bindService( daoServiceBindIntent, serviceBindConnection, Context.BIND_NOT_FOREGROUND );
+
+		requestAuthentication();
 	}
 
 	private void requestAuthentication() // Afficher l'activity de connexion
@@ -491,7 +609,6 @@ public class TT_TaskListActivity
 				public void run() {
 					treeView.requestFocusFromTouch();
 					treeView.setSelection( pos );
-
 				}
 			} );
 		}
@@ -504,13 +621,10 @@ public class TT_TaskListActivity
 	}
 
 	private HashMap<View, TT_Task>	view2taskMap;
-
 	private View					currentView;
-
 	private TT_Task					currentTask;
-
 	private AlertDialog.Builder		dialogBuilder;
-
+	private ServiceConnection		serviceBindConnection;
 	private SharedPreferences		prefs;
-
+	private boolean					mustOpenMenu	= false;
 }

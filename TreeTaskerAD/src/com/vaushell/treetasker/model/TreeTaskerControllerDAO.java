@@ -14,10 +14,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import pl.polidea.treeview.InMemoryTreeStateManager;
 import pl.polidea.treeview.TreeBuilder;
@@ -27,22 +28,19 @@ import android.content.Context;
 import com.google.android.gcm.GCMRegistrar;
 import com.google.gson.Gson;
 import com.vaushell.treetasker.GCMIntentService;
-import com.vaushell.treetasker.application.storage.TaskDB;
+import com.vaushell.treetasker.application.service.DataAccessService;
+import com.vaushell.treetasker.application.service.DataAccessService.DataAccessServiceListener;
 import com.vaushell.treetasker.client.E_BadResponseStatus;
 import com.vaushell.treetasker.client.SimpleJsonClient;
 import com.vaushell.treetasker.net.GcmRegistrationRequest;
 import com.vaushell.treetasker.net.GcmRegistrationResponse;
 import com.vaushell.treetasker.net.GcmUnregistrationRequest;
 import com.vaushell.treetasker.net.GcmUnregistrationResponse;
-import com.vaushell.treetasker.net.SyncingFinalRequest;
-import com.vaushell.treetasker.net.SyncingFinalResponse;
-import com.vaushell.treetasker.net.SyncingStartRequest;
-import com.vaushell.treetasker.net.SyncingStartResponse;
-import com.vaushell.treetasker.net.TaskStamp;
 import com.vaushell.treetasker.net.UserSession;
 import com.vaushell.treetasker.net.WS_Task;
 
 public class TreeTaskerControllerDAO
+	implements DataAccessServiceListener
 {
 	private static class TreeTaskerControllerDAOHolder
 	{
@@ -69,16 +67,48 @@ public class TreeTaskerControllerDAO
 	public void addRootTask(
 		TT_Task rootTask ) {
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
-		treeController.addRootTask( rootTask );
 		treeBuilder.sequentiallyAddNextNode( rootTask, 0 );
+		treeController.addRootTask( rootTask );
+		daoService.createOrUpdateTask( rootTask, isExpanded( rootTask ) );
 	}
 
 	public void addSubTask(
 		TT_Task parentTask,
 		TT_Task childTask ) {
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
-		treeController.addTask( childTask, parentTask.getID() );
 		treeBuilder.addRelation( parentTask, childTask );
+
+		Set<TT_Task> modifiedTasks = treeController.addTask( childTask, parentTask.getID() );
+		daoService.createOrUpdateTasks( modifiedTasks, retrieveExpandedSetFrom( modifiedTasks ) );
+	}
+
+	@Override
+	public void allTasksRetrieved(
+		Set<WS_Task> tasks,
+		Set<String> expandedSet ) {
+		// TODO Auto-generated method stub
+		// Emptying view
+		treeManager.clear();
+
+		// Rebuilding the tree
+		treeController.reinit( tasks );
+
+		TreeBuilder<TT_Task> builder = new TreeBuilder<TT_Task>( getTreeManager() );
+		for ( TT_Task task : treeController.getRootTasksList() )
+		{
+			builder.sequentiallyAddNextNode( task, 0 );
+			buildTreeRecursively( task, builder );
+		}
+
+		// Collapsing tasks
+		for ( TT_Task task : treeController.getTaskMap().values() )
+		{
+			if ( !expandedSet.contains( task.getID() )
+				&& treeManager.isInTree( treeController.getTaskMap().get( task.getID() ) ) )
+			{
+				treeManager.collapseChildren( treeController.getTaskMap().get( task.getID() ) );
+			}
+		}
 	}
 
 	public boolean canPaste() {
@@ -92,15 +122,16 @@ public class TreeTaskerControllerDAO
 
 	public void deleteTask(
 		TT_Task task ) {
-		HashSet<TT_Task> modifiedTasks = new HashSet<TT_Task>();
+		treeManager.removeNodeRecursively( task );
 
+		HashSet<TT_Task> modifiedTasks = new HashSet<TT_Task>();
+		HashSet<String> deletedTasksIds = new HashSet<String>();
 		for ( TT_Task deletedTask : treeController.removeTask( task.getID(), modifiedTasks ) )
 		{
-			deletedTasksList.add( new WS_Task( deletedTask ) );
+			deletedTasksIds.add( deletedTask.getID() );
 		}
-
-		treeManager.removeNodeRecursively( task );
-		// treeManager.refresh();
+		daoService.deleteTasks( deletedTasksIds );
+		daoService.createOrUpdateTasks( modifiedTasks, retrieveExpandedSetFrom( modifiedTasks ) );
 	}
 
 	public void edit(
@@ -110,6 +141,8 @@ public class TreeTaskerControllerDAO
 		task.setTitle( title );
 		task.setDescription( description );
 		task.setLastModificationDate( new Date() );
+
+		daoService.createOrUpdateTask( task, isExpanded( task ) );
 	}
 
 	public SimpleJsonClient getCheckClient(
@@ -124,8 +157,13 @@ public class TreeTaskerControllerDAO
 		return new SimpleJsonClient().resource( endpointValue ).path( "resources/login" );
 	}
 
-	public ArrayList<WS_Task> getDeletedTasksList() {
-		return deletedTasksList;
+	//
+	// public ArrayList<WS_Task> getDeletedTasksList() {
+	// return deletedTasksList;
+	// }
+
+	public DataAccessService getDaoService() {
+		return daoService;
 	}
 
 	public SimpleJsonClient getGcmRegistrationClient(
@@ -159,48 +197,57 @@ public class TreeTaskerControllerDAO
 		return new SimpleJsonClient().resource( endpointValue ).path( "resources/syncing2" );
 	}
 
+	//
+	// public UserSession getUserSession() {
+	// return userSession;
+	// }
+
 	public TreeStateManager<TT_Task> getTreeManager() {
 		return treeManager;
 	}
 
-	public UserSession getUserSession() {
-		return userSession;
-	}
+	//
+	// public void load(
+	// Context applicationContext ) {
+	// treeController = new OrderedTaskTreeController( new
+	// TT_UserTaskContainer() );
+	//
+	// TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager
+	// );
+	// TaskDB taskDB = new TaskDB( applicationContext );
+	// taskDB.open();
+	// taskDB.readTasksInfo();
+	//
+	// treeController.reinit( taskDB.getTasks() );
+	// // deletedTasksList.addAll( taskDB.getDeletedTasks() );
+	//
+	// taskDB.close();
+	//
+	// for ( TT_Task task : treeController.getRootTasksList() )
+	// {
+	// treeBuilder.sequentiallyAddNextNode( task, 0 );
+	// buildTreeRecursively( task, treeBuilder );
+	// }
+	//
+	// for ( TT_Task task : treeController.getTaskMap().values() )
+	// {
+	// if ( treeManager.isInTree( task ) )
+	// {
+	// if ( !taskDB.getExpandedSet().contains( task.getID() ) )
+	// {
+	// treeManager.collapseChildren( task );
+	// }
+	// else
+	// {
+	// treeManager.expandDirectChildren( task );
+	// }
+	// }
+	// }
+	// }
 
-	public void load(
-		Context applicationContext ) {
-		treeController = new OrderedTaskTreeController( new TT_UserTaskContainer() );
-
-		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
-		TaskDB taskDB = new TaskDB( applicationContext );
-		taskDB.open();
-		taskDB.readTasksInfo();
-
-		treeController.reinit( taskDB.getTasks() );
-		deletedTasksList.addAll( taskDB.getDeletedTasks() );
-
-		taskDB.close();
-
-		for ( TT_Task task : treeController.getRootTasksList() )
-		{
-			treeBuilder.sequentiallyAddNextNode( task, 0 );
-			buildTreeRecursively( task, treeBuilder );
-		}
-
-		for ( TT_Task task : treeController.getTaskMap().values() )
-		{
-			if ( treeManager.isInTree( task ) )
-			{
-				if ( !taskDB.getExpandedSet().contains( task.getID() ) )
-				{
-					treeManager.collapseChildren( task );
-				}
-				else
-				{
-					treeManager.expandDirectChildren( task );
-				}
-			}
-		}
+	public boolean isExpanded(
+		TT_Task task ) {
+		return treeManager.getNodeInfo( task ).isExpanded();
 	}
 
 	public UserSession loadUserSessionFromCache(
@@ -212,7 +259,7 @@ public class TreeTaskerControllerDAO
 			try
 			{
 				InputStreamReader isr = new InputStreamReader( new FileInputStream( cacheFile ) );
-				userSession = GSON_SERIALIZER.fromJson( isr, UserSession.class );
+				UserSession userSession = GSON_SERIALIZER.fromJson( isr, UserSession.class );
 				isr.close();
 				return userSession;
 			}
@@ -239,11 +286,14 @@ public class TreeTaskerControllerDAO
 		TT_Task destParentTask ) {
 		TT_Task childTask = copiedTask.getCopy();
 
-		treeController.addTask( childTask, destParentTask.getID() );
-
 		TreeBuilder<TT_Task> treeBuilder = new TreeBuilder<TT_Task>( treeManager );
 		treeBuilder.addRelation( destParentTask, childTask );
 		buildTreeRecursively( childTask, treeBuilder );
+
+		Set<TT_Task> modifiedTasks = treeController.addTask( childTask, destParentTask.getID() );
+
+		daoService.createOrUpdateTasks( modifiedTasks, retrieveExpandedSetFrom( modifiedTasks ) );
+
 		return childTask;
 	}
 
@@ -272,9 +322,9 @@ public class TreeTaskerControllerDAO
 		String regId,
 		String endpoint ) {
 		// Register on app server
-		if ( !regId.equals( "" ) && userSession != null )
+		if ( !regId.equals( "" ) && getDaoService().getUserSession() != null )
 		{
-			String userName = userSession.getUserName();
+			String userName = getDaoService().getUserSession().getUserName();
 			try
 			{
 				getGcmRegistrationClient( endpoint ).post( GcmRegistrationResponse.class,
@@ -295,35 +345,41 @@ public class TreeTaskerControllerDAO
 		init();
 	}
 
-	public void save(
-		Context applicationContext ) {
-		saveUserSession( applicationContext );
+	//
+	// public void setDeletedTasksList(
+	// ArrayList<WS_Task> deletedTasksList ) {
+	// this.deletedTasksList = deletedTasksList;
+	// }
 
-		if ( treeController == null )
+	public void saveUserSessionToCache(
+		Context appContext,
+		UserSession userSession ) {
+		File cacheFile = new File( appContext.getCacheDir(), CACHE_FILENAME );
+
+		if ( userSession != null )
 		{
-			return;
+			try
+			{
+				FileOutputStream fos = new FileOutputStream( cacheFile );
+				String userSessionJson = GSON_SERIALIZER.toJson( userSession );
+
+				fos.write( userSessionJson.getBytes() );
+				fos.close();
+			}
+			catch ( FileNotFoundException e )
+			{
+				e.printStackTrace();
+			}
+			catch ( IOException e )
+			{
+				e.printStackTrace();
+			}
 		}
-
-		TaskDB taskDB = new TaskDB( applicationContext );
-		taskDB.open();
-		taskDB.resetTable();
-
-		for ( TT_Task taskToSave : treeController.getTaskMap().values() )
-		{
-			saveTaskToDB( taskToSave, taskDB );
-		}
-
-		for ( WS_Task deletedTaskToSave : deletedTasksList )
-		{
-			saveTaskToDB( deletedTaskToSave.update( new TT_Task() ), taskDB );
-		}
-
-		taskDB.close();
 	}
 
-	public void setDeletedTasksList(
-		ArrayList<WS_Task> deletedTasksList ) {
-		this.deletedTasksList = deletedTasksList;
+	public void setDaoService(
+		DataAccessService daoService ) {
+		this.daoService = daoService;
 	}
 
 	public void setRootTasksList(
@@ -334,18 +390,19 @@ public class TreeTaskerControllerDAO
 	public void setStatus(
 		TT_Task task,
 		int status ) {
+		Set<TT_Task> modifiedTasks = null;
 		if ( status == TT_Task.TODO )
 		{
-			treeController.unvalidateTask( task.getID() );
+			modifiedTasks = treeController.unvalidateTask( task.getID() );
 		}
 		else
 		{
-			treeController.validateTask( task.getID() );
+			modifiedTasks = treeController.validateTask( task.getID() );
 		}
 
+		daoService.createOrUpdateTasks( modifiedTasks, retrieveExpandedSetFrom( modifiedTasks ) );
+
 		treeManager.refresh();
-		// task.setStatus( status );
-		// task.setLastModificationDate( new Date() );
 	}
 
 	public void setTreeManager(
@@ -353,109 +410,129 @@ public class TreeTaskerControllerDAO
 		this.treeManager = treeManager;
 	}
 
-	public void setUserSession(
-		UserSession userSession ) {
-		this.userSession = userSession;
+	//
+	// public void setUserSession(
+	// UserSession userSession ) {
+	// this.userSession = userSession;
+	// }
+
+	@Override
+	public void syncFinalized() {
+		// Do nothing
 	}
 
-	public void synchronizeWithDatastore(
-		String endPointValue ) {
-		SyncingStartRequest request = new SyncingStartRequest( userSession, TT_UserTaskContainer.DEFAULT_NAME );
+	//
+	// public void synchronizeWithDatastore(
+	// String endPointValue ) {
+	// SyncingStartRequest request = new SyncingStartRequest( userSession,
+	// TT_UserTaskContainer.DEFAULT_NAME );
+	//
+	// HashMap<String, WS_Task> wsTasksMap = new HashMap<String, WS_Task>();
+	// HashSet<String> collapsedSet = new HashSet<String>();
+	//
+	// for ( TT_Task task : treeController.getTaskMap().values() )
+	// {
+	// wsTasksMap.put( task.getID(), new WS_Task( task ) );
+	// request.addId( new TaskStamp( task.getID(),
+	// task.getLastModificationDate() ) );
+	// if ( !task.getChildrenTask().isEmpty() && !treeManager.getNodeInfo( task
+	// ).isExpanded() )
+	// {
+	// collapsedSet.add( task.getID() );
+	// }
+	// }
+	// //
+	// // for ( WS_Task task : deletedTasksList )
+	// // {
+	// // request.addRemovedId( task.getId() );
+	// // }
+	//
+	// try
+	// {
+	// SyncingStartResponse response = getSync1Client( endPointValue ).post(
+	// SyncingStartResponse.class, request );
+	//
+	// // On vide l'arbre
+	// treeManager.clear();
+	//
+	// // On se débarasse des noeuds supprimés
+	// for ( String deletedId : response.getDeletedIds() )
+	// {
+	// // tasksMap.get( deletedId ).setParent( null );
+	// wsTasksMap.remove( deletedId );
+	// collapsedSet.remove( deletedId );
+	// }
+	// //
+	// // deletedTasksList.clear();
+	//
+	// // On met tout l'arbre à jour
+	// for ( WS_Task taskToAdd : response.getTasksToAdd() )
+	// {
+	// wsTasksMap.put( taskToAdd.getId(), taskToAdd );
+	// }
+	//
+	// for ( WS_Task wsTask : response.getMoreRecentTasks() )
+	// {
+	// wsTask.update( wsTasksMap.get( wsTask.getId() ) );
+	// }
+	//
+	// // S'il y'a des informations à envoyer…
+	// if ( !response.getNeedUpdateIds().isEmpty() )
+	// {
+	// SyncingFinalRequest finalRequest = new SyncingFinalRequest( userSession,
+	// TT_UserTaskContainer.DEFAULT_NAME );
+	//
+	// for ( String needUpdateId : response.getNeedUpdateIds() )
+	// {
+	// finalRequest.addUpToDateTask( wsTasksMap.get( needUpdateId ) );
+	// }
+	//
+	// SyncingFinalResponse finalResponse = getSync2Client( endPointValue
+	// ).post( SyncingFinalResponse.class,
+	// finalRequest );
+	//
+	// for ( WS_Task wsTask : finalResponse.getUpToDateTasks() )
+	// {
+	// wsTask.update( wsTasksMap.get( wsTask.getId() ) );
+	// }
+	// }
+	//
+	// // On reconstruit l'arbre…
+	// treeController.reinit( wsTasksMap.values() );
+	//
+	// TreeBuilder<TT_Task> builder = new TreeBuilder<TT_Task>( getTreeManager()
+	// );
+	// for ( TT_Task task : treeController.getRootTasksList() )
+	// {
+	// builder.sequentiallyAddNextNode( task, 0 );
+	// buildTreeRecursively( task, builder );
+	// }
+	//
+	// // … sans oublier de replier les noeuds déjà pliés.
+	// for ( String collapsedId : collapsedSet )
+	// {
+	// if ( treeManager.isInTree( treeController.getTaskMap().get( collapsedId )
+	// ) )
+	// {
+	// treeManager.collapseChildren( treeController.getTaskMap().get(
+	// collapsedId ) );
+	// }
+	// }
+	// }
+	// catch ( IOException e )
+	// {
+	// return;
+	// }
+	// catch ( E_BadResponseStatus e )
+	// {
+	// e.printStackTrace();
+	// return;
+	// }
+	// }
 
-		HashMap<String, WS_Task> wsTasksMap = new HashMap<String, WS_Task>();
-		HashSet<String> collapsedSet = new HashSet<String>();
-
-		for ( TT_Task task : treeController.getTaskMap().values() )
-		{
-			wsTasksMap.put( task.getID(), new WS_Task( task ) );
-			request.addId( new TaskStamp( task.getID(), task.getLastModificationDate() ) );
-			if ( !task.getChildrenTask().isEmpty() && !treeManager.getNodeInfo( task ).isExpanded() )
-			{
-				collapsedSet.add( task.getID() );
-			}
-		}
-
-		for ( WS_Task task : deletedTasksList )
-		{
-			request.addRemovedId( task.getId() );
-		}
-
-		try
-		{
-			SyncingStartResponse response = getSync1Client( endPointValue ).post( SyncingStartResponse.class, request );
-
-			// On vide l'arbre
-			treeManager.clear();
-
-			// On se débarasse des noeuds supprimés
-			for ( String deletedId : response.getDeletedIds() )
-			{
-				// tasksMap.get( deletedId ).setParent( null );
-				wsTasksMap.remove( deletedId );
-				collapsedSet.remove( deletedId );
-			}
-
-			deletedTasksList.clear();
-
-			// On met tout l'arbre à jour
-			for ( WS_Task taskToAdd : response.getTasksToAdd() )
-			{
-				wsTasksMap.put( taskToAdd.getId(), taskToAdd );
-			}
-
-			for ( WS_Task wsTask : response.getMoreRecentTasks() )
-			{
-				wsTask.update( wsTasksMap.get( wsTask.getId() ) );
-			}
-
-			// S'il y'a des informations à envoyer…
-			if ( !response.getNeedUpdateIds().isEmpty() )
-			{
-				SyncingFinalRequest finalRequest = new SyncingFinalRequest( userSession,
-					TT_UserTaskContainer.DEFAULT_NAME );
-
-				for ( String needUpdateId : response.getNeedUpdateIds() )
-				{
-					finalRequest.addUpToDateTask( wsTasksMap.get( needUpdateId ) );
-				}
-
-				SyncingFinalResponse finalResponse = getSync2Client( endPointValue ).post( SyncingFinalResponse.class,
-					finalRequest );
-
-				for ( WS_Task wsTask : finalResponse.getUpToDateTasks() )
-				{
-					wsTask.update( wsTasksMap.get( wsTask.getId() ) );
-				}
-			}
-
-			// On reconstruit l'arbre…
-			treeController.reinit( wsTasksMap.values() );
-
-			TreeBuilder<TT_Task> builder = new TreeBuilder<TT_Task>( getTreeManager() );
-			for ( TT_Task task : treeController.getRootTasksList() )
-			{
-				builder.sequentiallyAddNextNode( task, 0 );
-				buildTreeRecursively( task, builder );
-			}
-
-			// … sans oublier de replier les noeuds déjà pliés.
-			for ( String collapsedId : collapsedSet )
-			{
-				if ( treeManager.isInTree( treeController.getTaskMap().get( collapsedId ) ) )
-				{
-					treeManager.collapseChildren( treeController.getTaskMap().get( collapsedId ) );
-				}
-			}
-		}
-		catch ( IOException e )
-		{
-			return;
-		}
-		catch ( E_BadResponseStatus e )
-		{
-			e.printStackTrace();
-			return;
-		}
+	@Override
+	public void syncStarted() {
+		// Do nothing
 	}
 
 	public void unregisterDeviceFromServer(
@@ -492,59 +569,51 @@ public class TreeTaskerControllerDAO
 
 	private void init() {
 		copiedTask = null;
-		deletedTasksList = new ArrayList<WS_Task>();
+		// deletedTasksList = new ArrayList<WS_Task>();
 		treeManager = new InMemoryTreeStateManager<TT_Task>();
-		treeController = null;
+		treeController = new OrderedTaskTreeController( new TT_UserTaskContainer() );
 	}
 
-	private void saveTaskToDB(
-		TT_Task taskToSave,
-		TaskDB taskDB ) {
-		if ( taskToSave == null )
+	private Set<String> retrieveExpandedSetFrom(
+		Collection<TT_Task> tasks ) {
+		HashSet<String> expandedSet = new HashSet<String>();
+
+		for ( TT_Task task : tasks )
 		{
-			return;
+			if ( isExpanded( task ) )
+			{
+				expandedSet.add( task.getID() );
+			}
 		}
 
-		if ( treeManager.isInTree( taskToSave ) )
-		{
-			taskDB.insertTask( taskToSave, treeManager.getNodeInfo( taskToSave ).isExpanded() );
-		}
-		else
-		{
-			taskDB.insertTask( taskToSave, false );
-		}
+		return expandedSet;
 	}
 
-	private void saveUserSession(
-		Context appContext ) {
-		File cacheFile = new File( appContext.getCacheDir(), CACHE_FILENAME );
+	//
+	// private void saveTaskToDB(
+	// TT_Task taskToSave,
+	// TaskDB taskDB ) {
+	// if ( taskToSave == null )
+	// {
+	// return;
+	// }
+	//
+	// if ( treeManager.isInTree( taskToSave ) )
+	// {
+	// taskDB.insertOrUpdateTask( taskToSave, treeManager.getNodeInfo(
+	// taskToSave ).isExpanded() );
+	// }
+	// else
+	// {
+	// taskDB.insertOrUpdateTask( taskToSave, false );
+	// }
+	// }
 
-		if ( userSession != null )
-		{
-			try
-			{
-				FileOutputStream fos = new FileOutputStream( cacheFile );
-				String userSessionJson = GSON_SERIALIZER.toJson( userSession );
-
-				fos.write( userSessionJson.getBytes() );
-				fos.close();
-			}
-			catch ( FileNotFoundException e )
-			{
-				e.printStackTrace();
-			}
-			catch ( IOException e )
-			{
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private UserSession					userSession;
+	// private UserSession userSession;
 	private TreeStateManager<TT_Task>	treeManager;
 	private TT_Task						copiedTask;
-	private ArrayList<WS_Task>			deletedTasksList;
+	// private ArrayList<WS_Task> deletedTasksList;
 
 	private OrderedTaskTreeController	treeController;
-
+	private DataAccessService			daoService;
 }

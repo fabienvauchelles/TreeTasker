@@ -22,6 +22,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
@@ -33,9 +35,13 @@ public class SimpleJsonClient
 {
 	// PROTECTED
 	// PRIVATE
-	private static final int	TIMEOUT_CONNECTION	= 10000;	// en ms
+	private static final int	TIMEOUT_CONNECTION	= 10000;					// en
+																				// ms
 
-	private static final int	TIMEOUT_SOCKET		= 10000;	// en ms
+	private static final int	TIMEOUT_SOCKET		= 10000;					// en
+																				// ms
+	private static final String	LOG_TAG_SENDING		= "JsonClient[SENDING]";
+	private static final String	LOG_TAG_RECEIVING	= "JsonClient[RECEIVING]";
 
 	// PUBLIC
 	public SimpleJsonClient()
@@ -60,8 +66,7 @@ public class SimpleJsonClient
 		try
 		{
 			String sending = gson.toJson( objectToSend );
-			System.out.println( "[SENDING]" );
-			System.out.println( sending );
+			Log.i( LOG_TAG_SENDING, sending );
 			se = new StringEntity( sending, "UTF-8" );
 		}
 		catch ( UnsupportedEncodingException e )
@@ -101,18 +106,19 @@ public class SimpleJsonClient
 			{
 				StringBuilder builder = new StringBuilder();
 
-				System.out.println( "[RECEIVING]" );
 				String line = buffReader.readLine();
 				while ( line != null )
 				{
 					builder.append( line );
-					System.out.println( line );
 					line = buffReader.readLine();
 				}
-
 				buffReader.close();
 
-				return gson.fromJson( builder.toString(), responseClass );
+				String receiving = builder.toString();
+
+				Log.i( LOG_TAG_RECEIVING, receiving );
+
+				return gson.fromJson( receiving, responseClass );
 			}
 			catch ( JsonSyntaxException e )
 			{

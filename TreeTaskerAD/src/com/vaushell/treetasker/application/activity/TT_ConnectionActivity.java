@@ -196,7 +196,7 @@ public class TT_ConnectionActivity
 			alert.show();
 		}
 
-		checkCurrentSessionFromServer( DAO.getUserSession() );
+		checkCurrentSessionFromServer( DAO.loadUserSessionFromCache( this ) );
 	}
 
 	// PROTECTED

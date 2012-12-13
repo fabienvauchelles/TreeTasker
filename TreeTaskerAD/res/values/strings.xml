@@ -67,5 +67,6 @@
     <string name="password_not_confirmed_properly">Le mot de passe a été mal saisi.</string>
     <string name="task_validated">Terminé</string>
     <string name="add">Ajouter</string>
+    <string name="toast_synchronizing">Synchronisation en cours…</string>
 
 </resources>

@@ -8,7 +8,9 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMBaseIntentService;
 import com.google.android.gcm.GCMRegistrar;
+import com.vaushell.treetasker.application.service.DataAccessService;
 import com.vaushell.treetasker.model.TreeTaskerControllerDAO;
+import com.vaushell.treetasker.net.UserSession;
 
 public class GCMIntentService
 	extends GCMBaseIntentService
@@ -53,6 +55,13 @@ public class GCMIntentService
 		Intent intent ) {
 		System.out.println( "Message reçu !" );
 
+		UserSession userSession = TreeTaskerControllerDAO.getInstance().loadUserSessionFromCache( this );
+
+		Intent serviceStartIntent = new Intent( this, DataAccessService.class );
+		serviceStartIntent.putExtra( "only-sync", true );
+		serviceStartIntent.putExtra( "user-session", userSession );
+
+		startService( serviceStartIntent );
 	}
 
 	@Override
@@ -75,5 +84,4 @@ public class GCMIntentService
 			prefs.getString( getString( R.string.endpoint ), TreeTaskerControllerDAO.DEFAULT_WEB_RESOURCE ) );
 
 	}
-
 }

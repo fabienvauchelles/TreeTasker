@@ -7,9 +7,10 @@
  ******************************************************************************/
 package com.vaushell.treetasker.application.storage;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -32,27 +33,55 @@ public class TaskDB
 		init();
 	}
 
+	public void clearDeletedTasks() {
+		deletedTasksSet.clear();
+
+		db.delete( TaskOpenHelper.TASK_TABLE_NAME, TaskOpenHelper.COL_STATUS + "=" + TT_Task.DELETED, null );
+	}
+
 	public void close() {
 		db.close();
+	}
+
+	public void deleteTask(
+		String taskId ) {
+		db.execSQL( "update " + TaskOpenHelper.TASK_TABLE_NAME + " set " + TaskOpenHelper.COL_STATUS + "="
+			+ TT_Task.DELETED + " where " + TaskOpenHelper.COL_ID + "=" + taskId );
+	}
+
+	public void deleteTasks(
+		Collection<String> taskIds ) {
+		db.beginTransaction();
+		for ( String taskId : taskIds )
+		{
+			db.execSQL( "update " + TaskOpenHelper.TASK_TABLE_NAME + " set " + TaskOpenHelper.COL_STATUS + "="
+				+ TT_Task.DELETED + " where " + TaskOpenHelper.COL_ID + "=" + taskId );
+		}
+		db.endTransaction();
+	}
+
+	public int eraseTask(
+		String taskId ) {
+		return db.delete( TaskOpenHelper.TASK_TABLE_NAME, TaskOpenHelper.COL_ID + "=" + taskId, null );
 	}
 
 	public SQLiteDatabase getDB() {
 		return db;
 	}
 
-	public ArrayList<WS_Task> getDeletedTasks() {
-		return deletedTasksList;
+	public Set<WS_Task> getDeletedTasks() {
+		return deletedTasksSet;
 	}
 
 	public HashSet<String> getExpandedSet() {
 		return expandedSet;
 	}
 
-	public ArrayList<WS_Task> getTasks() {
-		return tasksList;
+	public Set<WS_Task> getTasks() {
+		return taskSet;
 	}
 
-	public long insertTask(
+	public long insertOrUpdateTask(
 		TT_Task task,
 		boolean isExpanded ) {
 		ContentValues values = new ContentValues();
@@ -72,7 +101,49 @@ public class TaskDB
 		values.put( TaskOpenHelper.COL_EXPANDED, isExpanded );
 		values.put( TaskOpenHelper.COL_MODIF_DATE, String.valueOf( task.getLastModificationDate().getTime() ) );
 
-		return db.insert( TaskOpenHelper.TASK_TABLE_NAME, null, values );
+		if ( taskExists( task.getID() ) )
+		{
+			return db.replace( TaskOpenHelper.TASK_TABLE_NAME, null, values );
+		}
+		else
+		{
+			return db.insert( TaskOpenHelper.TASK_TABLE_NAME, null, values );
+		}
+	}
+
+	public long insertOrUpdateTask(
+		WS_Task task,
+		boolean isExpanded ) {
+		ContentValues values = new ContentValues();
+
+		values.put( TaskOpenHelper.COL_PARENT_ID, task.getParentId() );
+		values.put( TaskOpenHelper.COL_PREVIOUS_ID, task.getPreviousId() );
+		values.put( TaskOpenHelper.COL_ID, task.getId() );
+		values.put( TaskOpenHelper.COL_TITLE, task.getTitle() );
+		values.put( TaskOpenHelper.COL_DESCRIPTION, task.getDescription() );
+		values.put( TaskOpenHelper.COL_STATUS, task.getStatus() );
+		values.put( TaskOpenHelper.COL_EXPANDED, isExpanded );
+		values.put( TaskOpenHelper.COL_MODIF_DATE, String.valueOf( task.getLastModificationDate().getTime() ) );
+
+		if ( taskExists( task.getId() ) )
+		{
+			return db.replace( TaskOpenHelper.TASK_TABLE_NAME, null, values );
+		}
+		else
+		{
+			return db.insert( TaskOpenHelper.TASK_TABLE_NAME, null, values );
+		}
+	}
+
+	public void insertOrUpdateTasks(
+		Collection<TT_Task> tasks,
+		Set<String> expandedSet ) {
+		db.beginTransaction();
+		for ( TT_Task task : tasks )
+		{
+			insertOrUpdateTask( task, expandedSet.contains( task.getID() ) );
+		}
+		db.endTransaction();
 	}
 
 	public void open() {
@@ -80,8 +151,8 @@ public class TaskDB
 	}
 
 	public void readTasksInfo() {
-		tasksList.clear();
-		deletedTasksList.clear();
+		taskSet.clear();
+		deletedTasksSet.clear();
 		expandedSet.clear();
 
 		Cursor cursor = db.query( TaskOpenHelper.TASK_TABLE_NAME, null, null, null, null, null, null );
@@ -102,11 +173,11 @@ public class TaskDB
 
 			if ( taskToLoad.getStatus() == TT_Task.DELETED )
 			{
-				deletedTasksList.add( taskToLoad );
+				deletedTasksSet.add( taskToLoad );
 			}
 			else
 			{
-				tasksList.add( taskToLoad );
+				taskSet.add( taskToLoad );
 			}
 
 			if ( cursor.getInt( TaskOpenHelper.NUM_COL_EXPANDED ) > 0 )
@@ -120,20 +191,42 @@ public class TaskDB
 		cursor.close();
 	}
 
+	public void reinit(
+		Collection<WS_Task> tasks,
+		Set<String> expandedSet ) {
+		resetTable();
+
+		// db.beginTransaction();
+		for ( WS_Task task : tasks )
+		{
+			insertOrUpdateTask( task, expandedSet.contains( task.getId() ) );
+		}
+		// db.endTransaction();
+	}
+
 	public void resetTable() {
 		dbHelper.onUpgrade( db, 1, 1 );
 	}
 
+	public boolean taskExists(
+		String taskId ) {
+		Cursor cursor = db.rawQuery( "select 1 from " + TaskOpenHelper.TASK_TABLE_NAME + " where "
+			+ TaskOpenHelper.COL_ID + "='" + taskId + "'", null );
+		boolean exists = cursor.getCount() > 0;
+		cursor.close();
+		return exists;
+	}
+
 	private void init() {
-		tasksList = new ArrayList<WS_Task>();
-		deletedTasksList = new ArrayList<WS_Task>();
+		taskSet = new HashSet<WS_Task>();
+		deletedTasksSet = new HashSet<WS_Task>();
 		expandedSet = new HashSet<String>();
 	}
 
 	private SQLiteDatabase			db;
 	private final TaskOpenHelper	dbHelper;
-	private ArrayList<WS_Task>		tasksList;
-	private ArrayList<WS_Task>		deletedTasksList;
+	private Set<WS_Task>			taskSet;
+	private Set<WS_Task>			deletedTasksSet;
 
 	private HashSet<String>			expandedSet;
 }
