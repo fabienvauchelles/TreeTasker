@@ -373,6 +373,7 @@ public class TT_TaskListActivity
 					UserSession userSession = new UserSession( data.getStringExtra( USERNAME ),
 						data.getStringExtra( SESSIONID ) );
 
+					TreeTaskerControllerDAO.getInstance().saveUserSessionToCache( this, userSession );
 					TreeTaskerControllerDAO.getInstance().getDaoService().setUserSession( userSession );
 
 					warn( R.string.toast_connected );
