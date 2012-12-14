@@ -46,7 +46,7 @@ public class TT_ServerControllerDAO
 {
 	// PROTECTED
 	// PRIVATE
-	private static final String					API_KEY		= "AIzaSyDS5t3uo3gRnInv3GipPmfUaVJ_8zjoQuw";
+	private static final String					API_KEY		= "AIzaSyCmbB7fwwrcAtdP0OS_4IRx-m4RUUpeW70";
 	private static final TT_ServerControllerDAO	INSTANCE	= new TT_ServerControllerDAO();
 
 	private static final DatastoreService		DATASTORE	= DatastoreServiceFactory.getDatastoreService();

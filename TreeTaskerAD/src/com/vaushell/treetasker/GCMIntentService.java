@@ -18,7 +18,7 @@ public class GCMIntentService
 	/**
 	 * Google API project id registered to use GCM.
 	 */
-	public static final String	SENDER_ID	= "1072286232709";
+	public static final String	SENDER_ID	= "994153257191";
 
 	/**
 	 * Tag used on log messages.

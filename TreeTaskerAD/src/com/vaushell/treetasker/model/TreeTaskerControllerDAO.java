@@ -48,7 +48,7 @@ public class TreeTaskerControllerDAO
 	}
 
 	// PUBLIC
-	public static final String	DEFAULT_WEB_RESOURCE	= "https://vsh2-test.appspot.com/";
+	public static final String	DEFAULT_WEB_RESOURCE	= "https://treetasker.appspot.com/";
 
 	// PRIVATE
 	private static final Gson	GSON_SERIALIZER			= new Gson();
