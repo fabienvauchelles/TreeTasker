@@ -355,7 +355,7 @@ public class DataAccessService
 
 		if ( !syncInQueue )
 		{
-			int userSynctime = prefs.getInt( getString( R.string.synctime ), 10 );
+			int userSynctime = Integer.parseInt( prefs.getString( getString( R.string.synctime ), "10" ) );
 
 			if ( lastSyncDate != null && new Date().getTime() - lastSyncDate.getTime() < userSynctime * 60 * 1000 )
 			{
