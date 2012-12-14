@@ -32,11 +32,8 @@ dist/
 build/
 log/
 private/
-profils/
 tmp/
 build.properties
-database/
-licence.txt
 */gen/*
 *generated*
 .metadata
